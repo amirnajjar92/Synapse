@@ -54,7 +54,7 @@ export default function MonitorPage() {
           {/* Row 1: 400x153 (17.51% height) - 2 columns matching below */}
           <div className="flex w-full h-[17.51%]">
             {/* Column 1 - left cell */}
-            <div className="w-1/2 h-full border border-[#3B3B3B] flex items-center justify-center">
+            <div className="w-1/2 h-full border border-[#3B3B3B00] flex items-center justify-center">
               {isLoading ? (
                 <Skeleton className="w-20 sm:w-28 md:w-32 h-6 sm:h-8 md:h-10" />
               ) : (
@@ -62,7 +62,7 @@ export default function MonitorPage() {
               )}
             </div>
             {/* Column 2 - right cell */}
-            <div className="w-1/2 h-full border border-[#3B3B3B] flex items-center justify-center">
+            <div className="w-1/2 h-full border border-[#3B3B3B00] flex items-center justify-center">
               {isLoading ? (
                 <Skeleton className="w-20 sm:w-24 md:w-28 h-8 sm:h-10 md:h-12" />
               ) : (
