@@ -162,12 +162,12 @@ export default function MonitorPage() {
 
           {/* Row 6: 200x113 (12.93% height) */}
           <div className="flex w-full h-[12.93%]">
-            <div className="w-1/2 h-full border border-[#3B3B3B] flex flex-col p-1 sm:p-1.5 md:p-2">
+            <div className="w-1/2 h-full border border-[#3B3B3B] flex flex-col p-2 sm:p-3 md:p-4">
               {isLoading ? (
                 <Skeleton className="w-full h-full" />
               ) : (
                   <>
-                    <div className="flex justify-between text-[10px] sm:text-xs text-gray-400 mb-0.5 sm:mb-1">
+                    <div className="flex justify-between text-[10px] sm:text-xs text-gray-400 mb-1 sm:mb-1.5 md:mb-2">
                       <span>Day1</span>
                       <span>45</span>
                     </div>
@@ -177,12 +177,12 @@ export default function MonitorPage() {
                   </>
                 )}
             </div>
-            <div className="w-1/2 h-full border border-[#3B3B3B] flex flex-col p-1 sm:p-1.5 md:p-2 relative">
+            <div className="w-1/2 h-full border border-[#3B3B3B] flex flex-col p-2 sm:p-3 md:p-4 relative">
               {isLoading ? (
                 <Skeleton className="w-full h-full" />
               ) : (
                   <>
-                    <div className="flex justify-between text-[10px] sm:text-xs text-gray-400 mb-0.5 sm:mb-1">
+                    <div className="flex justify-between text-[10px] sm:text-xs text-gray-400 mb-1 sm:mb-1.5 md:mb-2">
                       <span>Day1</span>
                       <span>Day45</span>
                     </div>
@@ -200,10 +200,10 @@ export default function MonitorPage() {
                         showCurrentDayArrow
                         currentDayArrowColor="#ffffff"
                       />
-                      <div className="absolute bottom-0.5 sm:bottom-1 left-1 sm:left-2">
+                      <div className="absolute bottom-1 sm:bottom-1.5 md:bottom-2 left-1.5 sm:left-2 md:left-3">
                         <span className="text-white text-base sm:text-xl md:text-2xl font-light">-17kg</span>
                       </div>
-                      <div className="absolute bottom-0.5 sm:bottom-1 right-1 sm:right-2 text-[10px] sm:text-xs text-gray-400">1kg</div>
+                      <div className="absolute bottom-1 sm:bottom-1.5 md:bottom-2 right-1.5 sm:right-2 md:right-3 text-[10px] sm:text-xs text-gray-400">1kg</div>
                     </div>
                   </>
                 )}
