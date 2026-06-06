@@ -14,8 +14,12 @@ export default function MonitorPage() {
   // Generate sample data for bar charts
   const redChartData = Array.from({ length: 45 }, () => Math.random() * 80 + 20);
   const blueChartData = Array.from({ length: 45 }, (_, i) => {
-    const base = 80 - (i * 0.5);
-    return Math.max(20, base + (Math.random() * 20 - 10));
+    // Natural weight loss pattern: slow start, more loss later
+    const progress = i / 44; // 0 to 1
+    const base = 20 + (progress * 70); // Start at 20, go up to 90
+    // Add some natural variation
+    const variation = (Math.random() - 0.5) * 20;
+    return Math.max(15, Math.min(100, base + variation));
   });
 
   // Simulate loading
@@ -61,7 +65,7 @@ export default function MonitorPage() {
               {isLoading ? (
                 <Skeleton className="w-40 h-12" />
               ) : (
-                <span className="text-white font-bold" style={{ fontFamily: 'var(--font-hanalei-fill)', fontSize: '67.74px' }}>
+                <span className="text-white font-bold text-center" style={{ fontFamily: 'var(--font-hanalei-fill)', fontSize: 'calc(84px * 0.806)', lineHeight: '1' }}>
                   DAY 24
                 </span>
               )}
@@ -74,17 +78,17 @@ export default function MonitorPage() {
               {isLoading ? (
                 <Skeleton className="w-20 h-5" />
               ) : (
-                <span className="text-white text-xl font-light">Distance</span>
+                <span className="text-white text-xl font-light" style={{ lineHeight: '1' }}>Distance</span>
               )}
             </div>
-            <div className="w-[200px] h-[50px] border border-white flex items-center justify-end px-6">
+            <div className="w-[200px] h-[50px] border border-white flex items-center justify-center px-6">
               {isLoading ? (
                 <Skeleton className="w-24 h-6" />
               ) : (
-                <>
-                  <span className="text-white text-3xl font-light">6.34</span>
-                  <span className="text-gray-400 text-sm ml-2">/km</span>
-                </>
+                <div className="text-center w-full">
+                  <span className="text-white text-3xl font-light" style={{ lineHeight: '1' }}>6.34</span>
+                  <span className="text-gray-400 text-sm ml-2" style={{ lineHeight: '1' }}>/km</span>
+                </div>
               )}
             </div>
           </div>
@@ -95,17 +99,17 @@ export default function MonitorPage() {
               {isLoading ? (
                 <Skeleton className="w-16 h-5" />
               ) : (
-                <span className="text-white text-xl font-light">Pace</span>
+                <span className="text-white text-xl font-light" style={{ lineHeight: '1' }}>Pace</span>
               )}
             </div>
-            <div className="w-[200px] h-[50px] border border-white flex items-center justify-end px-6">
+            <div className="w-[200px] h-[50px] border border-white flex items-center justify-center px-6">
               {isLoading ? (
                 <Skeleton className="w-28 h-6" />
               ) : (
-                <>
-                  <span className="text-white text-3xl font-light">08'07"</span>
-                  <span className="text-gray-400 text-sm ml-2">/km</span>
-                </>
+                <div className="text-center w-full">
+                  <span className="text-white text-3xl font-light" style={{ lineHeight: '1' }}>08'07"</span>
+                  <span className="text-gray-400 text-sm ml-2" style={{ lineHeight: '1' }}>/km</span>
+                </div>
               )}
             </div>
           </div>
@@ -116,14 +120,16 @@ export default function MonitorPage() {
               {isLoading ? (
                 <Skeleton className="w-28 h-5" />
               ) : (
-                <span className="text-white text-xl font-light">Total Time</span>
+                <span className="text-white text-xl font-light" style={{ lineHeight: '1' }}>Total Time</span>
               )}
             </div>
-            <div className="w-[200px] h-[50px] border border-white flex items-center justify-end px-6">
+            <div className="w-[200px] h-[50px] border border-white flex items-center justify-center px-6">
               {isLoading ? (
                 <Skeleton className="w-32 h-6" />
               ) : (
-                <span className="text-white text-3xl font-light">1:05'37"</span>
+                <div className="text-center w-full">
+                  <span className="text-white text-3xl font-light" style={{ lineHeight: '1' }}>1:05'37"</span>
+                </div>
               )}
             </div>
           </div>
@@ -155,8 +161,20 @@ export default function MonitorPage() {
                       <span>Day45</span>
                     </div>
                     <div className="flex-1 relative">
-                      <BarChart data={blueChartData} color="#4488ff" />
-                      <div className="absolute inset-0 flex items-center justify-center">
+                      <BarChart 
+                        data={blueChartData} 
+                        color="#4488ff" 
+                        reversed 
+                        showConnectingLine
+                        connectingLineColor="#ffffff"
+                        connectingLineWidth={1}
+                        connectingLineShadow="#EFE9E9"
+                        activeBarCount={25}
+                        inactiveColor="#666666"
+                        showCurrentDayArrow
+                        currentDayArrowColor="#ffffff"
+                      />
+                      <div className="absolute bottom-1 left-2">
                         <span className="text-white text-2xl font-light">-17kg</span>
                       </div>
                       <div className="absolute bottom-1 right-2 text-xs text-gray-400">1kg</div>
@@ -175,7 +193,7 @@ export default function MonitorPage() {
                 <span className="text-white text-5xl font-light">SUN</span>
               )}
             </div>
-            <div className="w-[288px] h-[156px] border border-white flex items-baseline justify-center gap-2">
+            <div className="w-[288px] h-[156px] border border-white flex items-center justify-center gap-2">
               {isLoading ? (
                 <>
                   <Skeleton className="w-40 h-20" />
