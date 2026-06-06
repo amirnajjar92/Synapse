@@ -11,7 +11,7 @@ export default function MonitorPage() {
   const [activeSection, setActiveSection] = useState<string>('');
 
   return (
-    <div className="w-full h-screen bg-gray-900 flex items-center justify-center p-4">
+    <div className="w-full h-screen bg-gray-900 flex items-center justify-center ">
       {/* iPhone 17 Frame - 402x874 */}
       <div className="w-[402px] h-[874px] bg-black rounded-[40px] overflow-hidden shadow-2xl relative">
         {/* Main Container */}
@@ -19,122 +19,122 @@ export default function MonitorPage() {
           
           {/* Row 1: 1 column - 400x153 */}
           <div 
-            className="w-[400px] h-[153px] m-1 rounded-lg cursor-pointer"
+            className="w-[400px] h-[153px]  cursor-pointer border border-white"
             onClick={() => setActiveSection('row1')}
           >
-            <Skeleton className="w-full h-full rounded-lg" />
+            <Skeleton className="w-full h-full " />
           </div>
 
           {/* Row 2: 2 columns - 200x84 each */}
-          <div className="flex gap-2 mx-1 mt-2">
+          <div className="flex">
             <div 
-              className="w-[200px] h-[84px] rounded-lg cursor-pointer"
+              className="w-[200px] h-[84px]  cursor-pointer border border-white"
               onClick={() => setActiveSection('row2-col1')}
             >
-              <Skeleton className="w-full h-full rounded-lg" />
+              <Skeleton className="w-full h-full " />
             </div>
             <div 
-              className="w-[200px] h-[84px] rounded-lg cursor-pointer"
+              className="w-[200px] h-[84px]  cursor-pointer border border-white"
               onClick={() => setActiveSection('row2-col2')}
             >
-              <Skeleton className="w-full h-full rounded-lg" />
+              <Skeleton className="w-full h-full " />
             </div>
           </div>
 
           {/* Row 3: 2 columns - 200x50 each */}
-          <div className="flex gap-2 mx-1 mt-2">
+          <div className="flex">
             <div 
-              className="w-[200px] h-[50px] rounded-lg cursor-pointer"
+              className="w-[200px] h-[50px]  cursor-pointer border border-white"
               onClick={() => setActiveSection('row3-col1')}
             >
-              <Skeleton className="w-full h-full rounded-lg" />
+              <Skeleton className="w-full h-full " />
             </div>
             <div 
-              className="w-[200px] h-[50px] rounded-lg cursor-pointer"
+              className="w-[200px] h-[50px]  cursor-pointer border border-white"
               onClick={() => setActiveSection('row3-col2')}
             >
-              <Skeleton className="w-full h-full rounded-lg" />
+              <Skeleton className="w-full h-full " />
             </div>
           </div>
 
           {/* Row 4: 2 columns - 200x50 each */}
-          <div className="flex gap-2 mx-1 mt-2">
+          <div className="flex">
             <div 
-              className="w-[200px] h-[50px] rounded-lg cursor-pointer"
+              className="w-[200px] h-[50px]  cursor-pointer border border-white"
               onClick={() => setActiveSection('row4-col1')}
             >
-              <Skeleton className="w-full h-full rounded-lg" />
+              <Skeleton className="w-full h-full " />
             </div>
             <div 
-              className="w-[200px] h-[50px] rounded-lg cursor-pointer"
+              className="w-[200px] h-[50px]  cursor-pointer border border-white"
               onClick={() => setActiveSection('row4-col2')}
             >
-              <Skeleton className="w-full h-full rounded-lg" />
+              <Skeleton className="w-full h-full " />
             </div>
           </div>
 
           {/* Row 5: 2 columns - 200x50 each */}
-          <div className="flex gap-2 mx-1 mt-2">
+          <div className="flex">
             <div 
-              className="w-[200px] h-[50px] rounded-lg cursor-pointer"
+              className="w-[200px] h-[50px]  cursor-pointer border border-white"
               onClick={() => setActiveSection('row5-col1')}
             >
-              <Skeleton className="w-full h-full rounded-lg" />
+              <Skeleton className="w-full h-full " />
             </div>
             <div 
-              className="w-[200px] h-[50px] rounded-lg cursor-pointer"
+              className="w-[200px] h-[50px]  cursor-pointer border border-white"
               onClick={() => setActiveSection('row5-col2')}
             >
-              <Skeleton className="w-full h-full rounded-lg" />
+              <Skeleton className="w-full h-full " />
             </div>
           </div>
 
           {/* Row 6: 2 columns - 200x113 each */}
-          <div className="flex gap-2 mx-1 mt-2">
+          <div className="flex">
             <div 
-              className="w-[200px] h-[113px] rounded-lg cursor-pointer"
+              className="w-[200px] h-[113px]  cursor-pointer border border-white"
               onClick={() => setActiveSection('row6-col1')}
             >
-              <Skeleton className="w-full h-full rounded-lg" />
+              <Skeleton className="w-full h-full " />
             </div>
             <div 
-              className="w-[200px] h-[113px] rounded-lg cursor-pointer"
+              className="w-[200px] h-[113px]  cursor-pointer border border-white"
               onClick={() => setActiveSection('row6-col2')}
             >
-              <Skeleton className="w-full h-full rounded-lg" />
+              <Skeleton className="w-full h-full " />
             </div>
           </div>
 
           {/* Row 7: 2 columns - 114x156 and 288x156 */}
-          <div className="flex gap-2 mx-1 mt-2">
+          <div className="flex">
             <div 
-              className="w-[114px] h-[156px] rounded-lg cursor-pointer"
+              className="w-[114px] h-[156px]  cursor-pointer border border-white"
               onClick={() => setActiveSection('row7-col1')}
             >
-              <Skeleton className="w-full h-full rounded-lg" />
+              <Skeleton className="w-full h-full " />
             </div>
             <div 
-              className="w-[288px] h-[156px] rounded-lg cursor-pointer"
+              className="w-[288px] h-[156px]  cursor-pointer border border-white"
               onClick={() => setActiveSection('row7-col2')}
             >
-              <Skeleton className="w-full h-full rounded-lg" />
+              <Skeleton className="w-full h-full " />
             </div>
           </div>
 
           {/* Row 8: 1 column - 400x46 */}
           <div 
-            className="w-[400px] h-[46px] mx-1 mt-2 rounded-lg cursor-pointer"
+            className="w-[400px] h-[46px]  cursor-pointer border border-white"
             onClick={() => setActiveSection('row8')}
           >
-            <Skeleton className="w-full h-full rounded-lg" />
+            <Skeleton className="w-full h-full " />
           </div>
 
           {/* Row 9: 1 column - 400x176 */}
           <div 
-            className="w-[400px] h-[176px] mx-1 mt-2 rounded-lg cursor-pointer"
+            className="w-[400px] h-[176px]  cursor-pointer border border-white"
             onClick={() => setActiveSection('row9')}
           >
-            <Skeleton className="w-full h-full rounded-lg" />
+            <Skeleton className="w-full h-full " />
           </div>
         </div>
 
