@@ -36,7 +36,7 @@ export default function MonitorPage() {
   const aspectRatio = baseWidth / baseHeight;
 
   return (
-    <div className="w-full h-screen bg-gray-900 flex items-center justify-center p-2 sm:p-4">
+    <div className="w-full h-screen bg-[#151515] flex items-center justify-center p-2 sm:p-4">
       {/* Responsive iPhone Frame - scales with viewport, maintains aspect ratio */}
       <div 
         className="bg-black rounded-[40px] overflow-hidden shadow-2xl relative flex-shrink-0"
@@ -51,19 +51,24 @@ export default function MonitorPage() {
           className="w-full h-full flex flex-col"
           style={{ backgroundColor: '#2C2C2C' }}
         >
-          {/* Row 1: 400x153 (17.51% height) */}
-          <div className="w-full h-[17.51%] border border-[#3B3B3B] flex items-center justify-between px-[6px] sm:px-[12px] md:px-6">
-            {isLoading ? (
-              <>
+          {/* Row 1: 400x153 (17.51% height) - 2 columns matching below */}
+          <div className="flex w-full h-[17.51%]">
+            {/* Column 1 - left cell */}
+            <div className="w-1/2 h-full border border-[#3B3B3B] flex items-center justify-center">
+              {isLoading ? (
                 <Skeleton className="w-20 sm:w-28 md:w-32 h-6 sm:h-8 md:h-10" />
-                <Skeleton className="w-20 sm:w-24 md:w-28 h-8 sm:h-10 md:h-12" />
-              </>
-            ) : (
-              <>
+              ) : (
                 <span className="text-white text-2xl sm:text-3xl md:text-4xl font-light">2026/05</span>
+              )}
+            </div>
+            {/* Column 2 - right cell */}
+            <div className="w-1/2 h-full border border-[#3B3B3B] flex items-center justify-center">
+              {isLoading ? (
+                <Skeleton className="w-20 sm:w-24 md:w-28 h-8 sm:h-10 md:h-12" />
+              ) : (
                 <span className="text-white text-3xl sm:text-4xl md:text-5xl font-light">DONE</span>
-              </>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Row 2: 200x84 (9.61% height) */}
