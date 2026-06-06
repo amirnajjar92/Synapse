@@ -1,5 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { Hanalei_Fill } from "next/font/google";
+
+const hanaleiFill = Hanalei_Fill({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-hanalei-fill",
+});
 
 export const metadata: Metadata = {
   title: "Synapse",
@@ -12,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={hanaleiFill.variable}>
       <body
         className={`antialiased`}
       >

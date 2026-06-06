@@ -61,7 +61,7 @@ export default function MonitorPage() {
               {isLoading ? (
                 <Skeleton className="w-40 h-12" />
               ) : (
-                <span className="text-white text-6xl font-bold" style={{ fontFamily: 'system-ui, sans-serif' }}>
+                <span className="text-white font-bold" style={{ fontFamily: 'var(--font-hanalei-fill)', fontSize: '67.74px' }}>
                   DAY 24
                 </span>
               )}
