@@ -35,10 +35,10 @@ export default function MonitorPage() {
       {/* iPhone 17 Frame - 402x874 */}
       <div className="w-[402px] h-[874px] bg-black rounded-[40px] overflow-hidden shadow-2xl relative">
         {/* Main Container */}
-        <div className="w-full h-full bg-gray-800 flex flex-col">
+        <div className="w-full h-full flex flex-col" style={{ backgroundColor: '#2C2C2C' }}>
           
           {/* Row 1: 400x153 */}
-          <div className="w-[400px] h-[153px] border border-white flex items-center justify-between px-6">
+          <div className="w-[400px] h-[153px] border border-[#3B3B3B] flex items-center justify-between px-6">
             {isLoading ? (
               <>
                 <Skeleton className="w-32 h-10" />
@@ -54,14 +54,14 @@ export default function MonitorPage() {
 
           {/* Row 2: 200x84 */}
           <div className="flex">
-            <div className="w-[200px] h-[84px] border border-white flex items-center px-6">
+            <div className="w-[200px] h-[84px] border border-[#3B3B3B] flex items-center px-6">
               {isLoading ? (
                 <Skeleton className="w-28 h-8" />
               ) : (
                 <span className="text-white text-3xl font-light">ACTIVITY</span>
               )}
             </div>
-            <div className="w-[200px] h-[84px] border border-white flex items-center justify-center">
+            <div className="w-[200px] h-[84px] border border-[#3B3B3B] flex items-center justify-center">
               {isLoading ? (
                 <Skeleton className="w-40 h-12" />
               ) : (
@@ -74,14 +74,14 @@ export default function MonitorPage() {
 
           {/* Row 3: 200x50 */}
           <div className="flex">
-            <div className="w-[200px] h-[50px] border border-white flex items-center px-6">
+            <div className="w-[200px] h-[50px] border border-[#3B3B3B] flex items-center px-6">
               {isLoading ? (
                 <Skeleton className="w-20 h-5" />
               ) : (
                 <span className="text-white text-xl font-light" style={{ lineHeight: '1' }}>Distance</span>
               )}
             </div>
-            <div className="w-[200px] h-[50px] border border-white flex items-center justify-center px-6">
+            <div className="w-[200px] h-[50px] border border-[#3B3B3B] flex items-center justify-center px-6">
               {isLoading ? (
                 <Skeleton className="w-24 h-6" />
               ) : (
@@ -95,14 +95,14 @@ export default function MonitorPage() {
 
           {/* Row 4: 200x50 */}
           <div className="flex">
-            <div className="w-[200px] h-[50px] border border-white flex items-center px-6">
+            <div className="w-[200px] h-[50px] border border-[#3B3B3B] flex items-center px-6">
               {isLoading ? (
                 <Skeleton className="w-16 h-5" />
               ) : (
                 <span className="text-white text-xl font-light" style={{ lineHeight: '1' }}>Pace</span>
               )}
             </div>
-            <div className="w-[200px] h-[50px] border border-white flex items-center justify-center px-6">
+            <div className="w-[200px] h-[50px] border border-[#3B3B3B] flex items-center justify-center px-6">
               {isLoading ? (
                 <Skeleton className="w-28 h-6" />
               ) : (
@@ -116,14 +116,14 @@ export default function MonitorPage() {
 
           {/* Row 5: 200x50 */}
           <div className="flex">
-            <div className="w-[200px] h-[50px] border border-white flex items-center px-6">
+            <div className="w-[200px] h-[50px] border border-[#3B3B3B] flex items-center px-6">
               {isLoading ? (
                 <Skeleton className="w-28 h-5" />
               ) : (
                 <span className="text-white text-xl font-light" style={{ lineHeight: '1' }}>Total Time</span>
               )}
             </div>
-            <div className="w-[200px] h-[50px] border border-white flex items-center justify-center px-6">
+            <div className="w-[200px] h-[50px] border border-[#3B3B3B] flex items-center justify-center px-6">
               {isLoading ? (
                 <Skeleton className="w-32 h-6" />
               ) : (
@@ -136,7 +136,7 @@ export default function MonitorPage() {
 
           {/* Row 6: 200x113 */}
           <div className="flex">
-            <div className="w-[200px] h-[113px] border border-white flex flex-col p-2">
+            <div className="w-[200px] h-[113px] border border-[#3B3B3B] flex flex-col p-2">
               {isLoading ? (
                 <Skeleton className="w-full h-full" />
               ) : (
@@ -146,12 +146,12 @@ export default function MonitorPage() {
                       <span>45</span>
                     </div>
                     <div className="flex-1">
-                      <BarChart data={redChartData} color="#ff4444" />
+                      <BarChart data={redChartData} color="#E63416" />
                     </div>
                   </>
                 )}
             </div>
-            <div className="w-[200px] h-[113px] border border-white flex flex-col p-2 relative">
+            <div className="w-[200px] h-[113px] border border-[#3B3B3B] flex flex-col p-2 relative">
               {isLoading ? (
                 <Skeleton className="w-full h-full" />
               ) : (
@@ -163,7 +163,7 @@ export default function MonitorPage() {
                     <div className="flex-1 relative">
                       <BarChart 
                         data={blueChartData} 
-                        color="#4488ff" 
+                        color="#3B63CF" 
                         reversed 
                         showConnectingLine
                         connectingLineColor="#ffffff"
@@ -186,14 +186,14 @@ export default function MonitorPage() {
 
           {/* Row 7: 114x156 & 288x156 */}
           <div className="flex">
-            <div className="w-[114px] h-[156px] border border-white flex items-center justify-center">
+            <div className="w-[114px] h-[156px] border border-[#3B3B3B] flex items-center justify-center">
               {isLoading ? (
                 <Skeleton className="w-16 h-10" />
               ) : (
                 <span className="text-white text-5xl font-light">SUN</span>
               )}
             </div>
-            <div className="w-[288px] h-[156px] border border-white flex items-center justify-center gap-2">
+            <div className="w-[288px] h-[156px] border border-[#3B3B3B] flex items-center justify-center gap-2">
               {isLoading ? (
                 <>
                   <Skeleton className="w-40 h-20" />
@@ -209,10 +209,10 @@ export default function MonitorPage() {
           </div>
 
           {/* Row 8: 400x46 */}
-          <div className="w-[400px] h-[46px] border border-white"></div>
+          <div className="w-[400px] h-[46px] border border-[#3B3B3B]"></div>
 
           {/* Row 9: 400x176 */}
-          <div className="w-[400px] h-[176px] border border-white flex items-center justify-center">
+          <div className="w-[400px] h-[176px] border border-[#3B3B3B] flex items-center justify-center">
             {isLoading ? (
               <Skeleton className="w-32 h-16" />
             ) : (
