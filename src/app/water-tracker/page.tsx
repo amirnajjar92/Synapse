@@ -63,7 +63,7 @@ export default function WaterTrackerPage() {
           <div className="w-full h-[52.75%] border border-[#3B3B3B] flex items-center justify-center">
             {/* Centered container: 146 × 350 */}
             <div 
-              className="relative"
+              className="relative flex items-center justify-center"
               style={{
                 width: '36.5%', // 146/400
                 height: '75.92%', // 350/461
@@ -71,7 +71,13 @@ export default function WaterTrackerPage() {
             >
               {isLoading ? (
                 <Skeleton className="w-full h-full rounded-lg" />
-              ) : null}
+              ) : (
+                <img
+                  src="/vectors/water-bottle.svg"
+                  alt="Water Bottle"
+                  className="w-full h-full object-contain"
+                />
+              )}
             </div>
           </div>
 
