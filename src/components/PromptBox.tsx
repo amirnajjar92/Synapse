@@ -39,7 +39,7 @@ const PromptBox: React.FC<PromptBoxProps> = ({ value, onChange, isLoading }) => 
           }}
         >
           {/* TELL ME text container */}
-          <div className="absolute w-full top-[-35px] left-0 pointer-events-none">
+          <div className="absolute w-full top-[-30px] left-0 pointer-events-none">
             <span 
               className="text-white font-bold" 
               style={{ 
