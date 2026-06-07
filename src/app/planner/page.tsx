@@ -81,7 +81,7 @@ export default function PlannerPage() {
           {/* Row 2: 400 X (114 or 206) */}
           {!planGenerated ? (
             <div 
-              className="w-full border border-[#3B3B3B00] flex items-center justify-center p-3 sm:p-4 md:p-6 relative transition-all duration-500 ease-out"
+              className="w-full border border-[#3B3B3B00] flex items-center justify-center relative transition-all duration-500 ease-out"
               style={{ height: `${(row2Height / 874) * 100}%` }}
             >
               <PromptBox
@@ -100,7 +100,7 @@ export default function PlannerPage() {
           {/* Row 4: 400 X 206 - only when plan is generated (PromptBox moved here) */}
           {planGenerated && (
             <div 
-              className="w-full border border-[#3B3B3B00] flex items-center justify-center p-3 sm:p-4 md:p-6 relative transition-all duration-500 ease-out overflow-hidden"
+              className="w-full border border-[#3B3B3B00] flex items-center justify-center relative transition-all duration-500 ease-out overflow-hidden"
               style={{ height: `${(row4Height / 874) * 100}%` }}
             >
               <PromptBox

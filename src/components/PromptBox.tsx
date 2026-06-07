@@ -18,32 +18,39 @@ const PromptBox: React.FC<PromptBoxProps> = ({ value, onChange, isLoading }) => 
   }
 
   return (
-    <div className="w-full h-full relative transition-all duration-300 ease-out">
-      <img
-        src="/vectors/prompt-box-frame.svg"
-        alt="Prompt Box Frame"
-        className="w-full h-full object-contain absolute inset-0"
-      />
-      <div className="absolute inset-0 flex items-center justify-center p-1 sm:p-2">
+    <div className="w-full h-full relative transition-all duration-300 ease-out px-5">
+      {/* Frame container */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <img
+          src="/vectors/prompt-box-frame.svg"
+          alt="Prompt Box Frame"
+          className="w-full h-full object-contain"
+        />
+      </div>
+      {/* Input container */}
+      <div className="absolute inset-0 flex items-center justify-center">
         <div 
           className="flex items-start justify-start p-2 sm:p-3 md:p-4 relative transition-all duration-200 shadow-lg hover:shadow-xl"
           style={{
-            width: `${(327 / 400) * 100}%`,
+            width: `calc(${(327 / 400) * 100}% - 36px)`, // 18px gap on each side
             height: `${(125 / 206) * 100}%`,
             backgroundColor: '#FFFFFF',
             borderRadius: '10px'
           }}
         >
-          <span 
-            className="text-white absolute top-[-35px] sm:top-[-30px] md:top-[-35px] left-0 font-bold" 
-            style={{ 
-              fontFamily: 'var(--font-hanalei-fill)', 
-              fontSize: 'calc((100vh * 0.95) * (31 / 874))',
-              lineHeight: '1' 
-            }}
-          >
-            TELL ME
-          </span>
+          {/* TELL ME text container */}
+          <div className="absolute w-full top-[-35px] left-0 pointer-events-none">
+            <span 
+              className="text-white font-bold" 
+              style={{ 
+                fontFamily: 'var(--font-hanalei-fill)', 
+                fontSize: 'calc((100vh * 0.95) * (31 / 874))',
+                lineHeight: '1'
+              }}
+            >
+              TELL ME
+            </span>
+          </div>
           <textarea
             className="w-full h-full text-gray-800 text-sm sm:text-base md:text-xl font-light text-left bg-transparent border-none resize-none outline-none placeholder-gray-400 focus:ring-0"
             value={value}
