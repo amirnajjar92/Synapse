@@ -56,7 +56,7 @@ export default function PlanListPage() {
           style={{ backgroundColor: '#0b0b0bff' }}
         >
           {/* Header */}
-          <div className="mb-6">
+          <div className="flex items-center justify-center mb-6 min-h-[40px]">
             {isLoading ? (
               <Skeleton className="w-3/4 h-6" />
             ) : (
@@ -99,12 +99,15 @@ export default function PlanListPage() {
           </div>
 
           {/* Buttons Section */}
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3 sm:gap-4">
             {/* Start Button */}
             <div className="flex items-center justify-center">
               <CustomButton 
                 text="START" 
                 isLoading={isLoading} 
+                width="calc((100vh * 0.95) * (207 / 874))"
+                fontSize="calc((100vh * 0.95) * (42 / 874))"
+                mirrorY={true}
               />
             </div>
             
@@ -129,6 +132,9 @@ export default function PlanListPage() {
               <CustomButton 
                 text="CHANGE BY AI" 
                 isLoading={isLoading} 
+                width="calc((100vh * 0.95) * (144 / 874))"
+                fontSize="calc((100vh * 0.95) * (20 / 874))"
+                mirrorY={true}
               />
             </div>
           </div>
