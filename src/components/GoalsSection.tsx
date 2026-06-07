@@ -27,7 +27,7 @@ const GoalsSection: React.FC<GoalsSectionProps> = ({ isLoading }) => {
   return (
     <div className="w-full h-full flex flex-col p-3 sm:p-4 md:p-6 transition-all duration-300 ease-out">
       {/* Goals Header */}
-      <div className="flex items-start gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8 border-b border-gray-600 pb-3 sm:pb-4 md:pb-6">
+      <div className="flex items-center gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8 border-b border-gray-600 pb-3 sm:pb-4 md:pb-6">
         <h2 
           className="text-white font-bold" 
           style={{ 
