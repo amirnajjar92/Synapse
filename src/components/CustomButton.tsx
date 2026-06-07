@@ -6,13 +6,14 @@ interface CustomButtonProps {
   text: string;
   isLoading?: boolean;
   onClick?: () => void;
+  reverseY?: boolean;
 }
 
 const Skeleton = ({ className = '' }: { className?: string }) => (
-  <div className={`animate-pulse bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 bg-[length:200%_100%] opacity-50 ${className}`} />
+  <div className={`animate-pulse bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 bg-[length:200%_100% opacity-50 ${className}`} />
 );
 
-const CustomButton: React.FC<CustomButtonProps> = ({ text, isLoading, onClick }) => {
+const CustomButton: React.FC<CustomButtonProps> = ({ text, isLoading, onClick, reverseY }) => {
   if (isLoading) {
     return <Skeleton className="w-full h-full rounded-lg" />;
   }
@@ -26,6 +27,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({ text, isLoading, onClick })
         src="/vectors/button-frame.svg"
         alt="Button Frame"
         className="w-full h-full object-contain absolute inset-0"
+        style={reverseY ? { transform: 'scaleY(-1)' } : undefined}
       />
       <span 
         className="text-white font-bold relative z-10" 
