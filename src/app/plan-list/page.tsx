@@ -52,7 +52,7 @@ export default function PlanListPage() {
       >
         {/* Main Container */}
         <div 
-          className="w-full h-full flex flex-col p-3 sm:p-4 md:p-6"
+          className="w-full h-full flex flex-col p-2 sm:p-3 md:p-4"
           style={{ backgroundColor: '#0b0b0bff' }}
         >
           {/* Header */}
@@ -67,22 +67,22 @@ export default function PlanListPage() {
           </div>
 
           {/* Items List */}
-          <div className="flex-1 flex flex-col gap-3 sm:gap-4 mb-6 overflow-y-auto">
+          <div className="flex-1 flex flex-col gap-2 mb-4 overflow-y-auto">
             {isLoading ? (
               Array.from({ length: 6 }).map((_, index) => (
-                <Skeleton key={index} className="w-full h-20 rounded-lg" />
+                <Skeleton key={index} className="w-full h-16 rounded-lg" />
               ))
             ) : (
               planItems.map((item) => (
                 <div 
                   key={item.id} 
-                  className="flex items-center justify-between p-3 sm:p-4 bg-[#2c2c2c] rounded-lg border border-gray-600 transition-all duration-200 hover:bg-gray-700/50 cursor-pointer"
+                  className="flex items-center justify-between p-2 sm:p-3 bg-[#2c2c2c] rounded-lg border border-gray-600 transition-all duration-200 hover:bg-gray-700/50 cursor-pointer"
                 >
                   <h3 
                     className="text-white font-bold"
                     style={{ 
                       fontFamily: 'var(--font-hanalei-fill)', 
-                      fontSize: 'calc((100vh * 0.95) * (32 / 874))',
+                      fontSize: 'calc((100vh * 0.95) * (28 / 874))',
                       lineHeight: '1'
                     }}
                   >
@@ -91,7 +91,7 @@ export default function PlanListPage() {
                   <img 
                     src={item.icon} 
                     alt={item.name} 
-                    className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 object-contain"
+                    className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
                   />
                 </div>
               ))
