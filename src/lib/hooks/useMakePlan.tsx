@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks';
-import { 
-  setGeneratedPlan, 
-  setIsGenerating, 
-  setGenerationError 
+import {
+  setGeneratedPlan,
+  setIsGenerating,
+  setGenerationError,
+  setPlanItemLoadingState,
 } from '@/lib/redux/slices/planSlice';
 import type { GeneratedPlan } from '@/lib/types/plan';
+import mockPlan from '@/lib/mock-data/mock-plan.json';
 
 const filterResponse = (response: string): string => {
   return response.replace(/```json|```|\\n/g, '').trim();
@@ -28,6 +30,14 @@ const useMakePlan = (userPrompt: string, autoRun = false) => {
 
   const [resetState, setResetState] = useState(false);
 
+  // Helper to simulate sequential plan item loading
+  const simulatePlanItemLoading = async () => {
+    for (let i = 0; i < 6; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      dispatch(setPlanItemLoadingState({ index: i, isLoading: false }));
+    }
+  };
+
   const askAI = async (prompt: string): Promise<{ answer: string | null; error: string | null }> => {
     try {
       dispatch(setIsGenerating(true));
@@ -36,27 +46,44 @@ const useMakePlan = (userPrompt: string, autoRun = false) => {
       const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
       const apiUrl = process.env.NEXT_PUBLIC_OPENAI_API_URL;
 
-      if (!apiKey) {
-        throw new Error('OpenAI API key is missing');
+      // For testing: use mock data if API key not present
+      const useMockData = !apiKey || !apiUrl;
+      if (useMockData) {
+        console.log('Using mock plan data (no API key set)');
+        // For mock data, simulate AI call with 2s delay
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        // Convert mock planTypes to GeneratedPlan (for consistency)
+        const mockGeneratedPlan: GeneratedPlan = {
+          meals: mockPlan.planTypes[0].tableData,
+          cardio: mockPlan.planTypes[1].tableData,
+          nutrients: mockPlan.planTypes[2].tableData,
+          recommended: mockPlan.planTypes[3].tableData,
+          challenges: mockPlan.planTypes[4].tableData,
+          supplements: mockPlan.planTypes[5].tableData,
+        };
+        dispatch(setGeneratedPlan(mockGeneratedPlan));
+        await simulatePlanItemLoading();
+        return { answer: JSON.stringify(mockGeneratedPlan), error: null };
       }
 
       const res = await fetch(apiUrl || 'https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
+          Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
           model: 'gpt-4o-mini',
           messages: [
             {
               role: 'system',
-              content: 'You are a fitness and nutrition expert that generates comprehensive, structured plans. You ONLY respond with valid JSON, no extra text, no markdown, just clean JSON.'
+              content:
+                'You are a fitness and nutrition expert that generates comprehensive, structured plans. You ONLY respond with valid JSON, no extra text, no markdown, just clean JSON.',
             },
             {
               role: 'user',
-              content: prompt
-            }
+              content: prompt,
+            },
           ],
           temperature: 0.7,
         }),
@@ -70,7 +97,21 @@ const useMakePlan = (userPrompt: string, autoRun = false) => {
 
       const data = await res.json();
       const answer = data.choices?.[0]?.message?.content;
+
+      if (answer) {
+        const filtered = filterResponse(answer);
+        const parsedPlan: GeneratedPlan | null = safelyParseJSON(filtered);
+
+        if (parsedPlan) {
+          dispatch(setGeneratedPlan(parsedPlan));
+        } else {
+          console.error('Failed to parse plan:', answer);
+          throw new Error('Failed to parse plan from AI. Please try again.');
+        }
+      }
+
       dispatch(setIsGenerating(false));
+      await simulatePlanItemLoading();
       return { answer: answer || null, error: null };
     } catch (err: unknown) {
       dispatch(setIsGenerating(false));
@@ -89,7 +130,7 @@ const useMakePlan = (userPrompt: string, autoRun = false) => {
 
     const prompt = `Generate a comprehensive fitness and nutrition plan based on this user request: ${userPrompt}
 
-Return ONLY a JSON object in the following exact format, no extra characters, no text, no markdown:
+Return ONLY a JSON object in the following exact format, no extra text, no markdown, just JSON:
 {
   "meals": [
     { "id": "1", "columns": ["Breakfast", "08:00", "Details with protein, carbs, etc."] },
@@ -125,42 +166,27 @@ Return ONLY a JSON object in the following exact format, no extra characters, no
     { "id": "5", "columns": ["Motivation / Mindset", "Daily positive affirmation or quote"] }
   ],
   "challenges": [
-    { "id": "1", "columns": ["Daily", "Push-up Challenge", "Week 1: 50/day, Week 2: 80/day, Week 3: 100/day, Week 4: 150/day"] },
-    { "id": "2", "columns": ["Daily", "No Sugar Challenge", "7-day streak = new badge, 14-day streak = bonus"] },
-    { "id": "3", "columns": ["Daily", "Steps Challenge", "Hit 10k steps = 1 point, Hit 25 days = bonus"] },
-    { "id": "4", "columns": ["Daily", "Hydration Challenge", "Log 3.5L water, full month = Water trophy"] },
-    { "id": "5", "columns": ["5 min/day", "Mindfulness Challenge", "5-minute breathing or meditation, complete 20 days"] }
+    { "id": "1", "columns": ["Daily", "Push-up Challenge", "Week 1: 50/day", "Week 2: 80/day", "Week 4: 150/day"] },
+    { "id": "2", "columns": ["Daily", "No Sugar Challenge", "7-day streak = new badge", "", ""], "columnWidths": ["120px", "180px", "160px", "160px", "160px"] },
+    { "id": "3", "columns": ["Daily", "Phone / Watch Steps", "Hit 25 days = Bonus points", "", ""], "columnWidths": ["120px", "180px", "160px", "160px", "160px"] },
+    { "id": "4", "columns": ["Daily", "Log 3.5L water", "Full month = Water trophy", "", ""], "columnWidths": ["120px", "180px", "160px", "160px", "160px"] },
+    { "id": "5", "columns": ["5 min / day", "Meditation or breathing", "Complete 20 days", "", ""], "columnWidths": ["120px", "180px", "160px", "160px", "160px"] }
   ],
   "supplements": [
-    { "id": "1", "columns": ["Whey Protein", "Muscle recovery & growth", "25g", "Post-workout"] },
-    { "id": "2", "columns": ["Creatine Monohydrate", "Strength & performance", "5g", "Any time of day"] },
-    { "id": "3", "columns": ["Omega-3 Fish Oil", "Joint & heart health", "1-2g", "With meals"] },
-    { "id": "4", "columns": ["Vitamin D3", "Bone health & immunity", "1000-2000 IU", "With food"] },
-    { "id": "5", "columns": ["Multivitamin", "Overall health", "1 tablet", "With breakfast"] }
+    { "id": "1", "columns": ["Whey Protein", "Muscle recovery & growth", "25g", "Post-workout", ""], "columnWidths": ["120px", "180px", "160px", "160px", "160px"] },
+    { "id": "2", "columns": ["Creatine Monohydrate", "Strength & performance", "5g", "Any time of day", ""], "columnWidths": ["120px", "180px", "160px", "160px", "160px"] },
+    { "id": "3", "columns": ["Omega-3 Fish Oil", "Joint & heart health", "1-2g", "With meals", ""], "columnWidths": ["120px", "180px", "160px", "160px", "160px"] },
+    { "id": "4", "columns": ["Vitamin D3", "Bone health & immunity", "1000-2000 IU", "With food", ""], "columnWidths": ["120px", "180px", "160px", "160px", "160px"] },
+    { "id": "5", "columns": ["Multivitamin", "Overall health", "1 tablet", "With breakfast", ""], "columnWidths": ["120px", "180px", "160px", "160px", "160px"] }
   ]
 }
 ---And only return this JSON response with no extra characters or text.`;
 
-    const { answer, error } = await askAI(prompt);
-    if (error) return;
-
-    if (answer) {
-      const filtered = filterResponse(answer);
-      const parsedPlan: GeneratedPlan | null = safelyParseJSON(filtered);
-
-      if (parsedPlan) {
-        dispatch(setGeneratedPlan(parsedPlan));
-      } else {
-        console.error('Failed to parse plan:', answer);
-        dispatch(setGenerationError('Failed to parse plan from AI. Please try again.'));
-      }
-    }
+    await askAI(prompt);
   };
 
   const resetPlan = () => {
     setResetState(true);
-    dispatch(setGeneratedPlan(null));
-    dispatch(setGenerationError(null));
   };
 
   useEffect(() => {

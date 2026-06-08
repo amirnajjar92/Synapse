@@ -1,0 +1,87 @@
+{
+  "planTypes": [
+    {
+      "title": "MEALS",
+      "icon": "/vectors/meals-icon.svg",
+      "tableData": [
+        { "id": 1, "columns": ["Breakfast", "08:00", "Oatmeal + Whey Protein + Banana + Almonds"] },
+        { "id": 2, "columns": ["Snack 1", "11:00", "Greek Yogurt + Berries + Chia Seeds"] },
+        { "id": 3, "columns": ["Lunch", "13:30", "Grilled Chicken + Quinoa + Vegetables + Olive Oil"] },
+        { "id": 4, "columns": ["Snack 2", "16:30", "Apple + Handful of Mixed Nuts"] },
+        { "id": 5, "columns": ["Dinner", "19:30", "Baked Salmon + Sweet Potato + Salad"] },
+        { "id": 6, "columns": ["Total", "-", "Daily Total"] }
+      ],
+      "columnWidths": ["w-1/3", "w-1/5"],
+      "horizontalScroll": false
+    },
+    {
+      "title": "CARDIO",
+      "icon": "/vectors/cardio-icon.svg",
+      "tableData": [
+        { "id": 1, "columns": ["Monday", "Easy Run", "5 km", "30 min"] },
+        { "id": 2, "columns": ["Tuesday", "Rest or Light Walk", "-", "-"] },
+        { "id": 3, "columns": ["Wednesday", "Interval Training", "6 km", "35 min"] },
+        { "id": 4, "columns": ["Thursday", "Easy Run", "5 km", "32 min"] },
+        { "id": 5, "columns": ["Friday", "Rest", "-", "-"] },
+        { "id": 6, "columns": ["Saturday", "Long Run", "8-10 km", "55-65 min"] },
+        { "id": 7, "columns": ["Sunday", "Rest or Yoga", "-", "-"] }
+      ],
+      "columnWidths": ["w-1/4", "w-1/3", "w-1/5"],
+      "horizontalScroll": false
+    },
+    {
+      "title": "NUTRIENTS",
+      "icon": "/vectors/nutrients-icon.svg",
+      "tableData": [
+        { "id": 0, "columns": ["", "Calories", "Protein", "Carbs", "Fats"] },
+        { "id": 1, "columns": ["Breakfast", "480", "35g", "55g", "15g"] },
+        { "id": 2, "columns": ["Snack 1", "220", "20g", "18g", "8g"] },
+        { "id": 3, "columns": ["Lunch", "520", "45g", "45g", "18g"] },
+        { "id": 4, "columns": ["Snack 2", "250", "6g", "25g", "15g"] },
+        { "id": 5, "columns": ["Dinner", "380", "35g", "40g", "12g"] },
+        { "id": 6, "columns": ["Total", "1,850", "141g", "183g", "68g"] }
+      ],
+      "columnWidths": ["w-1/4", "w-1/6", "w-1/6", "w-1/6"],
+      "horizontalScroll": false
+    },
+    {
+      "title": "RECOMMENDED",
+      "icon": "/vectors/recomended-icon.svg",
+      "tableData": [
+        { "id": 1, "columns": ["Sleep Goal", "7.5 - 8.5 hours / night"] },
+        { "id": 2, "columns": ["Step Target", "10,000 - 12,000 steps daily"] },
+        { "id": 3, "columns": ["Strength Training", "3-4 sessions/week (Full body + Core focus)"] },
+        { "id": 4, "columns": ["Habit Checklist", "• Drink 3.5L water\n• No added sugar\n• 10k steps\n• Sleep before 11 PM"] },
+        { "id": 5, "columns": ["Motivation / Mindset", "Daily tip or quote (changes every day)"] }
+      ],
+      "columnWidths": ["w-2/5"],
+      "horizontalScroll": false
+    },
+    {
+      "title": "CHALLENGES",
+      "icon": "/vectors/challenges-icon.svg",
+      "tableData": [
+        { "id": 1, "columns": ["Daily", "Push-up Challenge", "Week 1: 50/day", "Week 2: 80/day", "Week 4: 150/day"] },
+        { "id": 2, "columns": ["Daily", "No Sugar Challenge", "7-day streak = new badge", "", ""], "columnWidths": ["120px", "180px", "160px", "160px", "160px"] },
+        { "id": 3, "columns": ["Daily", "Phone / Watch Steps", "Hit 25 days = Bonus points", "", ""], "columnWidths": ["120px", "180px", "160px", "160px", "160px"] },
+        { "id": 4, "columns": ["Daily", "Log 3.5L water", "Full month = Water trophy", "", ""], "columnWidths": ["120px", "180px", "160px", "160px", "160px"] },
+        { "id": 5, "columns": ["5 min / day", "Meditation or breathing", "Complete 20 days", "", ""], "columnWidths": ["120px", "180px", "160px", "160px", "160px"] }
+      ],
+      "columnWidths": ["120px", "180px", "160px", "160px", "160px"],
+      "horizontalScroll": true
+    },
+    {
+      "title": "SUPPLEMENTS",
+      "icon": "/vectors/suppliments-icon.svg",
+      "tableData": [
+        { "id": 1, "columns": ["Whey Protein", "Muscle recovery & growth", "25g", "Post-workout", ""] },
+        { "id": 2, "columns": ["Creatine Monohydrate", "Strength & performance", "5g", "Any time of day", ""], "columnWidths": ["120px", "180px", "160px", "160px", "160px"] },
+        { "id": 3, "columns": ["Omega-3 Fish Oil", "Joint & heart health", "1-2g", "With meals", ""], "columnWidths": ["120px", "180px", "160px", "160px", "160px"] },
+        { "id": 4, "columns": ["Vitamin D3", "Bone health & immunity", "1000-2000 IU", "With food", ""], "columnWidths": ["120px", "180px", "160px", "160px", "160px"] },
+        { "id": 5, "columns": ["Multivitamin", "Overall health", "1 tablet", "With breakfast", ""], "columnWidths": ["120px", "180px", "160px", "160px", "160px"] }
+      ],
+      "columnWidths": ["120px", "180px", "160px", "160px", "160px"],
+      "horizontalScroll": true
+    }
+  ]
+}

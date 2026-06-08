@@ -1,10 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import PromptBox from '@/components/PromptBox';
 import CustomButton from '@/components/CustomButton';
 import GoalsSection from '@/components/GoalsSection';
 import ViewPlanButton from '@/components/ViewPlanButton';
+import useMakePlan from '@/lib/hooks/useMakePlan';
+import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks';
+import { setPromptText, resetPlan } from '@/lib/redux/slices/planSlice';
 
 // Skeleton Component
 const Skeleton = ({ className = '' }: { className?: string }) => (
@@ -12,20 +16,25 @@ const Skeleton = ({ className = '' }: { className?: string }) => (
 );
 
 export default function PlannerPage() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [promptText, setPromptText] = useState('today running 13.8km with pace 6.5and im 92kg total time 1:12:34');
-  const [planGenerated, setPlanGenerated] = useState(false);
+  const router = useRouter();
+  const dispatch = useAppDispatch();
+  const { promptText, planGenerated, isGenerating } = useAppSelector((state) => state.plan);
+  const [localPromptText, setLocalPromptText] = useState('I want to lose 10kg in 30 days and I am 85kg now');
 
-  // Simulate loading
+  const { generatePlan } = useMakePlan(localPromptText);
+
+  // Initial load
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
-    return () => clearTimeout(timer);
+    dispatch(setPromptText(localPromptText));
   }, []);
 
-  const handleGoClick = () => {
-    setPlanGenerated(true);
+  const handleGoClick = async () => {
+    dispatch(setPromptText(localPromptText));
+    await generatePlan();
+  };
+
+  const handleViewPlanClick = () => {
+    router.push('/plan-detail');
   };
 
   // Base dimensions (original design)
@@ -61,10 +70,8 @@ export default function PlannerPage() {
             className="w-full border border-[#3B3B3B00] flex items-center justify-center overflow-hidden transition-all duration-500 ease-out"
             style={{ height: `${(row1Height / 874) * 100}%` }}
           >
-            {isLoading ? (
-              <Skeleton className="w-full h-full" />
-            ) : planGenerated ? (
-              <GoalsSection isLoading={isLoading} />
+            {isGenerating || planGenerated ? (
+              <GoalsSection isLoading={false} />
             ) : null}
           </div>
 
@@ -74,28 +81,40 @@ export default function PlannerPage() {
               className="w-full border border-[#3B3B3B00] flex items-center justify-center transition-all duration-500 ease-out overflow-hidden"
               style={{ height: `${(row3Height / 874) * 100}%` }}
             >
-              <ViewPlanButton isLoading={isLoading} />
+              <ViewPlanButton isLoading={false} onClick={handleViewPlanClick} />
             </div>
           )}
 
           {/* Row 2: 400 X (114 or 206) */}
-          {!planGenerated ? (
+          {!planGenerated && !isGenerating ? (
             <div 
               className="w-full border border-[#3B3B3B00] flex items-center justify-center relative transition-all duration-500 ease-out"
               style={{ height: `${(row2Height / 874) * 100}%` }}
             >
               <PromptBox
-                value={promptText}
-                onChange={setPromptText}
-                isLoading={isLoading}
+                value={localPromptText}
+                onChange={setLocalPromptText}
+                isLoading={false}
                 usePlannerStyle={true}
               />
             </div>
           ) : (
             <div 
-              className="w-full border border-[#3B3B3B00] transition-all duration-500 ease-out"
+              className="w-full border border-[#3B3B3B00] transition-all duration-500 ease-out flex items-center justify-center"
               style={{ height: `${(row2Height / 874) * 100}%` }}
-            />
+            >
+              {planGenerated && (
+                <p 
+                  className="text-white font-bold"
+                  style={{
+                    fontFamily: 'var(--font-hanalei-fill)',
+                    fontSize: 'calc((100vh * 0.95) * (24 / 874))',
+                  }}
+                >
+                  Plan is ready!
+                </p>
+              )}
+            </div>
           )}
 
           {/* Row 4: 400 X 206 - only when plan is generated (PromptBox moved here) */}
@@ -105,9 +124,9 @@ export default function PlannerPage() {
               style={{ height: `${(row4Height / 874) * 100}%` }}
             >
               <PromptBox
-                value={promptText}
-                onChange={setPromptText}
-                isLoading={isLoading}
+                value={localPromptText}
+                onChange={setLocalPromptText}
+                isLoading={false}
                 usePlannerStyle={true}
               />
             </div>
@@ -121,18 +140,14 @@ export default function PlannerPage() {
             <div 
               className="h-full border border-[#3B3B3B00] flex items-center justify-center"
               style={{ width: `${(176 / 400) * 100}%` }}
-            >
-              {isLoading ? (
-                <Skeleton className="w-20 sm:w-28 md:w-32 h-6 sm:h-8 md:h-10" />
-              ) : null}
-            </div>
+            />
             <div 
               className="h-full border border-[#3B3B3B00] flex items-center justify-center p-1 sm:p-2 relative"
               style={{ width: `${(226 / 400) * 100}%` }}
             >
               <CustomButton
                 text="GO"
-                isLoading={isLoading}
+                isLoading={isGenerating}
                 onClick={handleGoClick}
               />
             </div>
