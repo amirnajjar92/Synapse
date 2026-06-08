@@ -107,7 +107,7 @@ export default function PlanListPage() {
                 isLoading={isLoading} 
                 width="calc((100vh * 0.95) * (207 / 874))"
                 fontSize="calc((100vh * 0.95) * (42 / 874))"
-                mirrorY={true}
+                mirror={true}
               />
             </div>
             
@@ -134,7 +134,7 @@ export default function PlanListPage() {
                 isLoading={isLoading} 
                 width="calc((100vh * 0.95) * (144 / 874))"
                 fontSize="calc((100vh * 0.95) * (20 / 874))"
-                mirrorY={true}
+                mirror={true}
               />
             </div>
           </div>
