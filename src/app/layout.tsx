@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Hanalei_Fill } from "next/font/google";
+import { StoreProvider } from "@/lib/redux/StoreProvider";
 
 const hanaleiFill = Hanalei_Fill({
   weight: "400",
@@ -23,7 +24,7 @@ export default function RootLayout({
       <body
         className={`antialiased`}
       >
-        {children}
+        <StoreProvider>{children}</StoreProvider>
       </body>
     </html>
   );
