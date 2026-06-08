@@ -18,7 +18,7 @@ const PromptBox: React.FC<PromptBoxProps> = ({ value, onChange, isLoading }) => 
   }
 
   return (
-    <div className="w-full h-full relative transition-all duration-300 ease-out px-5">
+    <div className="w-full h-full relative transition-all duration-300 ease-out ">
       {/* Frame container */}
       <div className="absolute inset-0 flex items-center justify-center">
         <img
@@ -32,7 +32,7 @@ const PromptBox: React.FC<PromptBoxProps> = ({ value, onChange, isLoading }) => 
         <div 
           className="flex items-start justify-start p-2 sm:p-3 md:p-4 relative transition-all duration-200 shadow-lg hover:shadow-xl"
           style={{
-            width: `calc(${(327 / 400) * 100}% - 36px)`, // 18px gap on each side
+            width: 'calc(100% - 30px)', // 18px gap on each side
             height: `${(125 / 206) * 100}%`,
             backgroundColor: '#FFFFFF',
             borderRadius: '10px'
