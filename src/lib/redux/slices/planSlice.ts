@@ -125,6 +125,12 @@ const planSlice = createSlice({
         state.planGenerated = true;
       }
     },
+    setTableData: (
+      state,
+      action: PayloadAction<{ index: number; tableData: { id: string | number; columns: string[] }[] }>
+    ) => {
+      state.planTypes[action.payload.index].tableData = action.payload.tableData;
+    },
     resetPlan: (state) => {
       state.promptText = '';
       state.currentTableIndex = 0;
@@ -146,6 +152,7 @@ export const {
   setIsGenerating,
   setGenerationError,
   setPlanItemLoadingState,
+  setTableData,
   resetPlan,
 } = planSlice.actions;
 export default planSlice.reducer;
