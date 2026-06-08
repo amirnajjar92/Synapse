@@ -61,26 +61,26 @@
       "title": "CHALLENGES",
       "icon": "/vectors/challenges-icon.svg",
       "tableData": [
-        { "id": 1, "columns": ["Daily", "Push-up Challenge", "Week 1: 50/day", "Week 2: 80/day", "Week 4: 150/day"] },
-        { "id": 2, "columns": ["Daily", "No Sugar Challenge", "7-day streak = new badge", "", ""], "columnWidths": ["120px", "180px", "160px", "160px", "160px"] },
-        { "id": 3, "columns": ["Daily", "Phone / Watch Steps", "Hit 25 days = Bonus points", "", ""], "columnWidths": ["120px", "180px", "160px", "160px", "160px"] },
-        { "id": 4, "columns": ["Daily", "Log 3.5L water", "Full month = Water trophy", "", ""], "columnWidths": ["120px", "180px", "160px", "160px", "160px"] },
-        { "id": 5, "columns": ["5 min / day", "Meditation or breathing", "Complete 20 days", "", ""], "columnWidths": ["120px", "180px", "160px", "160px", "160px"] }
+        { "id": 1, "columns": ["Push-up Challenge", "Build upper body strength", "Daily", "Count total push-ups", "Week 1: 50/day → Week 4: 150/day"] },
+        { "id": 2, "columns": ["No Sugar Challenge", "Reduce cravings & improve energy", "Daily", "Mark days without added sugar", "7-day streak = new badge"] },
+        { "id": 3, "columns": ["10K Steps Challenge", "Increase daily movement", "Daily", "Phone / Watch steps", "Hit 25 days = Bonus points"] },
+        { "id": 4, "columns": ["Hydration Challenge", "Improve water intake habit", "Daily", "Log 3.5L water", "Full month = Water trophy"] },
+        { "id": 5, "columns": ["Mindfulness Challenge", "Reduce stress eating", "Daily", "Meditation or breathing", "Complete 20 days"] }
       ],
-      "columnWidths": ["120px", "180px", "160px", "160px", "160px"],
+      "columnWidths": ["160px", "160px", "100px", "180px", "200px"],
       "horizontalScroll": true
     },
     {
       "title": "SUPPLEMENTS",
       "icon": "/vectors/suppliments-icon.svg",
       "tableData": [
-        { "id": 1, "columns": ["Whey Protein", "Muscle recovery & growth", "25g", "Post-workout", ""] },
-        { "id": 2, "columns": ["Creatine Monohydrate", "Strength & performance", "5g", "Any time of day", ""], "columnWidths": ["120px", "180px", "160px", "160px", "160px"] },
-        { "id": 3, "columns": ["Omega-3 Fish Oil", "Joint & heart health", "1-2g", "With meals", ""], "columnWidths": ["120px", "180px", "160px", "160px", "160px"] },
-        { "id": 4, "columns": ["Vitamin D3", "Bone health & immunity", "1000-2000 IU", "With food", ""], "columnWidths": ["120px", "180px", "160px", "160px", "160px"] },
-        { "id": 5, "columns": ["Multivitamin", "Overall health", "1 tablet", "With breakfast", ""], "columnWidths": ["120px", "180px", "160px", "160px", "160px"] }
+        { "id": 1, "columns": ["Whey Protein", "Muscle recovery", "Daily", "25g", "Post-workout"] },
+        { "id": 2, "columns": ["Creatine", "Strength & performance", "Daily", "5g", "Any time"] },
+        { "id": 3, "columns": ["Omega-3", "Joint & heart health", "Daily", "1-2g", "With meals"] },
+        { "id": 4, "columns": ["Vitamin D3", "Bone health & immunity", "Daily", "1000-2000 IU", "With food"] },
+        { "id": 5, "columns": ["Multivitamin ", "Overall health", "Daily", "1 tablet", "Breakfast"] }
       ],
-      "columnWidths": ["120px", "180px", "160px", "160px", "160px"],
+      "columnWidths": ["160px", "160px", "100px", "180px", "200px"],
       "horizontalScroll": true
     }
   ]
