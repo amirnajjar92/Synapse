@@ -95,7 +95,7 @@ export default function PlanDetailPage() {
         { id: 2, columns: ["Creatine", "Strength & performance", "Daily", "5g", "Any time"] },
         { id: 3, columns: ["Omega-3", "Joint & heart health", "Daily", "1-2g", "With meals"] },
         { id: 4, columns: ["Vitamin D3", "Bone health & immunity", "Daily", "1000-2000 IU", "With food"] },
-        { id: 5, columns: ["Multivitamin", "Overall health", "Daily", "1 tablet", "Breakfast"] },
+        { id: 5, columns: ["Multivitamin ", "Overall health", "Daily", "1 tablet", "Breakfast"] },
       ],
       columnWidths: ["160px", "160px", "100px", "180px", "200px"],
       horizontalScroll: true
