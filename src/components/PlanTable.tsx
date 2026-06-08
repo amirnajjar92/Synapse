@@ -21,6 +21,7 @@ interface PlanTableProps {
   rowHeight?: string;
   onNext?: () => void;
   horizontalScroll?: boolean;
+  height?: string | number; // Height prop (can be CSS class like "h-full" or pixel value)
 }
 
 const PlanTable: React.FC<PlanTableProps> = ({ 
@@ -29,12 +30,17 @@ const PlanTable: React.FC<PlanTableProps> = ({
   isLoading,
   rowHeight = "h-16",
   onNext,
-  horizontalScroll = false
+  horizontalScroll = false,
+  height
 }) => {
+  // Determine the height style/class
+  const isHeightClass = typeof height === "string" && (height.startsWith("h-"));
+  const containerStyle = typeof height === "string" && !isHeightClass ? { height } : (typeof height === "number" ? { height: `${height}px` } : {});
+  
   return (
-    <div className="w-full h-full flex flex-col">
+    <div className={`w-full flex flex-col ${isHeightClass ? height : "h-full"}`} style={containerStyle}>
       {/* Table scroll container */}
-      <div className={`flex-1 ${horizontalScroll ? "overflow-x-auto overflow-y-hidden" : "overflow-y-auto"}`}>
+      <div className={`flex-1 min-h-0 overflow-hidden ${horizontalScroll ? "overflow-x-auto overflow-y-auto" : "overflow-y-auto"}`}>
         {isLoading ? (
           <div className="w-full h-full flex flex-col gap-2 p-3">
             {Array.from({ length: data.length > 0 ? data.length : 6 }).map((_, index) => (
@@ -42,13 +48,13 @@ const PlanTable: React.FC<PlanTableProps> = ({
             ))}
           </div>
         ) : (
-          <div className={`flex flex-col text-gray-300 text-xs sm:text-sm md:text-base font-light ${horizontalScroll ? "min-w-max" : ""}`}>
+          <div className={`inline-flex flex-col text-gray-300 text-xs sm:text-sm md:text-base font-light min-h-full ${horizontalScroll ? "min-w-max" : "w-full"}`}>
             {data.map((row, rowIndex) => {
               const isLastRow = rowIndex === data.length - 1;
               return (
                 <div 
                   key={row.id} 
-                  className={`flex ${!isLastRow ? "border-b border-gray-600" : ""}`}
+                  className={`flex ${!isLastRow ? "border-b border-gray-600" : ""} flex-1 w-full`}
                 >
                   {row.columns.map((cell, colIndex) => {
                     const isLastCol = colIndex === row.columns.length - 1;
