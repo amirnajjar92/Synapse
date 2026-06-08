@@ -76,7 +76,7 @@ export default function PlanListPage() {
               planItems.map((item) => (
                 <div 
                   key={item.id} 
-                  className="flex items-center justify-between p-2 sm:p-3 bg-[#2c2c2c] rounded-lg border border-gray-600 transition-all duration-200 hover:bg-gray-700/50 cursor-pointer"
+                  className="flex items-center justify-between p-2 sm:p-3 bg-[#FFFFFF07] rounded-lg  transition-all duration-200 hover:bg-gray-700/50 cursor-pointer"
                 >
                   <h3 
                     className="text-white font-bold"
