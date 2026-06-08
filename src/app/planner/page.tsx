@@ -88,6 +88,7 @@ export default function PlannerPage() {
                 value={promptText}
                 onChange={setPromptText}
                 isLoading={isLoading}
+                usePlannerStyle={true}
               />
             </div>
           ) : (
@@ -107,6 +108,7 @@ export default function PlannerPage() {
                 value={promptText}
                 onChange={setPromptText}
                 isLoading={isLoading}
+                usePlannerStyle={true}
               />
             </div>
           )}
