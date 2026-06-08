@@ -1,30 +1,30 @@
 export interface MealPlanItem {
-  id: string;
+  id: string | number;
   columns: string[];
 }
 
 export interface CardioPlanItem {
-  id: string;
+  id: string | number;
   columns: string[];
 }
 
 export interface NutrientsPlanItem {
-  id: string;
+  id: string | number;
   columns: string[];
 }
 
 export interface RecommendedPlanItem {
-  id: string;
+  id: string | number;
   columns: string[];
 }
 
 export interface ChallengesPlanItem {
-  id: string;
+  id: string | number;
   columns: string[];
 }
 
 export interface SupplementsPlanItem {
-  id: string;
+  id: string | number;
   columns: string[];
 }
 

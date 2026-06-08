@@ -22,7 +22,8 @@ export default function PlanDetailPage() {
 
   // Handle next button click
   const handleNextTable = () => {
-    dispatch(setCurrentTableIndex((prev) => (prev + 1) % planTypes.length));
+    const nextIndex = (currentTableIndex + 1) % planTypes.length;
+    dispatch(setCurrentTableIndex(nextIndex));
   };
 
   // Handle back button click

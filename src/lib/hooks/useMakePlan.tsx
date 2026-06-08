@@ -43,16 +43,14 @@ const useMakePlan = (userPrompt: string, autoRun = false) => {
       dispatch(setIsGenerating(true));
       dispatch(setGenerationError(null));
 
-      const apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
-      const apiUrl = process.env.NEXT_PUBLIC_OPENAI_API_URL;
-
-      // For testing: use mock data if API key not present
-      const useMockData = !apiKey || !apiUrl;
+      // Use proxy endpoint
+      const apiUrl = 'https://moole-back.vercel.app/ask-moole';
+      
+      // For testing: use mock data if proxy endpoint fails (fallback)
+      const useMockData = false; // Set to true if you want to use mock data directly
       if (useMockData) {
-        console.log('Using mock plan data (no API key set)');
-        // For mock data, simulate AI call with 2s delay
+        console.log('Using mock plan data (fallback mode)');
         await new Promise((resolve) => setTimeout(resolve, 2000));
-        // Convert mock planTypes to GeneratedPlan (for consistency)
         const mockGeneratedPlan: GeneratedPlan = {
           meals: mockPlan.planTypes[0].tableData,
           cardio: mockPlan.planTypes[1].tableData,
@@ -66,37 +64,28 @@ const useMakePlan = (userPrompt: string, autoRun = false) => {
         return { answer: JSON.stringify(mockGeneratedPlan), error: null };
       }
 
-      const res = await fetch(apiUrl || 'https://api.openai.com/v1/chat/completions', {
+      const res = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [
-            {
-              role: 'system',
-              content:
-                'You are a fitness and nutrition expert that generates comprehensive, structured plans. You ONLY respond with valid JSON, no extra text, no markdown, just clean JSON.',
-            },
-            {
-              role: 'user',
-              content: prompt,
-            },
-          ],
-          temperature: 0.7,
+          question: prompt,
         }),
       });
 
       if (!res.ok) {
         const errorData = await res.text();
-        console.error('OpenAI API error:', res.status, errorData);
+        console.error('Proxy API error:', res.status, errorData);
         throw new Error(`Failed to get plan from AI: ${res.status} ${res.statusText}`);
       }
 
       const data = await res.json();
-      const answer = data.choices?.[0]?.message?.content;
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      const answer = data.answer;
 
       if (answer) {
         const filtered = filterResponse(answer);
@@ -128,9 +117,13 @@ const useMakePlan = (userPrompt: string, autoRun = false) => {
       return;
     }
 
-    const prompt = `Generate a comprehensive fitness and nutrition plan based on this user request: ${userPrompt}
+    // Combine system instruction and user prompt into one question for proxy
+    const systemPrompt = `You are a fitness and nutrition expert that generates comprehensive, structured plans. You ONLY respond with valid JSON, no extra text, no markdown, just clean JSON.`;
+    const prompt = `${systemPrompt}
 
-Return ONLY a JSON object in the following exact format, no extra text, no markdown, just JSON:
+Generate a comprehensive fitness and nutrition plan based on this user request: ${userPrompt}
+
+Return ONLY a JSON object in the following exact format, no extra characters, no text, no markdown, just JSON:
 {
   "meals": [
     { "id": "1", "columns": ["Breakfast", "08:00", "Details with protein, carbs, etc."] },
@@ -161,12 +154,12 @@ Return ONLY a JSON object in the following exact format, no extra text, no markd
   "recommended": [
     { "id": "1", "columns": ["Sleep Goal", "7.5 - 8.5 hours per night"] },
     { "id": "2", "columns": ["Step Target", "10,000 - 12,000 steps daily"] },
-    { "id": "3", "columns": ["Strength Training", "3-4 sessions per week (Full body + Core focus)"] },
+    { "id": "3", "columns": ["Strength Training", "3-4 sessions/week (Full body + Core focus)"] },
     { "id": "4", "columns": ["Habit Checklist", "• Drink 3.5L water\n• No added sugar\n• 10k steps\n• Sleep before 11 PM"] },
     { "id": "5", "columns": ["Motivation / Mindset", "Daily positive affirmation or quote"] }
   ],
   "challenges": [
-    { "id": "1", "columns": ["Daily", "Push-up Challenge", "Week 1: 50/day", "Week 2: 80/day", "Week 4: 150/day"] },
+    { "id": "1", "columns": ["Daily", "Push-up Challenge", "Week 1: 50/day", "Week 4: 150/day"] },
     { "id": "2", "columns": ["Daily", "No Sugar Challenge", "7-day streak = new badge", "", ""], "columnWidths": ["120px", "180px", "160px", "160px", "160px"] },
     { "id": "3", "columns": ["Daily", "Phone / Watch Steps", "Hit 25 days = Bonus points", "", ""], "columnWidths": ["120px", "180px", "160px", "160px", "160px"] },
     { "id": "4", "columns": ["Daily", "Log 3.5L water", "Full month = Water trophy", "", ""], "columnWidths": ["120px", "180px", "160px", "160px", "160px"] },
