@@ -7,6 +7,7 @@ import CustomButton from '@/components/CustomButton';
 import GoalsSection from '@/components/GoalsSection';
 import ViewPlanButton from '@/components/ViewPlanButton';
 import useMakePlan from '@/lib/hooks/useMakePlan';
+import usePromptEnhancer from '@/lib/hooks/usePromptEnhancer';
 import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks';
 import { setPromptText, resetPlan } from '@/lib/redux/slices/planSlice';
 
@@ -20,8 +21,10 @@ export default function PlannerPage() {
   const dispatch = useAppDispatch();
   const { promptText, planGenerated, isGenerating } = useAppSelector((state) => state.plan);
   const [localPromptText, setLocalPromptText] = useState('I want to lose 10kg in 30 days and I am 85kg now');
+  const [enhancedPromptText, setEnhancedPromptText] = useState('I want to lose 10kg in 30 days and I am 85kg now');
 
-  const { generatePlan } = useMakePlan(localPromptText);
+  const { enhancePrompt } = usePromptEnhancer();
+  const { generatePlan } = useMakePlan(enhancedPromptText);
 
   // Initial load
   useEffect(() => {
@@ -29,6 +32,12 @@ export default function PlannerPage() {
   }, []);
 
   const handleGoClick = async () => {
+    console.log('=== Prompt Enhancer ===');
+    console.log('Original prompt:', localPromptText);
+    const enhanced = await enhancePrompt(localPromptText);
+    console.log('Enhanced prompt:', enhanced);
+    console.log('=======================');
+    setEnhancedPromptText(enhanced);
     dispatch(setPromptText(localPromptText));
     await generatePlan();
   };

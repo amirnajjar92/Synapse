@@ -48,40 +48,41 @@ const PlanTable: React.FC<PlanTableProps> = ({
             ))}
           </div>
         ) : (
-          <div className={`inline-flex flex-col text-gray-300 text-xs sm:text-sm md:text-base font-light min-h-full ${horizontalScroll ? "min-w-max" : "w-full"}`}>
-            {data.map((row, rowIndex) => {
-              const isLastRow = rowIndex === data.length - 1;
-              return (
-                <div 
-                  key={row.id} 
-                  className={`flex ${!isLastRow ? "border-b border-gray-600" : ""} flex-1 w-full`}
-                >
-                  {row.columns.map((cell, colIndex) => {
-                    const isLastCol = colIndex === row.columns.length - 1;
-                    const widthVal = columnWidths && columnWidths[colIndex];
-                    const hasTailwindWidth = widthVal && (widthVal.startsWith("w-") || widthVal.includes("/"));
-                    const isPixelWidth = widthVal && widthVal.endsWith("px");
-                    
-                    return (
-                      <div
-                        key={`${row.id}-${colIndex}`}
-                        className={`p-2 sm:p-3 md:p-4 ${!isLastCol ? "border-r border-gray-600" : ""} ${hasTailwindWidth ? widthVal : ""} flex items-center`}
-                        style={{
-                          width: isPixelWidth ? widthVal : (!hasTailwindWidth && widthVal ? widthVal : undefined),
-                          minWidth: isPixelWidth ? widthVal : (horizontalScroll ? "150px" : undefined),
-                          flex: !hasTailwindWidth && !isPixelWidth ? 1 : undefined,
-                        }}
-                      >
-                        {cell.split('\n').map((line, i) => (
-                          <div key={i}>{line}</div>
-                        ))}
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })}
-          </div>
+          <table className={`text-gray-300 text-xs sm:text-sm md:text-base font-light min-h-full ${horizontalScroll ? "min-w-max" : "w-full"} table-fixed`}>
+            <tbody>
+              {data.map((row, rowIndex) => {
+                const isLastRow = rowIndex === data.length - 1;
+                return (
+                  <tr 
+                    key={row.id} 
+                    className={`${!isLastRow ? "border-b border-gray-600" : ""}`}
+                  >
+                    {row.columns.map((cell, colIndex) => {
+                      const isLastCol = colIndex === row.columns.length - 1;
+                      const widthVal = columnWidths && columnWidths[colIndex];
+                      const hasTailwindWidth = widthVal && (widthVal.startsWith("w-") || widthVal.includes("/"));
+                      const isPixelWidth = widthVal && widthVal.endsWith("px");
+                      
+                      return (
+                        <td
+                          key={`${row.id}-${colIndex}`}
+                          className={`p-2 sm:p-3 md:p-4 ${!isLastCol ? "border-r border-gray-600" : ""} ${hasTailwindWidth ? widthVal : ""} align-middle`}
+                          style={{
+                            width: isPixelWidth ? widthVal : (!hasTailwindWidth && widthVal ? widthVal : undefined),
+                            minWidth: isPixelWidth ? widthVal : (horizontalScroll ? "150px" : undefined),
+                          }}
+                        >
+                          {cell.split('\n').map((line, i) => (
+                            <div key={i}>{line}</div>
+                          ))}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         )}
       </div>
       
