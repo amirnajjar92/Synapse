@@ -368,14 +368,19 @@ RULES:
     };
 
     try {
+      console.log('Attempting to save plan with data:', planData);
       const response = await fetch('/api/plans', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(planData),
       });
-      if (!response.ok) throw new Error('Failed to save plan');
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Save plan failed with status:', response.status, 'Error text:', errorText);
+        throw new Error(`Failed to save plan: ${response.status} - ${errorText}`);
+      }
       const data = await response.json();
-      console.log('Plan saved:', data.plan);
+      console.log('Plan saved successfully:', data.plan);
       return data.plan;
     } catch (error) {
       console.error('Error saving plan:', error);
