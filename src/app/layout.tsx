@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Hanalei_Fill } from "next/font/google";
 import { StoreProvider } from "@/lib/redux/StoreProvider";
+import { SessionProvider } from "next-auth/react";
 
 const hanaleiFill = Hanalei_Fill({
   weight: "400",
@@ -24,7 +25,9 @@ export default function RootLayout({
       <body
         className={`antialiased`}
       >
-        <StoreProvider>{children}</StoreProvider>
+        <SessionProvider>
+          <StoreProvider>{children}</StoreProvider>
+        </SessionProvider>
       </body>
     </html>
   );
