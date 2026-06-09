@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks';
+import { useAppDispatch } from '@/lib/redux/hooks';
+import { store } from '@/lib/redux/store';
 import {
   setIsGenerating,
   setGenerationError,
@@ -331,6 +332,10 @@ RULES:
 
     // Mark overall generation as complete
     dispatch(setIsGenerating(false));
+    
+    // Auto-save the plan!
+    const planState = store.getState().plan;
+    savePlan({ planTypes: planState.planTypes, promptText: userPrompt });
   };
 
   const resetPlan = () => {
