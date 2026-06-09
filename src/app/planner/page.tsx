@@ -6,6 +6,7 @@ import PromptBox from '@/components/PromptBox';
 import CustomButton from '@/components/CustomButton';
 import GoalsSection from '@/components/GoalsSection';
 import ViewPlanButton from '@/components/ViewPlanButton';
+import ChatRow from '@/components/ChatRow';
 import useMakePlan from '@/lib/hooks/useMakePlan';
 import usePromptEnhancer from '@/lib/hooks/usePromptEnhancer';
 import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks';
@@ -91,14 +92,14 @@ export default function PlannerPage() {
   const baseWidth = 402;
   const baseHeight = 874;
 
-  // Dynamic dimensions based on state
-  const row1Height = planGenerated ? 370 : 151; // Half of original 302
-  const chatRowHeight = showChat && !planGenerated ? 151 : 0; // Half for chat
+  // Dynamic dimensions based on state (original heights)
+  const row1Height = planGenerated ? 370 : 302;
   const row2Height = planGenerated ? 114 : 206;
   const row3Height = planGenerated ? 106 : 52;
   const row4Height = planGenerated ? 206 : 0;
   const row5Height = planGenerated ? 52 : 0;
   const row6Height = planGenerated ? 30 : 0;
+  const chatRowHeight = showChat ? (planGenerated ? row2Height : 100) : 0; // Chat row height
 
   return (
     <div className="w-full h-screen bg-[#151515] flex items-center justify-center p-2 sm:p-4">
@@ -116,7 +117,7 @@ export default function PlannerPage() {
           className="w-full h-full flex flex-col"
           style={{ backgroundColor: '#0b0b0bff' }}
         >
-          {/* Row 1: 400 X (370 or 151) */}
+          {/* Row 1: 400 X (370 or 302) - ORIGINAL HEIGHT */}
           <div 
             className="w-full border border-[#3B3B3B00] flex items-center justify-center overflow-hidden transition-all duration-500 ease-out"
             style={{ height: `${(row1Height / 874) * 100}%` }}
@@ -126,41 +127,6 @@ export default function PlannerPage() {
             ) : null}
           </div>
 
-          {/* Chat Row: 400 X 151 only when showChat and not planGenerated */}
-          {showChat && !planGenerated && (
-            <div 
-              className="w-full border border-[#3B3B3B00] flex flex-col items-center overflow-hidden transition-all duration-500 ease-out"
-              style={{ height: `${(chatRowHeight / 874) * 100}%` }}
-            >
-              <div className="w-full h-full flex flex-col p-3 sm:p-4 md:p-6">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                      <path d="M12 17h.01" />
-                      <circle cx="12" cy="12" r="10" />
-                    </svg>
-                  </div>
-                  <h3 className="text-white font-semibold text-sm sm:text-base">AI Thought Process</h3>
-                </div>
-                <div className="flex-1 overflow-y-auto space-y-2">
-                  {chatMessages.map((msg, index) => (
-                    <div 
-                      key={index}
-                      className={`p-2 rounded-lg text-xs sm:text-sm transition-all duration-300 ease-out ${
-                        msg.startsWith('User:') 
-                          ? 'bg-blue-600/20 text-blue-200 ml-4' 
-                          : 'bg-gray-700/30 text-gray-200 mr-4'
-                      }`}
-                    >
-                      {msg}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Row 3: 400 X (106 or 52) - VIEW PLAN BUTTON (Moved up) */}
           {planGenerated && (
             <div 
@@ -169,6 +135,14 @@ export default function PlannerPage() {
             >
               <ViewPlanButton isLoading={false} onClick={handleViewPlanClick} />
             </div>
+          )}
+
+          {/* Chat Row (after first GO click, always shown) */}
+          {showChat && (
+            <ChatRow 
+              targetHeight={`${(chatRowHeight / 874) * 100}%`} 
+              chatMessages={chatMessages} 
+            />
           )}
 
           {/* Row 2: 400 X (114 or 206) */}
@@ -185,27 +159,27 @@ export default function PlannerPage() {
               />
             </div>
           ) : (
-            <div 
-              className="w-full border border-[#3B3B3B00] transition-all duration-500 ease-out flex flex-col items-start justify-center px-4 sm:px-6 md:px-8"
-              style={{ height: `${(row2Height / 874) * 100}%` }}
-            >
-              {planGenerated && (
-                <>
-                  <p 
-                    className="text-white font-bold mb-2"
-                    style={{
-                      fontFamily: 'var(--font-hanalei-fill)',
-                      fontSize: 'calc((100vh * 0.95) * (24 / 874))',
-                    }}
-                  >
-                    Plan is ready!
-                  </p>
-                  <p className="text-gray-300 text-xs sm:text-sm md:text-base font-light">
-                    Personalized plan prepared just for you! Tap "View Plan" to see all details.
-                  </p>
-                </>
-              )}
-            </div>
+            planGenerated ? (
+              // Show nothing here because ChatRow is already shown (we can uncomment the original later if needed)
+              null
+            ) : null
+            // Original "Plan is ready!" row (commented out for now):
+            // <div 
+            //   className="w-full border border-[#3B3B3B00] transition-all duration-500 ease-out flex items-center justify-center"
+            //   style={{ height: `${(row2Height / 874) * 100}%` }}
+            // >
+            //   {planGenerated && (
+            //     <p 
+            //       className="text-white font-bold"
+            //       style={{
+            //         fontFamily: 'var(--font-hanalei-fill)',
+            //         fontSize: 'calc((100vh * 0.95) * (24 / 874))',
+            //       }}
+            //     >
+            //       Plan is ready!
+            //     </p>
+            //   )}
+            // </div>
           )}
 
           {/* Row 4: 400 X 206 - only when plan is generated (PromptBox moved here) */}
@@ -224,25 +198,34 @@ export default function PlannerPage() {
           )}
 
           {/* Row 5: 176 X 52 + 226 X 52 */}
-          <div 
-            className="flex w-full border border-[#3B3B3B00] transition-all duration-300"
-            style={{ height: `${(52 / 874) * 100}%` }}
-          >
+          {!isGenerating && (
             <div 
-              className="h-full border border-[#3B3B3B00] flex items-center justify-center"
-              style={{ width: `${(176 / 400) * 100}%` }}
-            />
-            <div 
-              className="h-full border border-[#3B3B3B00] flex items-center justify-center p-1 sm:p-2 relative"
-              style={{ width: `${(226 / 400) * 100}%` }}
+              className="flex w-full border border-[#3B3B3B00] transition-all duration-300"
+              style={{ height: `${(52 / 874) * 100}%` }}
             >
-              <CustomButton
-                text="GO"
-                isLoading={isGenerating}
-                onClick={handleGoClick}
+              <div 
+                className="h-full border border-[#3B3B3B00] flex items-center justify-center"
+                style={{ width: `${(176 / 400) * 100}%` }}
               />
+              <div 
+                className="h-full border border-[#3B3B3B00] flex items-center justify-center p-1 sm:p-2 relative"
+                style={{ width: `${(226 / 400) * 100}%` }}
+              >
+                <CustomButton
+                  text="GO"
+                  isLoading={false}
+                  onClick={handleGoClick}
+                />
+              </div>
             </div>
-          </div>
+          )}
+          {/* Empty div to preserve layout while generating */}
+          {isGenerating && (
+            <div 
+              className="flex w-full border border-[#3B3B3B00]"
+              style={{ height: `${(52 / 874) * 100}%` }}
+            />
+          )}
 
           {/* Row 6: 400 X 30 - only when plan is generated */}
           {planGenerated && (

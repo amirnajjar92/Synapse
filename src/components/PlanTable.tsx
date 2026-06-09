@@ -41,49 +41,42 @@ const PlanTable: React.FC<PlanTableProps> = ({
     <div className={`w-full flex flex-col ${isHeightClass ? height : "h-full"}`} style={containerStyle}>
       {/* Table scroll container */}
       <div className={`flex-1 min-h-0 overflow-hidden ${horizontalScroll ? "overflow-x-auto overflow-y-auto" : "overflow-y-auto"}`}>
-        {isLoading ? (
-          <div className="w-full h-full flex flex-col gap-2 p-3">
-            {Array.from({ length: data.length > 0 ? data.length : 6 }).map((_, index) => (
-              <Skeleton key={index} className={`w-full ${rowHeight}`} />
-            ))}
-          </div>
-        ) : (
-          <table className={`text-gray-300 text-xs sm:text-sm md:text-base font-light min-h-full ${horizontalScroll ? "min-w-max" : "w-full"} table-fixed`}>
-            <tbody>
-              {data.map((row, rowIndex) => {
-                const isLastRow = rowIndex === data.length - 1;
-                return (
-                  <tr 
-                    key={row.id} 
-                    className={`${!isLastRow ? "border-b border-gray-600" : ""}`}
-                  >
-                    {row.columns.map((cell, colIndex) => {
-                      const isLastCol = colIndex === row.columns.length - 1;
-                      const widthVal = columnWidths && columnWidths[colIndex];
-                      const hasTailwindWidth = widthVal && (widthVal.startsWith("w-") || widthVal.includes("/"));
-                      const isPixelWidth = widthVal && widthVal.endsWith("px");
-                      
-                      return (
-                        <td
-                          key={`${row.id}-${colIndex}`}
-                          className={`p-2 sm:p-3 md:p-4 ${!isLastCol ? "border-r border-gray-600" : ""} ${hasTailwindWidth ? widthVal : ""} align-middle`}
-                          style={{
-                            width: isPixelWidth ? widthVal : (!hasTailwindWidth && widthVal ? widthVal : undefined),
-                            minWidth: isPixelWidth ? widthVal : (horizontalScroll ? "150px" : undefined),
-                          }}
-                        >
-                          {cell.split('\n').map((line, i) => (
-                            <div key={i}>{line}</div>
-                          ))}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
+        {/* No skeleton while generating, show the table directly */}
+        <table className={`text-gray-300 text-xs sm:text-sm md:text-base font-light min-h-full ${horizontalScroll ? "min-w-max" : "w-full"} table-fixed`}>
+          <tbody>
+            {data.map((row, rowIndex) => {
+              const isLastRow = rowIndex === data.length - 1;
+              return (
+                <tr 
+                  key={row.id} 
+                  className={`${!isLastRow ? "border-b border-gray-600" : ""}`}
+                >
+                  {row.columns.map((cell, colIndex) => {
+                    const isLastCol = colIndex === row.columns.length - 1;
+                    const widthVal = columnWidths && columnWidths[colIndex];
+                    const hasTailwindWidth = widthVal && (widthVal.startsWith("w-") || widthVal.includes("/"));
+                    const isPixelWidth = widthVal && widthVal.endsWith("px");
+                    
+                    return (
+                      <td
+                        key={`${row.id}-${colIndex}`}
+                        className={`p-2 sm:p-3 md:p-4 ${!isLastCol ? "border-r border-gray-600" : ""} ${hasTailwindWidth ? widthVal : ""} align-middle`}
+                        style={{
+                          width: isPixelWidth ? widthVal : (!hasTailwindWidth && widthVal ? widthVal : undefined),
+                          minWidth: isPixelWidth ? widthVal : (horizontalScroll ? "150px" : undefined),
+                        }}
+                      >
+                        {cell.split('\n').map((line, i) => (
+                          <div key={i}>{line}</div>
+                        ))}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
       
       {/* Next button (if provided) */}

@@ -61,30 +61,24 @@ export default function PlanDetailPage() {
             className="w-full border border-[#3B3B3B00] flex items-center justify-between px-3 sm:px-4 md:px-6 transition-all duration-300"
             style={{ height: `${(headerHeight / baseHeight) * 100}%` }}
           >
-            {isGenerating ? (
-              <div className="flex items-center justify-between w-full px-2">
-                <Skeleton className="w-1/2 h-10" />
-                <Skeleton className="w-16 h-16 sm:w-20 sm:h-20" />
-              </div>
-            ) : (
-              <>
-                <h2 
-                  className="text-white font-bold"
-                  style={{ 
-                    fontFamily: 'var(--font-hanalei-fill)', 
-                    fontSize: 'calc((100vh * 0.95) * (36 / 874))',
-                    lineHeight: '1'
-                  }}
-                >
-                  {currentPlan.title}
-                </h2>
-                <img 
-                  src={currentPlan.icon} 
-                  alt={`${currentPlan.title} Icon`} 
-                  className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 object-contain"
-                />
-              </>
-            )}
+            {/* No skeletons while generating, show the header directly */}
+            <>
+              <h2 
+                className="text-white font-bold"
+                style={{ 
+                  fontFamily: 'var(--font-hanalei-fill)', 
+                  fontSize: 'calc((100vh * 0.95) * (36 / 874))',
+                  lineHeight: '1'
+                }}
+              >
+                {currentPlan.title}
+              </h2>
+              <img 
+                src={currentPlan.icon} 
+                alt={`${currentPlan.title} Icon`} 
+                className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 object-contain"
+              />
+            </>
           </div>
 
           {/* Row 2: Table Section - 400 X 360 */}

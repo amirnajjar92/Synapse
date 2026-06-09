@@ -76,19 +76,16 @@ const GoalsSection: React.FC<GoalsSectionProps> = ({ isLoading }) => {
               {item}
             </span>
             <div className="col-span-1 flex items-center justify-center">
-              {planItemLoadingStates[index] ? (
-                <Spinner className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8" />
-              ) : (
-                <svg 
-                  width="20" 
-                  height="20" 
-                  viewBox="0 0 24 24" 
-                  fill="none"
-                  className="sm:w-6 sm:h-6 md:w-8 md:h-8"
-                >
-                  <path d="M5 12L10 17L20 7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              )}
+              {/* Always show checkmark, no spinner while generating */}
+              <svg 
+                width="20" 
+                height="20" 
+                viewBox="0 0 24 24" 
+                fill="none"
+                className="sm:w-6 sm:h-6 md:w-8 md:h-8"
+              >
+                <path d="M5 12L10 17L20 7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </div>
           </div>
         ))}

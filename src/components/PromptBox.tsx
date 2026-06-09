@@ -14,9 +14,10 @@ const Skeleton = ({ className = '' }: { className?: string }) => (
 );
 
 const PromptBox: React.FC<PromptBoxProps> = ({ value, onChange, isLoading, usePlannerStyle = false }) => {
-  if (isLoading) {
-    return <Skeleton className="w-full h-full rounded-lg" />;
-  }
+  // Don't show skeleton while generating, show the input directly
+  // if (isLoading) {
+  //   return <Skeleton className="w-full h-full rounded-lg" />;
+  // }
 
   return (
     <div className="w-full h-full relative transition-all duration-300 ease-out ">
