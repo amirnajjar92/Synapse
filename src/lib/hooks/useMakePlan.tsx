@@ -349,7 +349,35 @@ RULES:
     }
   }, [autoRun, userPrompt]);
 
-  return { generatePlan, resetPlan };
+  const savePlan = async ({ planTypes, promptText }: { planTypes: any[]; promptText: string }) => {
+    if (!planTypes) return;
+
+    const planData = {
+      title: promptText || 'Personalized Plan',
+      prompt: promptText,
+      icon: '/vectors/plan-icon.svg',
+      tables: planTypes.map((pt) => ({
+        title: pt.title,
+        rows: pt.tableData,
+      })),
+    };
+
+    try {
+      const response = await fetch('/api/plans', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(planData),
+      });
+      if (!response.ok) throw new Error('Failed to save plan');
+      const data = await response.json();
+      console.log('Plan saved:', data.plan);
+      return data.plan;
+    } catch (error) {
+      console.error('Error saving plan:', error);
+    }
+  };
+
+  return { generatePlan, resetPlan, savePlan };
 };
 
 export default useMakePlan;
