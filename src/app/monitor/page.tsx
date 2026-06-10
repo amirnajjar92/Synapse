@@ -162,7 +162,7 @@ export default function MonitorPage() {
 
           {/* Row 6: 200x113 (12.93% height) */}
           <div className="flex w-full h-[12.93%]">
-            <div className="w-1/2 h-full border border-[#3B3B3B] flex flex-col p-2 sm:p-3 md:p-4 overflow-hidden">
+            <div className=" w-1/2 h-full border border-[#3B3B3B] flex flex-col p-2 sm:p-3 md:p-4 overflow-hidden">
               {isLoading ? (
                 <Skeleton className="w-full h-full" />
               ) : (
