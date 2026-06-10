@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
-import { auth } from '@/../auth'
+import { getServerSession } from 'next-auth/next'
+import { authOptions } from '@/../auth'
 import prisma from '@/lib/db'
 
-export async function GET() {
-  const session = await auth()
+export async function GET(request: Request) {
+  const session = await getServerSession(authOptions)
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
@@ -19,7 +20,7 @@ export async function GET() {
 export async function POST(request: Request) {
   console.log('POST /api/plans request received');
   try {
-    const session = await auth()
+    const session = await getServerSession(authOptions)
     console.log('Session:', session);
     
     if (!session?.user?.email) {
