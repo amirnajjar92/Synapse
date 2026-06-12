@@ -16,6 +16,7 @@ export interface PlanType {
 interface PlanState {
   promptText: string;
   enhancedPromptText: string;
+  promptHistory: string[];
   currentTableIndex: number;
   planGenerated: boolean;
   generatedPlan: GeneratedPlan | null;
@@ -28,6 +29,7 @@ interface PlanState {
 const initialState: PlanState = {
   promptText: '',
   enhancedPromptText: '',
+  promptHistory: [],
   currentTableIndex: 0,
   planGenerated: false,
   generatedPlan: null,
@@ -92,6 +94,16 @@ const planSlice = createSlice({
     setPromptText: (state, action: PayloadAction<string>) => {
       state.promptText = action.payload;
     },
+    addPromptToHistory: (state, action: PayloadAction<string>) => {
+      // Add only if not already in history
+      if (!state.promptHistory.includes(action.payload)) {
+        state.promptHistory.unshift(action.payload);
+        // Keep only last 20 prompts
+        if (state.promptHistory.length > 20) {
+          state.promptHistory.pop();
+        }
+      }
+    },
     setEnhancedPromptText: (state, action: PayloadAction<string>) => {
       state.enhancedPromptText = action.payload;
     },
@@ -139,6 +151,7 @@ const planSlice = createSlice({
     resetPlan: (state) => {
       state.promptText = '';
       state.enhancedPromptText = '';
+      state.promptHistory = [];
       state.currentTableIndex = 0;
       state.planGenerated = false;
       state.generatedPlan = null;
@@ -152,6 +165,7 @@ const planSlice = createSlice({
 
 export const {
   setPromptText,
+  addPromptToHistory,
   setEnhancedPromptText,
   setCurrentTableIndex,
   setPlanGenerated,

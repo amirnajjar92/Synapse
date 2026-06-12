@@ -10,7 +10,7 @@ import ChatRow from '@/components/ChatRow';
 import useMakePlan from '@/lib/hooks/useMakePlan';
 import usePromptEnhancer from '@/lib/hooks/usePromptEnhancer';
 import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks';
-import { setPromptText, setEnhancedPromptText, resetPlan } from '@/lib/redux/slices/planSlice';
+import { setPromptText, setEnhancedPromptText, resetPlan, addPromptToHistory } from '@/lib/redux/slices/planSlice';
 
 // Skeleton Component
 const Skeleton = ({ className = '' }: { className?: string }) => (
@@ -85,6 +85,7 @@ export default function PlannerPage() {
     setLocalEnhancedPromptText(enhanced);
     dispatch(setPromptText(localPromptText));
     dispatch(setEnhancedPromptText(enhanced));
+    dispatch(addPromptToHistory(localPromptText));
     // Pass the actual current prompt to generatePlan
     await generatePlan(localPromptText);
     
