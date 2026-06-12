@@ -12,7 +12,7 @@ export const authOptions: AuthOptions = {
       clientSecret: process.env.AUTH_GOOGLE_SECRET as string,
     }),
     Credentials({
-      name: 'Test Credentials',
+      name: 'Test  Credentials',
       credentials: {
         email: { label: 'Email', type: 'text', placeholder: 'test@example.com' },
         password: { label: 'Password', type: 'password' },
