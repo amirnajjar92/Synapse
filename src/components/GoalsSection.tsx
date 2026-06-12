@@ -18,7 +18,7 @@ const Spinner = ({ className = '' }: { className?: string }) => (
 );
 
 const GoalsSection: React.FC<GoalsSectionProps> = ({ isLoading }) => {
-  const { planItemLoadingStates } = useAppSelector((state) => state.plan);
+  const { planItemLoadingStates, promptText } = useAppSelector((state) => state.plan);
 
   if (isLoading) {
     return <Skeleton className="w-full h-full" />;
@@ -32,6 +32,8 @@ const GoalsSection: React.FC<GoalsSectionProps> = ({ isLoading }) => {
     'Recomended',
     'Challenges',
   ];
+
+  const displayPrompt = promptText || 'Your fitness goal here';
 
   return (
     <div className="w-full h-full flex flex-col p-3 sm:p-4 md:p-6 transition-all duration-300 ease-out">
@@ -48,14 +50,8 @@ const GoalsSection: React.FC<GoalsSectionProps> = ({ isLoading }) => {
           GOALS
         </h2>
         <div className="border-l border-gray-500 pl-3 sm:pl-4 md:pl-6">
-          <p className="text-gray-300 text-xs sm:text-sm md:text-base font-light mb-1">
-            Lose 10 kg in 30 days
-          </p>
-          <p className="text-gray-300 text-xs sm:text-sm md:text-base font-light mb-1">
-            Starting Weight: 85 kg
-          </p>
           <p className="text-gray-300 text-xs sm:text-sm md:text-base font-light">
-            → Target: 75 kg
+            {displayPrompt}
           </p>
         </div>
       </div>

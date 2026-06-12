@@ -15,6 +15,7 @@ export interface PlanType {
 
 interface PlanState {
   promptText: string;
+  enhancedPromptText: string;
   currentTableIndex: number;
   planGenerated: boolean;
   generatedPlan: GeneratedPlan | null;
@@ -26,6 +27,7 @@ interface PlanState {
 
 const initialState: PlanState = {
   promptText: '',
+  enhancedPromptText: '',
   currentTableIndex: 0,
   planGenerated: false,
   generatedPlan: null,
@@ -90,6 +92,9 @@ const planSlice = createSlice({
     setPromptText: (state, action: PayloadAction<string>) => {
       state.promptText = action.payload;
     },
+    setEnhancedPromptText: (state, action: PayloadAction<string>) => {
+      state.enhancedPromptText = action.payload;
+    },
     setCurrentTableIndex: (state, action: PayloadAction<number>) => {
       state.currentTableIndex = action.payload;
     },
@@ -133,6 +138,7 @@ const planSlice = createSlice({
     },
     resetPlan: (state) => {
       state.promptText = '';
+      state.enhancedPromptText = '';
       state.currentTableIndex = 0;
       state.planGenerated = false;
       state.generatedPlan = null;
@@ -146,6 +152,7 @@ const planSlice = createSlice({
 
 export const {
   setPromptText,
+  setEnhancedPromptText,
   setCurrentTableIndex,
   setPlanGenerated,
   setGeneratedPlan,

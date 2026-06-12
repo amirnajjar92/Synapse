@@ -10,7 +10,7 @@ import ChatRow from '@/components/ChatRow';
 import useMakePlan from '@/lib/hooks/useMakePlan';
 import usePromptEnhancer from '@/lib/hooks/usePromptEnhancer';
 import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks';
-import { setPromptText, resetPlan } from '@/lib/redux/slices/planSlice';
+import { setPromptText, setEnhancedPromptText, resetPlan } from '@/lib/redux/slices/planSlice';
 
 // Skeleton Component
 const Skeleton = ({ className = '' }: { className?: string }) => (
@@ -22,7 +22,7 @@ export default function PlannerPage() {
   const dispatch = useAppDispatch();
   const { promptText, planGenerated, isGenerating } = useAppSelector((state) => state.plan);
   const [localPromptText, setLocalPromptText] = useState('I want to lose 10kg in 30 days and I am 85kg now');
-  const [enhancedPromptText, setEnhancedPromptText] = useState('I want to lose 10kg in 30 days and I am 85kg now');
+  const [localEnhancedPromptText, setLocalEnhancedPromptText] = useState('I want to lose 10kg in 30 days and I am 85kg now');
   const [chatMessages, setChatMessages] = useState<string[]>([]);
   const [showChat, setShowChat] = useState(false);
 
@@ -35,7 +35,7 @@ export default function PlannerPage() {
   }, [router]);
 
   const { enhancePrompt } = usePromptEnhancer();
-  const { generatePlan } = useMakePlan(enhancedPromptText);
+  const { generatePlan } = useMakePlan(localEnhancedPromptText);
 
   // Initial load
   useEffect(() => {
@@ -82,8 +82,9 @@ export default function PlannerPage() {
       setChatMessages((prev) => [...prev, 'AI: Generating personalized plan...']);
     }, 1300);
     
-    setEnhancedPromptText(enhanced);
+    setLocalEnhancedPromptText(enhanced);
     dispatch(setPromptText(localPromptText));
+    dispatch(setEnhancedPromptText(enhanced));
     // Pass the actual current prompt to generatePlan
     await generatePlan(localPromptText);
     
