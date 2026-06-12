@@ -100,6 +100,22 @@ export default function Home() {
           name: data.name,
           picture: data.picture
         }));
+
+        // Now call our Synapse API to save the user to our Postgres DB
+        const synapseUserResponse = await fetch('/api/users/me', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: data.email,
+            name: data.name,
+            picture: data.picture
+          })
+        });
+
+        if (!synapseUserResponse.ok) {
+          console.error('Failed to save user to Synapse DB');
+        }
+
         router.push("/planner");
       } else {
         console.error("Backend authentication failed:", data.error);
@@ -124,6 +140,22 @@ export default function Home() {
         name: "Test User",
         picture: null
       }));
+
+      // Also save test user to Synapse DB
+      const synapseUserResponse = await fetch('/api/users/me', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: testEmail,
+          name: "Test User",
+          picture: null
+        })
+      });
+
+      if (!synapseUserResponse.ok) {
+        console.error('Failed to save test user to Synapse DB');
+      }
+
       router.push("/planner");
     } catch (error) {
       console.error("Test sign in error:", error);

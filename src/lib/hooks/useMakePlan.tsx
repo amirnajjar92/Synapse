@@ -357,6 +357,14 @@ RULES:
   const savePlan = async ({ planTypes, promptText }: { planTypes: any[]; promptText: string }) => {
     if (!planTypes) return;
 
+    // Get user email from localStorage
+    const userStr = localStorage.getItem('synapse_user');
+    const user = userStr ? JSON.parse(userStr) : null;
+    if (!user?.email) {
+      console.error('No user email found');
+      return;
+    }
+
     const planData = {
       title: promptText || 'Personalized Plan',
       prompt: promptText,
@@ -365,6 +373,7 @@ RULES:
         title: pt.title,
         rows: pt.tableData,
       })),
+      userEmail: user.email, // Add user email to plan data
     };
 
     try {

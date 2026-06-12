@@ -1,43 +1,58 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/db'
 
-// Helper to get or create test user
-const getTestUser = async () => {
+// Helper to get or create user by email
+const getOrCreateUser = async (email: string) => {
+  if (!email) {
+    throw new Error('Email is required')
+  }
   let user = await prisma.user.findUnique({
-    where: { email: 'test@example.com' }
+    where: { email }
   })
   if (!user) {
     user = await prisma.user.create({
       data: {
-        email: 'test@example.com',
-        name: 'Test User'
+        email,
+        name: 'User'
       }
     })
-  }
-  if (!user.email) {
-    throw new Error('User email not found')
   }
   return user
 }
 
 export async function GET(request: Request) {
-  const user = await getTestUser()
+  try {
+    const { searchParams } = new URL(request.url)
+    const userEmail = searchParams.get('userEmail')
 
-  const userWithPlans = await prisma.user.findUnique({
-    where: { email: user.email as string },
-    include: { plans: { include: { tables: { include: { rows: true } } } } },
-  })
+    if (!userEmail) {
+      // If no userEmail, return empty array
+      return NextResponse.json({ plans: [] })
+    }
 
-  return NextResponse.json({ plans: userWithPlans?.plans || [] })
+    const userWithPlans = await prisma.user.findUnique({
+      where: { email: userEmail },
+      include: { plans: { include: { tables: { include: { rows: true } } } } },
+    })
+
+    return NextResponse.json({ plans: userWithPlans?.plans || [] })
+  } catch (error) {
+    console.error('Error getting plans:', error)
+    return NextResponse.json({ plans: [] })
+  }
 }
 
 export async function POST(request: Request) {
   console.log('POST /api/plans request received');
   try {
-    const { title, prompt, icon, tables } = await request.json()
-    console.log('Request data:', { title, prompt, icon, tablesCount: tables?.length });
+    const { title, prompt, icon, tables, userEmail } = await request.json()
+    console.log('Request data:', { title, prompt, icon, tablesCount: tables?.length, userEmail });
 
-    const user = await getTestUser()
+    if (!userEmail) {
+      return NextResponse.json({ error: 'User email is required' }, { status: 400 })
+    }
+
+    const user = await getOrCreateUser(userEmail)
     console.log('User found:', user);
 
     const plan = await prisma.plan.create({
