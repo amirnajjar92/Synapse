@@ -416,24 +416,28 @@ export default function PlannerPage() {
               {isSigningIn ? "Signing in..." : "Sign in with Google"}
             </button>
 
-            <div className="text-white/50 my-2">or</div>
+            {process.env.NODE_ENV !== 'production' && (
+              <>
+                <div className="text-white/50 my-2">or</div>
 
-            <form onSubmit={handleTestSignIn} className="flex flex-col gap-3 w-full">
-              <input
-                type="email"
-                value={testEmail}
-                onChange={(e) => setTestEmail(e.target.value)}
-                placeholder="Enter test email"
-                className="px-4 py-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-gray-500 w-full"
-              />
-              <button
-                type="submit"
-                disabled={testLoading}
-                className="flex items-center justify-center gap-3 bg-green-600 text-white px-8 py-4 rounded-full font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {testLoading ? "Signing in..." : "Test Sign In"}
-              </button>
-            </form>
+                <form onSubmit={handleTestSignIn} className="flex flex-col gap-3 w-full">
+                  <input
+                    type="email"
+                    value={testEmail}
+                    onChange={(e) => setTestEmail(e.target.value)}
+                    placeholder="Enter test email"
+                    className="px-4 py-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:border-gray-500 w-full"
+                  />
+                  <button
+                    type="submit"
+                    disabled={testLoading}
+                    className="flex items-center justify-center gap-3 bg-green-600 text-white px-8 py-4 rounded-full font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {testLoading ? "Signing in..." : "Test Sign In"}
+                  </button>
+                </form>
+              </>
+            )}
           </div>
         </div>
       )}
