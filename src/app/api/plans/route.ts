@@ -71,6 +71,12 @@ export async function POST(request: Request) {
             },
           })),
         },
+        userPrompts: {
+          create: {
+            userId: user.id,
+            prompt,
+          },
+        },
       },
       include: { tables: { include: { rows: true } } },
     })

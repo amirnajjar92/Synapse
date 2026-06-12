@@ -20,6 +20,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   plans         Plan[]
+  userPrompts   UserPrompt[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -70,6 +71,7 @@ model Plan {
   updatedAt DateTime     @updatedAt
   tables    PlanTable[]
   user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userPrompts UserPrompt[]
 }
 
 model PlanTable {
@@ -87,4 +89,15 @@ model PlanRow {
   columns   String[]
   createdAt DateTime        @default(now())
   table     PlanTable       @relation(fields: [tableId], references: [id], onDelete: Cascade)
+}
+
+model UserPrompt {
+  id        String   @id @default(cuid())
+  userId    String
+  planId    String?
+  prompt    String
+  createdAt DateTime @default(now())
+  
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan Plan? @relation(fields: [planId], references: [id], onDelete: Cascade)
 }
