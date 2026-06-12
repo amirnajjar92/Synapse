@@ -1,43 +1,44 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/../auth'
 import prisma from '@/lib/db'
 
-export async function GET(request: Request) {
-  const session = await getServerSession(authOptions)
-  if (!session?.user?.email) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+// Helper to get or create test user
+const getTestUser = async () => {
+  let user = await prisma.user.findUnique({
+    where: { email: 'test@example.com' }
+  })
+  if (!user) {
+    user = await prisma.user.create({
+      data: {
+        email: 'test@example.com',
+        name: 'Test User'
+      }
+    })
   }
+  if (!user.email) {
+    throw new Error('User email not found')
+  }
+  return user
+}
 
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
+export async function GET(request: Request) {
+  const user = await getTestUser()
+
+  const userWithPlans = await prisma.user.findUnique({
+    where: { email: user.email as string },
     include: { plans: { include: { tables: { include: { rows: true } } } } },
   })
 
-  return NextResponse.json({ plans: user?.plans || [] })
+  return NextResponse.json({ plans: userWithPlans?.plans || [] })
 }
 
 export async function POST(request: Request) {
   console.log('POST /api/plans request received');
   try {
-    const session = await getServerSession(authOptions)
-    console.log('Session:', session);
-    
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const { title, prompt, icon, tables } = await request.json()
     console.log('Request data:', { title, prompt, icon, tablesCount: tables?.length });
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    })
+    const user = await getTestUser()
     console.log('User found:', user);
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
 
     const plan = await prisma.plan.create({
       data: {

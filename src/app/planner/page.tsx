@@ -26,6 +26,14 @@ export default function PlannerPage() {
   const [chatMessages, setChatMessages] = useState<string[]>([]);
   const [showChat, setShowChat] = useState(false);
 
+  // Check if user is signed in
+  useEffect(() => {
+    const token = localStorage.getItem('synapse_token');
+    if (!token) {
+      router.push('/');
+    }
+  }, [router]);
+
   const { enhancePrompt } = usePromptEnhancer();
   const { generatePlan } = useMakePlan(enhancedPromptText);
 
