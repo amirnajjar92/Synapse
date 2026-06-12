@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { StoreProvider } from '@/lib/redux/StoreProvider';
 import Providers from './providers';
+import UserProfile from '@/components/UserProfile';
 
 export const metadata: Metadata = {
   title: 'Synapse',
@@ -19,7 +20,10 @@ export default function RootLayout({
         className={`antialiased`}
       >
         <Providers>
-          <StoreProvider>{children}</StoreProvider>
+          <StoreProvider>
+            <UserProfile />
+            {children}
+          </StoreProvider>
         </Providers>
       </body>
     </html>
