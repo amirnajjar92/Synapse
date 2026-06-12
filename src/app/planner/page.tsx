@@ -84,7 +84,8 @@ export default function PlannerPage() {
     
     setEnhancedPromptText(enhanced);
     dispatch(setPromptText(localPromptText));
-    await generatePlan();
+    // Pass the actual current prompt to generatePlan
+    await generatePlan(localPromptText);
     
     // Add plan ready message
     setTimeout(() => {

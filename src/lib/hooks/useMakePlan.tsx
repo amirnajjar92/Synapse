@@ -165,8 +165,9 @@ const useMakePlan = (userPrompt: string, autoRun = false) => {
     }
   };
 
-  const generatePlan = async () => {
-    if (!userPrompt.trim()) {
+  const generatePlan = async (currentPrompt?: string) => {
+    const promptToUse = currentPrompt || userPrompt;
+    if (!promptToUse.trim()) {
       dispatch(setGenerationError('Please enter a prompt to generate a plan'));
       return;
     }
@@ -300,7 +301,7 @@ Example for "vegan diet, build muscle":
 
       return `SYSTEM: You are an elite fitness and nutrition coach who creates highly personalized, detailed plans tailored EXACTLY to the user's specific goals, constraints, and lifestyle. You are creative, practical, and always keep the structure consistent.
 
-USER'S EXACT GOAL/REQUEST: ${userPrompt}
+USER'S EXACT GOAL/REQUEST: ${promptToUse}
 
 TASK: Generate ONLY the ${metadata.title} table data tailored to the user's request.
 
@@ -335,7 +336,7 @@ RULES:
     
     // Auto-save the plan!
     const planState = store.getState().plan;
-    savePlan({ planTypes: planState.planTypes, promptText: userPrompt });
+    savePlan({ planTypes: planState.planTypes, promptText: promptToUse });
   };
 
   const resetPlan = () => {
