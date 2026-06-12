@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import LogoAnimation from "@/components/LogoAnimation";
 
 // Google Identity Services type declaration
 declare global {
@@ -24,6 +25,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [testEmail, setTestEmail] = useState("test@example.com");
   const [testLoading, setTestLoading] = useState(false);
+  const [showAnimation, setShowAnimation] = useState(true);
 
   // Check if user is already signed in
   useEffect(() => {
@@ -163,6 +165,12 @@ export default function Home() {
       setTestLoading(false);
     }
   };
+
+  if (showAnimation) {
+    return (
+      <LogoAnimation onComplete={() => setShowAnimation(false)} />
+    );
+  }
 
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 bg-[#151515]">
