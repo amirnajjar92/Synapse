@@ -3,6 +3,13 @@ import './globals.css';
 import { StoreProvider } from '@/lib/redux/StoreProvider';
 import Providers from './providers';
 import UserProfile from '@/components/UserProfile';
+import { Hanalei_Fill } from "next/font/google";
+
+const hanaleiFill = Hanalei_Fill({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-hanalei-fill",
+});
 
 export const metadata: Metadata = {
   title: 'Synapse',
@@ -15,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={hanaleiFill.variable}>
       <body
         className={`antialiased`}
       >
