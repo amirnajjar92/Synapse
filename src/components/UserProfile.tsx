@@ -26,7 +26,8 @@ export default function UserProfile() {
     router.push('/');
   };
 
-  if (!user) return null;
+  const hasToken = typeof window !== 'undefined' && !!localStorage.getItem('synapse_token');
+  if (!hasToken) return null;
 
   return (
     <div className="fixed bottom-4 left-4 z-50 flex items-center gap-3">
@@ -35,18 +36,18 @@ export default function UserProfile() {
         className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white font-bold text-lg shadow-lg hover:scale-110 transition-transform"
         title="Logout"
       >
-        {user.picture ? (
+        {user?.picture ? (
           <img
             src={user.picture}
             alt={user.name || 'User'}
             className="w-full h-full rounded-full object-cover"
           />
         ) : (
-          (user.name?.charAt(0) || user.email.charAt(0).toUpperCase())
+          (user?.name?.charAt(0) || user?.email?.charAt(0).toUpperCase() || 'U')
         )}
       </button>
       <span className="text-white text-sm font-medium truncate max-w-[150px] hidden sm:block">
-        {user.name || user.email}
+        {user?.name || user?.email || 'User'}
       </span>
     </div>
   );
