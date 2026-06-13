@@ -254,7 +254,7 @@ export default function PlannerPage() {
 
   // Dynamic dimensions based on state (original heights)
   const row1Height = planGenerated ? 370 : 302;
-  const row2Height = planGenerated ? 114 : 206;
+  const row2Height = planGenerated ? 140 : 206;
   const row3Height = planGenerated ? 106 : 52;
   const row4Height = planGenerated ? 206 : 0;
   const row5Height = planGenerated ? 52 : 0;
