@@ -391,6 +391,8 @@ RULES:
       }
       const data = await response.json();
       console.log('Plan saved successfully:', data.plan);
+      // Save plan id to localStorage for planner page
+      localStorage.setItem('current_plan_id', data.plan.id);
       return data.plan;
     } catch (error) {
       console.error('Error saving plan:', error);

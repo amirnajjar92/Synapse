@@ -63,9 +63,8 @@ export default function MyPlansPage() {
   }, [user]);
 
   const handlePlanClick = (plan: Plan) => {
-    // Save plan to localStorage and navigate to plan-detail
-    localStorage.setItem('current_plan', JSON.stringify(plan));
-    router.push('/plan-detail');
+    // Navigate to plan-detail with plan id
+    router.push(`/plan-detail/${plan.id}`);
   };
 
   // Base dimensions for planner-style frame

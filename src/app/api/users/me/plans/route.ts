@@ -18,9 +18,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Get all plans for this user
+    // Get all plans for this user with tables and rows
     const plans = await prisma.plan.findMany({
       where: { userId: user.id },
+      include: { tables: { include: { rows: true } } },
       orderBy: { createdAt: 'desc' }
     });
 

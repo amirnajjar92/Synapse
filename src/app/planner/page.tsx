@@ -120,7 +120,12 @@ export default function PlannerPage() {
   };
 
   const handleViewPlanClick = () => {
-    router.push('/plan-detail');
+    const planId = localStorage.getItem('current_plan_id');
+    if (planId) {
+      router.push(`/plan-detail/${planId}`);
+    } else {
+      router.push('/my-plans');
+    }
   };
 
   // Google Sign In handlers

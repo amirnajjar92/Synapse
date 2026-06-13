@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import PromptBox from '@/components/PromptBox';
 import CustomButton from '@/components/CustomButton';
@@ -17,6 +17,16 @@ interface PlanTableData {
   horizontalScroll: boolean;
 }
 
+interface Plan {
+  id: string;
+  title: string;
+  prompt: string;
+  icon: string;
+  tables: any[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Skeleton Component
 const Skeleton = ({ className = '' }: { className?: string }) => (
   <div className={`animate-pulse bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 bg-[length:200%_100%] opacity-50 ${className}`} />
@@ -24,32 +34,50 @@ const Skeleton = ({ className = '' }: { className?: string }) => (
 
 export default function PlanDetailPage() {
   const router = useRouter();
+  const { id } = useParams();
   const dispatch = useAppDispatch();
   const { planTypes, currentTableIndex, promptText, isGenerating } = useAppSelector((state) => state.plan);
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Load plan from localStorage on mount
+  // Fetch plan from API using id
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const currentPlanStr = localStorage.getItem('current_plan');
-      if (currentPlanStr) {
-        const plan = JSON.parse(currentPlanStr);
+    const fetchPlan = async () => {
+      if (!id || typeof id !== 'string') return;
+
+      try {
+        const response = await fetch(`/api/plans/${id}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch plan');
+        }
+        const data = await response.json();
+        const plan: Plan = data.plan;
+
         // Convert the plan.tables to the planTypes format we use in Redux
-        const convertedPlanTypes: PlanTableData[] = plan.tables.map((table: any, index: number) => ({
+        const convertedPlanTypes: PlanTableData[] = (plan.tables || []).map((table: any, index: number) => ({
           id: index,
           title: table.title || `Table ${index + 1}`,
           icon: plan.icon || '/vectors/plan-icon.svg',
-          tableData: table.rows || [],
+          tableData: (table.rows || []).map((row: any) => ({
+            columns: row.columns || []
+          })),
           columnWidths: table.columnWidths,
           horizontalScroll: table.horizontalScroll || false
         }));
         
         dispatch(setPlanTypes(convertedPlanTypes));
         dispatch(setPromptText(plan.prompt));
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching plan:', err);
+        setError('Failed to load plan');
+      } finally {
+        setHasLoaded(true);
       }
-      setHasLoaded(true);
-    }
-  }, [dispatch]);
+    };
+
+    fetchPlan();
+  }, [id, dispatch]);
 
   // Get current plan
   const currentPlan = planTypes[currentTableIndex];
@@ -62,7 +90,7 @@ export default function PlanDetailPage() {
 
   // Handle back button click
   const handleBackClick = () => {
-    router.push('/planner');
+    router.push('/my-plans');
   };
 
   // Base dimensions (original design)
