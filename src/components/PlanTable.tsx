@@ -41,6 +41,12 @@ const PlanTable: React.FC<PlanTableProps> = ({
   currentTableIndex,
   onTabClick
 }) => {
+  // Hide scrollbar styles
+  const hideScrollbarStyle = `
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+  `;
   // Determine the height style/class
   const isHeightClass = typeof height === "string" && (height.startsWith("h-"));
   const containerStyle = typeof height === "string" && !isHeightClass ? { height } : (typeof height === "number" ? { height: `${height}px` } : {});
@@ -61,7 +67,9 @@ const PlanTable: React.FC<PlanTableProps> = ({
   }, [currentTableIndex]);
   
   return (
-    <div className={`w-full flex flex-col ${isHeightClass ? height : "h-full"}`} style={containerStyle}>
+    <>
+      <style dangerouslySetInnerHTML={{ __html: hideScrollbarStyle }} />
+      <div className={`w-full flex flex-col ${isHeightClass ? height : "h-full"}`} style={containerStyle}>
       {/* Table scroll container */}
       <div className={`flex-1 min-h-0 overflow-hidden ${horizontalScroll ? "overflow-x-auto overflow-y-auto" : "overflow-y-auto"}`}>
         {/* No skeleton while generating, show the table directly */}
@@ -122,7 +130,11 @@ const PlanTable: React.FC<PlanTableProps> = ({
           {tableTitles && tableTitles.length > 0 && (
             <div 
               ref={tabsContainerRef}
-              className="flex gap-1 flex-1 overflow-x-auto"
+              className="flex gap-1 flex-1 overflow-x-auto hide-scrollbar"
+              style={{ 
+                scrollbarWidth: 'none', /* Firefox */
+                msOverflowStyle: 'none' /* IE and Edge */
+              }}
             >
               {tableTitles.map((title, index) => (
                 <button
@@ -156,6 +168,7 @@ const PlanTable: React.FC<PlanTableProps> = ({
         </div>
       )}
     </div>
+    </>
   );
 };
 
