@@ -110,6 +110,9 @@ const planSlice = createSlice({
     setCurrentTableIndex: (state, action: PayloadAction<number>) => {
       state.currentTableIndex = action.payload;
     },
+    setPlanTypes: (state, action: PayloadAction<PlanType[]>) => {
+      state.planTypes = action.payload;
+    },
     setPlanGenerated: (state, action: PayloadAction<boolean>) => {
       state.planGenerated = action.payload;
     },
@@ -168,6 +171,7 @@ export const {
   addPromptToHistory,
   setEnhancedPromptText,
   setCurrentTableIndex,
+  setPlanTypes,
   setPlanGenerated,
   setGeneratedPlan,
   setIsGenerating,

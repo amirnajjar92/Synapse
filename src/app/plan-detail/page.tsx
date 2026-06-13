@@ -1,11 +1,21 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import PromptBox from '@/components/PromptBox';
 import CustomButton from '@/components/CustomButton';
 import PlanTable from '@/components/PlanTable';
 import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks';
-import { setCurrentTableIndex, setPromptText } from '@/lib/redux/slices/planSlice';
+import { setCurrentTableIndex, setPromptText, setPlanTypes } from '@/lib/redux/slices/planSlice';
+
+interface PlanTableData {
+  id: number;
+  title: string;
+  icon: string;
+  tableData: any[];
+  columnWidths?: string[];
+  horizontalScroll: boolean;
+}
 
 // Skeleton Component
 const Skeleton = ({ className = '' }: { className?: string }) => (
@@ -16,6 +26,30 @@ export default function PlanDetailPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { planTypes, currentTableIndex, promptText, isGenerating } = useAppSelector((state) => state.plan);
+  const [hasLoaded, setHasLoaded] = useState(false);
+
+  // Load plan from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const currentPlanStr = localStorage.getItem('current_plan');
+      if (currentPlanStr) {
+        const plan = JSON.parse(currentPlanStr);
+        // Convert the plan.tables to the planTypes format we use in Redux
+        const convertedPlanTypes: PlanTableData[] = plan.tables.map((table: any, index: number) => ({
+          id: index,
+          title: table.title || `Table ${index + 1}`,
+          icon: plan.icon || '/vectors/plan-icon.svg',
+          tableData: table.rows || [],
+          columnWidths: table.columnWidths,
+          horizontalScroll: table.horizontalScroll || false
+        }));
+        
+        dispatch(setPlanTypes(convertedPlanTypes));
+        dispatch(setPromptText(plan.prompt));
+      }
+      setHasLoaded(true);
+    }
+  }, [dispatch]);
 
   // Get current plan
   const currentPlan = planTypes[currentTableIndex];
@@ -39,6 +73,30 @@ export default function PlanDetailPage() {
   const headerHeight = 100;
   const tableHeight = 360;
   const emptyRowHeight = 100;
+
+  if (!hasLoaded) {
+    return (
+      <div className="w-full h-screen bg-[#151515] flex items-center justify-center">
+        <Skeleton className="w-40 h-10 rounded" />
+      </div>
+    );
+  }
+
+  if (planTypes.length === 0) {
+    return (
+      <div className="w-full h-screen bg-[#151515] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <p className="text-gray-400">No plan selected</p>
+          <button
+            onClick={() => router.push('/planner')}
+            className="px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-full font-semibold hover:scale-105 transition-transform"
+          >
+            Go to Planner
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-screen bg-[#151515] flex items-center justify-center p-2 sm:p-4">
