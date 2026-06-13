@@ -215,7 +215,14 @@ export default function PlanDetailPage() {
             className="w-full border border-[#3B3B3B00] flex items-center justify-center"
             style={{ height: `${(emptyRowHeight / baseHeight) * 100}%` }}
           >
-            <button
+            <CustomButton
+              mirror={true}
+              text={
+                mockPlanStatus === 'NOT_STARTED' ? 'START PLAN' :
+                mockPlanStatus === 'IN_PROGRESS' ? 'PAUSE PLAN' :
+                mockPlanStatus === 'PAUSED' ? 'RESUME PLAN' :
+                'RESTART PLAN'
+              }
               onClick={() => {
                 // Mock handler to cycle through statuses for preview
                 if (mockPlanStatus === 'NOT_STARTED') setMockPlanStatus('IN_PROGRESS');
@@ -223,13 +230,10 @@ export default function PlanDetailPage() {
                 else if (mockPlanStatus === 'PAUSED') setMockPlanStatus('IN_PROGRESS');
                 else setMockPlanStatus('NOT_STARTED');
               }}
-              className="px-4 py-2 rounded-full font-semibold text-white transition-all hover:scale-105 bg-gradient-to-r from-purple-500 to-blue-500"
-            >
-              {mockPlanStatus === 'NOT_STARTED' ? 'START PLAN' :
-               mockPlanStatus === 'IN_PROGRESS' ? 'PAUSE PLAN' :
-               mockPlanStatus === 'PAUSED' ? 'RESUME PLAN' :
-               'RESTART PLAN'}
-            </button>
+
+              width="150px"
+              fontSize="16px"
+            />
           </div>
 
           {/* Row 4: Prompt Section */}
