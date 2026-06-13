@@ -20,6 +20,7 @@ interface PlanTableProps {
   isLoading?: boolean;
   rowHeight?: string;
   onNext?: () => void;
+  onPrev?: () => void;
   horizontalScroll?: boolean;
   height?: string | number; // Height prop (can be CSS class like "h-full" or pixel value)
 }
@@ -30,6 +31,7 @@ const PlanTable: React.FC<PlanTableProps> = ({
   isLoading,
   rowHeight = "h-16",
   onNext,
+  onPrev,
   horizontalScroll = false,
   height
 }) => {
@@ -79,18 +81,31 @@ const PlanTable: React.FC<PlanTableProps> = ({
         </table>
       </div>
       
-      {/* Next button (if provided) */}
-      {onNext && (
-        <div className="flex justify-end p-2">
-          <button
-            onClick={onNext}
-            className="p-2 text-white hover:bg-gray-700 rounded-full transition-colors"
-            aria-label="Next table"
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-          </button>
+      {/* Navigation buttons */}
+      {(onPrev || onNext) && (
+        <div className="flex justify-between p-2">
+          {onPrev && (
+            <button
+              onClick={onPrev}
+              className="p-2 text-white hover:bg-gray-700 rounded-full transition-colors"
+              aria-label="Previous table"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </button>
+          )}
+          {onNext && (
+            <button
+              onClick={onNext}
+              className="p-2 text-white hover:bg-gray-700 rounded-full transition-colors"
+              aria-label="Next table"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </button>
+          )}
         </div>
       )}
     </div>

@@ -106,6 +106,12 @@ export default function PlanDetailPage() {
     dispatch(setCurrentTableIndex(nextIndex));
   };
 
+  // Handle prev button click
+  const handlePrevTable = () => {
+    const prevIndex = (currentTableIndex - 1 + planTypes.length) % planTypes.length;
+    dispatch(setCurrentTableIndex(prevIndex));
+  };
+
   // Handle back button click
   const handleBackClick = () => {
     router.push('/my-plans');
@@ -195,6 +201,7 @@ export default function PlanDetailPage() {
               columnWidths={currentPlan.columnWidths}
               isLoading={isGenerating}
               onNext={handleNextTable}
+              onPrev={handlePrevTable}
               horizontalScroll={currentPlan.horizontalScroll}
             />
           </div>
