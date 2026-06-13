@@ -104,7 +104,7 @@ const PlanTable: React.FC<PlanTableProps> = ({
       
       {/* Navigation area with prev/next and tabs */}
       {(onPrev || onNext || tableTitles) && (
-        <div className="flex items-center justify-between p-2 gap-2">
+        <div className="flex items-center justify-between p-2 gap-2 mt-4">
           {/* Previous button */}
           {onPrev && (
             <button

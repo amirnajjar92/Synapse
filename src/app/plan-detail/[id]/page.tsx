@@ -39,6 +39,7 @@ export default function PlanDetailPage() {
   const { planTypes, currentTableIndex, promptText, isGenerating } = useAppSelector((state) => state.plan);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mockPlanStatus, setMockPlanStatus] = useState<'NOT_STARTED' | 'IN_PROGRESS' | 'PAUSED' | 'COMPLETED'>('NOT_STARTED');
 
   // Fetch plan from API using id OR use existing Redux plan if available
   useEffect(() => {
@@ -209,11 +210,27 @@ export default function PlanDetailPage() {
             />
           </div>
 
-          {/* Row 3: Empty Row - 400 X 100 */}
+          {/* Row 3: Status Controls - 400 X 100 */}
           <div 
-            className="w-full border border-[#3B3B3B00]"
+            className="w-full border border-[#3B3B3B00] flex items-center justify-center"
             style={{ height: `${(emptyRowHeight / baseHeight) * 100}%` }}
-          />
+          >
+            <button
+              onClick={() => {
+                // Mock handler to cycle through statuses for preview
+                if (mockPlanStatus === 'NOT_STARTED') setMockPlanStatus('IN_PROGRESS');
+                else if (mockPlanStatus === 'IN_PROGRESS') setMockPlanStatus('PAUSED');
+                else if (mockPlanStatus === 'PAUSED') setMockPlanStatus('IN_PROGRESS');
+                else setMockPlanStatus('NOT_STARTED');
+              }}
+              className="px-4 py-2 rounded-full font-semibold text-white transition-all hover:scale-105 bg-gradient-to-r from-purple-500 to-blue-500"
+            >
+              {mockPlanStatus === 'NOT_STARTED' ? 'START PLAN' :
+               mockPlanStatus === 'IN_PROGRESS' ? 'PAUSE PLAN' :
+               mockPlanStatus === 'PAUSED' ? 'RESUME PLAN' :
+               'RESTART PLAN'}
+            </button>
+          </div>
 
           {/* Row 4: Prompt Section */}
           <div 
