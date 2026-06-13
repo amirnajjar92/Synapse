@@ -23,6 +23,9 @@ interface PlanTableProps {
   onPrev?: () => void;
   horizontalScroll?: boolean;
   height?: string | number; // Height prop (can be CSS class like "h-full" or pixel value)
+  tableTitles?: string[]; // All table titles for tabs
+  currentTableIndex?: number; // Current active table index
+  onTabClick?: (index: number) => void; // Handler for tab click
 }
 
 const PlanTable: React.FC<PlanTableProps> = ({ 
@@ -33,11 +36,29 @@ const PlanTable: React.FC<PlanTableProps> = ({
   onNext,
   onPrev,
   horizontalScroll = false,
-  height
+  height,
+  tableTitles,
+  currentTableIndex,
+  onTabClick
 }) => {
   // Determine the height style/class
   const isHeightClass = typeof height === "string" && (height.startsWith("h-"));
   const containerStyle = typeof height === "string" && !isHeightClass ? { height } : (typeof height === "number" ? { height: `${height}px` } : {});
+  
+  // Refs for scroll management
+  const tabsContainerRef = React.useRef<HTMLDivElement>(null);
+  const activeTabRef = React.useRef<HTMLButtonElement>(null);
+  
+  // Scroll active tab into view when currentTableIndex changes
+  React.useEffect(() => {
+    if (activeTabRef.current && tabsContainerRef.current) {
+      activeTabRef.current.scrollIntoView({
+        behavior: 'smooth',
+        inline: 'center',
+        block: 'nearest'
+      });
+    }
+  }, [currentTableIndex]);
   
   return (
     <div className={`w-full flex flex-col ${isHeightClass ? height : "h-full"}`} style={containerStyle}>
@@ -81,13 +102,14 @@ const PlanTable: React.FC<PlanTableProps> = ({
         </table>
       </div>
       
-      {/* Navigation buttons */}
-      {(onPrev || onNext) && (
-        <div className="flex justify-between p-2">
+      {/* Navigation area with prev/next and tabs */}
+      {(onPrev || onNext || tableTitles) && (
+        <div className="flex items-center justify-between p-2 gap-2">
+          {/* Previous button */}
           {onPrev && (
             <button
               onClick={onPrev}
-              className="p-2 text-white hover:bg-gray-700 rounded-full transition-colors"
+              className="p-2 text-white hover:bg-gray-700 rounded-full transition-colors flex-shrink-0"
               aria-label="Previous table"
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -95,10 +117,35 @@ const PlanTable: React.FC<PlanTableProps> = ({
               </svg>
             </button>
           )}
+          
+          {/* Tabs (if available) */}
+          {tableTitles && tableTitles.length > 0 && (
+            <div 
+              ref={tabsContainerRef}
+              className="flex gap-1 flex-1 overflow-x-auto"
+            >
+              {tableTitles.map((title, index) => (
+                <button
+                  key={index}
+                  ref={index === currentTableIndex ? activeTabRef : null}
+                  onClick={() => onTabClick && onTabClick(index)}
+                  className={`px-2 py-1 rounded-full text-xs transition-all whitespace-nowrap ${
+                    index === currentTableIndex
+                      ? 'bg-purple-600 text-white font-semibold'
+                      : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                  }`}
+                >
+                  {title}
+                </button>
+              ))}
+            </div>
+          )}
+          
+          {/* Next button */}
           {onNext && (
             <button
               onClick={onNext}
-              className="p-2 text-white hover:bg-gray-700 rounded-full transition-colors"
+              className="p-2 text-white hover:bg-gray-700 rounded-full transition-colors flex-shrink-0"
               aria-label="Next table"
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

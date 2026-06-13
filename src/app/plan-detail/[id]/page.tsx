@@ -203,6 +203,9 @@ export default function PlanDetailPage() {
               onNext={handleNextTable}
               onPrev={handlePrevTable}
               horizontalScroll={currentPlan.horizontalScroll}
+              tableTitles={planTypes.map(p => p.title)}
+              currentTableIndex={currentTableIndex}
+              onTabClick={(index) => dispatch(setCurrentTableIndex(index))}
             />
           </div>
 
