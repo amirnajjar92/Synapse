@@ -13,26 +13,36 @@ export default function Sidebar() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<UserData | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const [hasToken, setHasToken] = useState(false);
 
-  // Check for user data on mount
+  // Check for user data on mount and periodically
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    setMounted(true);
+    const checkAuth = () => {
       const userStr = localStorage.getItem('synapse_user');
+      const token = localStorage.getItem('synapse_token');
+      setHasToken(!!token);
       if (userStr) {
         setUser(JSON.parse(userStr));
       }
-    }
+    };
+    checkAuth();
+    // Check every 500ms for auth changes
+    const interval = setInterval(checkAuth, 500);
+    return () => clearInterval(interval);
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('synapse_token');
     localStorage.removeItem('synapse_user');
+    setHasToken(false);
+    setUser(null);
     setIsOpen(false);
     router.push('/');
   };
 
-  const hasToken = typeof window !== 'undefined' && !!localStorage.getItem('synapse_token');
-
+  if (!mounted) return null;
   if (!hasToken) return null;
 
   return (

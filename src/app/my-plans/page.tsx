@@ -22,17 +22,17 @@ export default function MyPlansPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<{ email: string } | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   // Check authentication and get user
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const userStr = localStorage.getItem('synapse_user');
-      if (userStr) {
-        setUser(JSON.parse(userStr));
-      } else {
-        // Redirect to home if not signed in
-        router.push('/');
-      }
+    setMounted(true);
+    const userStr = localStorage.getItem('synapse_user');
+    if (userStr) {
+      setUser(JSON.parse(userStr));
+    } else {
+      // Redirect to home if not signed in
+      router.push('/');
     }
   }, [router]);
 

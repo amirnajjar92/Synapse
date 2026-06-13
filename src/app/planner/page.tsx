@@ -48,9 +48,11 @@ export default function PlannerPage() {
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [testEmail, setTestEmail] = useState('test@example.com');
   const [testLoading, setTestLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   // Check if user is signed in on mount
   useEffect(() => {
+    setMounted(true);
     const token = localStorage.getItem('synapse_token');
     if (token) {
       setIsSignedIn(true);
@@ -266,7 +268,7 @@ export default function PlannerPage() {
   const row6Height = planGenerated ? 30 : 0;
   const chatRowHeight = showChat ? (planGenerated ? row2Height : 100) : 0; // Chat row height
 
-  if (isCheckingAuth) {
+  if (!mounted || isCheckingAuth) {
     return (
       <div className="w-full h-screen bg-[#151515] flex items-center justify-center">
         <Skeleton className="w-20 h-20 rounded-full" />

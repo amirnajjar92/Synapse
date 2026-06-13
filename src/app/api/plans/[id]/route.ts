@@ -3,13 +3,46 @@ import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/../auth'
 import prisma from '@/lib/db'
 
+async function getUserFromRequest(request: Request) {
+  // Check NextAuth session first
+  const session = await getServerSession(authOptions)
+  if (session?.user?.email) {
+    return await prisma.user.findUnique({
+      where: { email: session.user.email },
+    })
+  }
+
+  // If no session, try to get email from query params first for GET requests
+  const { searchParams } = new URL(request.url)
+  const emailFromQuery = searchParams.get('email')
+  if (emailFromQuery) {
+    return await prisma.user.findUnique({
+      where: { email: emailFromQuery },
+    })
+  }
+
+  // If no query param, try to get email from request body for POST/PUT/DELETE
+  try {
+    const body = await request.json().catch(() => null)
+    if (body?.email) {
+      return await prisma.user.findUnique({
+        where: { email: body.email },
+      })
+    }
+  } catch (e) {
+    // Do nothing
+  }
+
+  return null
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const session = await getServerSession(authOptions)
-  if (!session?.user?.email) {
+  const user = await getUserFromRequest(request)
+  if (!user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -22,11 +55,7 @@ export async function GET(
     return NextResponse.json({ error: 'Plan not found' }, { status: 404 })
   }
 
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-  })
-
-  if (plan.userId !== user?.id) {
+  if (plan.userId !== user.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
   }
 
@@ -38,8 +67,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const session = await getServerSession(authOptions)
-  if (!session?.user?.email) {
+  const user = await getUserFromRequest(request)
+  if (!user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -51,11 +80,7 @@ export async function DELETE(
     return NextResponse.json({ error: 'Plan not found' }, { status: 404 })
   }
 
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-  })
-
-  if (plan.userId !== user?.id) {
+  if (plan.userId !== user.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
   }
 

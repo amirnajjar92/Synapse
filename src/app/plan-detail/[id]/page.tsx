@@ -40,17 +40,34 @@ export default function PlanDetailPage() {
   const [hasLoaded, setHasLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch plan from API using id
+  // Fetch plan from API using id OR use existing Redux plan if available
   useEffect(() => {
     const fetchPlan = async () => {
       if (!id || typeof id !== 'string') return;
 
+      // First, check if we already have a plan in Redux (just generated)
+      if (planTypes.length > 0) {
+        setHasLoaded(true);
+        return;
+      }
+
+      // Otherwise, fetch from API
+      // Get user email from localStorage
+      const userStr = localStorage.getItem('synapse_user');
+      const user = userStr ? JSON.parse(userStr) : null;
+      
       try {
-        const response = await fetch(`/api/plans/${id}`);
-        if (!response.ok) {
+        // Use query parameter for email since GET requests shouldn't have a body
+        const url = new URL(`/api/plans/${id}`, window.location.origin);
+        if (user?.email) {
+          url.searchParams.set('email', user.email);
+        }
+        const finalResponse = await fetch(url.toString());
+        
+        if (!finalResponse.ok) {
           throw new Error('Failed to fetch plan');
         }
-        const data = await response.json();
+        const data = await finalResponse.json();
         const plan: Plan = data.plan;
 
         // Convert the plan.tables to the planTypes format we use in Redux
@@ -58,7 +75,8 @@ export default function PlanDetailPage() {
           id: index,
           title: table.title || `Table ${index + 1}`,
           icon: plan.icon || '/vectors/plan-icon.svg',
-          tableData: (table.rows || []).map((row: any) => ({
+          tableData: (table.rows || []).map((row: any, rowIndex: number) => ({
+            id: row.id || rowIndex,
             columns: row.columns || []
           })),
           columnWidths: table.columnWidths,
@@ -77,7 +95,7 @@ export default function PlanDetailPage() {
     };
 
     fetchPlan();
-  }, [id, dispatch]);
+  }, [id, dispatch, planTypes.length]);
 
   // Get current plan
   const currentPlan = planTypes[currentTableIndex];
