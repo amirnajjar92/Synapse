@@ -48,15 +48,12 @@ export default function PlannerPage() {
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [testEmail, setTestEmail] = useState('test@example.com');
   const [testLoading, setTestLoading] = useState(false);
-  const [userData, setUserData] = useState<any>(null);
 
   // Check if user is signed in on mount
   useEffect(() => {
     const token = localStorage.getItem('synapse_token');
-    const userStr = localStorage.getItem('synapse_user');
-    if (token && userStr) {
+    if (token) {
       setIsSignedIn(true);
-      setUserData(JSON.parse(userStr));
     }
     setIsCheckingAuth(false);
   }, []);
@@ -184,25 +181,27 @@ export default function PlannerPage() {
       const data = await backendResponse.json();
 
       if (backendResponse.ok) {
-        const userInfo = {
+        localStorage.setItem("synapse_token", data.token);
+        localStorage.setItem("synapse_user", JSON.stringify({
           email: data.email,
           name: data.name,
           picture: data.picture
-        };
-        localStorage.setItem("synapse_token", data.token);
-        localStorage.setItem("synapse_user", JSON.stringify(userInfo));
+        }));
 
         const synapseUserResponse = await fetch('/api/users/me', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(userInfo)
+          body: JSON.stringify({
+            email: data.email,
+            name: data.name,
+            picture: data.picture
+          })
         });
 
         if (!synapseUserResponse.ok) {
           console.error('Failed to save user to Synapse DB');
         }
 
-        setUserData(userInfo);
         setIsSignedIn(true);
       } else {
         console.error("Backend authentication failed:", data.error);
@@ -220,25 +219,27 @@ export default function PlannerPage() {
     e.preventDefault();
     setTestLoading(true);
     try {
-      const userInfo = {
+      localStorage.setItem("synapse_token", "test_token_" + Date.now());
+      localStorage.setItem("synapse_user", JSON.stringify({
         email: testEmail,
         name: "Test User",
         picture: null
-      };
-      localStorage.setItem("synapse_token", "test_token_" + Date.now());
-      localStorage.setItem("synapse_user", JSON.stringify(userInfo));
+      }));
 
       const synapseUserResponse = await fetch('/api/users/me', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userInfo)
+        body: JSON.stringify({
+          email: testEmail,
+          name: "Test User",
+          picture: null
+        })
       });
 
       if (!synapseUserResponse.ok) {
         console.error('Failed to save test user to Synapse DB');
       }
 
-      setUserData(userInfo);
       setIsSignedIn(true);
     } catch (error) {
       console.error("Test sign in error:", error);
@@ -270,25 +271,6 @@ export default function PlannerPage() {
 
   return (
     <div className="w-full h-screen bg-[#151515] flex items-center justify-center p-2 sm:p-4 relative">
-      {/* Profile Circle - Bottom Left */}
-      {isSignedIn && (
-        <div className="absolute bottom-4 left-4 z-40">
-          <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center overflow-hidden border border-white/20">
-            {userData?.picture ? (
-              <img 
-                src={userData.picture} 
-                alt="Profile" 
-                className="w-full h-full object-cover" 
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-white font-bold text-lg">
-                {userData?.name?.charAt(0)?.toUpperCase() || userData?.email?.charAt(0)?.toUpperCase() || 'U'}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-      
       {/* Responsive iPhone Frame (Planner Page Content) */}
       <div 
         className="bg-black rounded-[40px] overflow-hidden shadow-2xl relative flex-shrink-0"
