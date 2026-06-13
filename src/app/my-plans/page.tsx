@@ -23,6 +23,8 @@ export default function MyPlansPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<{ email: string } | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [planToDelete, setPlanToDelete] = useState<Plan | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Check authentication and get user
   useEffect(() => {
@@ -37,34 +39,66 @@ export default function MyPlansPage() {
   }, [router]);
 
   // Fetch plans when user is available
-  useEffect(() => {
-    const fetchPlans = async () => {
-      if (!user?.email) return;
+  const fetchPlans = async () => {
+    if (!user?.email) return;
 
-      try {
-        const response = await fetch('/api/users/me/plans', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: user.email })
-        });
+    try {
+      const response = await fetch('/api/users/me/plans', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user.email })
+      });
 
-        if (response.ok) {
-          const data = await response.json();
-          setPlans(data.plans || []);
-        }
-      } catch (error) {
-        console.error('Error fetching plans:', error);
-      } finally {
-        setIsLoading(false);
+      if (response.ok) {
+        const data = await response.json();
+        setPlans(data.plans || []);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching plans:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchPlans();
   }, [user]);
 
   const handlePlanClick = (plan: Plan) => {
     // Navigate to plan-detail with plan id
     router.push(`/plan-detail/${plan.id}`);
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent, plan: Plan) => {
+    e.stopPropagation();
+    setPlanToDelete(plan);
+  };
+
+  const confirmDelete = async () => {
+    if (!planToDelete || !user?.email) return;
+
+    setIsDeleting(true);
+    try {
+      // Use POST request with body to send email (since DELETE body is not always supported)
+      const response = await fetch(`/api/plans/${planToDelete.id}?email=${encodeURIComponent(user.email)}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user.email })
+      });
+
+      if (response.ok) {
+        // Refresh the plans list
+        await fetchPlans();
+        setPlanToDelete(null);
+      } else {
+        throw new Error('Failed to delete plan');
+      }
+    } catch (error) {
+      console.error('Error deleting plan:', error);
+      alert('Failed to delete plan');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   // Base dimensions for planner-style frame
@@ -148,7 +182,22 @@ export default function MyPlansPage() {
                           {new Date(plan.createdAt).toLocaleDateString()} • {new Date(plan.createdAt).toLocaleTimeString()}
                         </p>
                       </div>
-                      <div className="ml-4 flex-shrink-0">
+                      <div className="ml-4 flex-shrink-0 flex gap-2 items-start">
+                        <button
+                          onClick={(e) => handleDeleteClick(e, plan)}
+                          className="p-2 text-red-400 hover:bg-red-500/20 rounded-full transition-colors"
+                          aria-label="Delete plan"
+                        >
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                            <path
+                              d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14M10 11v6M14 11v6"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </button>
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
                           <path
                             d="M9 5l7 7-7 7"
@@ -167,6 +216,34 @@ export default function MyPlansPage() {
           </div>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {planToDelete && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="bg-[#1a1a1a] rounded-2xl p-6 max-w-sm w-full mx-4 border border-gray-700 shadow-2xl">
+            <h3 className="text-white font-bold text-xl mb-2">Delete Plan?</h3>
+            <p className="text-gray-400 mb-6">
+              Are you sure you want to delete this plan? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setPlanToDelete(null)}
+                className="flex-1 px-4 py-3 bg-gray-700 text-white rounded-xl font-semibold hover:bg-gray-600 transition-colors"
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors disabled:opacity-50"
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
