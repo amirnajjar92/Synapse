@@ -1,7 +1,11 @@
 'use client';
 
 import { BarChart } from '@/components/BarChart';
+import PromptBox from '@/components/PromptBox';
+import CustomButton from '@/components/CustomButton';
 import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { Plan } from '@prisma/client';
 
 // Skeleton Component
 const Skeleton = ({ className = '' }: { className?: string }) => (
@@ -9,7 +13,12 @@ const Skeleton = ({ className = '' }: { className?: string }) => (
 );
 
 export default function MonitorPage() {
+  const { data: session } = useSession();
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [dailyNotes, setDailyNotes] = useState('');
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   // Generate sample data for bar charts
   const redChartData = Array.from({ length: 45 }, () => Math.random() * 80 + 20);
@@ -22,13 +31,57 @@ export default function MonitorPage() {
     return Math.max(15, Math.min(100, base + variation));
   });
 
-  // Simulate loading
+  // Fetch user's plans
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1500);
+    const fetchPlans = async () => {
+      if (!session?.user?.email) return;
+      
+      try {
+        const response = await fetch(`/api/users/me/plans?email=${encodeURIComponent(session.user.email)}`);
+        if (response.ok) {
+          const data = await response.json();
+          setPlans(data.plans);
+          if (data.plans.length > 0) {
+            setSelectedPlan(data.plans[0]);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching plans:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPlans();
+  }, [session]);
+
+  // Save daily notes with debounce
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (!session?.user?.email || !selectedPlan || !dailyNotes) return;
+      
+      try {
+        const response = await fetch('/api/users/me/daily-entries', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: session.user.email,
+            planId: selectedPlan.id,
+            date: currentDate.toISOString(),
+            notes: dailyNotes,
+          }),
+        });
+        
+        if (response.ok) {
+          console.log('Daily notes saved');
+        }
+      } catch (error) {
+        console.error('Error saving daily notes:', error);
+      }
+    }, 1000); // Debounce 1 second
+
     return () => clearTimeout(timer);
-  }, []);
+  }, [dailyNotes, selectedPlan, session, currentDate]);
 
   // Base dimensions (original design)
   const baseWidth = 402;
@@ -53,20 +106,36 @@ export default function MonitorPage() {
         >
           {/* Row 1: 400x153 (17.51% height) - 2 columns matching below */}
           <div className="flex w-full h-[17.51%]">
-            {/* Column 1 - left cell */}
-            <div className="w-1/2 h-full border border-[#3B3B3B00] flex items-center justify-center">
+            {/* Column 1 - left cell: Plan Selection */}
+            <div className="w-1/2 h-full border border-[#3B3B3B00] flex items-center justify-center px-2">
               {isLoading ? (
                 <Skeleton className="w-20 sm:w-28 md:w-32 h-6 sm:h-8 md:h-10" />
               ) : (
-                <span className="text-white text-2xl sm:text-3xl md:text-4xl font-light">2026/05</span>
+                <select
+                  value={selectedPlan?.id || ''}
+                  onChange={(e) => {
+                    const plan = plans.find(p => p.id === e.target.value);
+                    setSelectedPlan(plan || null);
+                  }}
+                  className="bg-transparent text-white text-xl sm:text-2xl md:text-3xl font-light border-none outline-none text-center"
+                >
+                  {plans.length === 0 ? (
+                    <option value="">No Plans</option>
+                  ) : (
+                    plans.map(plan => (
+                    <option key={plan.id} value={plan.id}>{plan.title}</option>
+                  )))}
+                </select>
               )}
             </div>
-            {/* Column 2 - right cell */}
+            {/* Column 2 - right cell: Current date */}
             <div className="w-1/2 h-full border border-[#3B3B3B00] flex items-center justify-center">
               {isLoading ? (
                 <Skeleton className="w-20 sm:w-24 md:w-28 h-8 sm:h-10 md:h-12" />
               ) : (
-                <span className="text-white text-3xl sm:text-4xl md:text-5xl font-light">DONE</span>
+                <span className="text-white text-3xl sm:text-4xl md:text-5xl font-light">
+                  {currentDate.toLocaleDateString('en', { month: 'numeric', year: 'numeric' })}
+                </span>
               )}
             </div>
           </div>
@@ -237,21 +306,18 @@ export default function MonitorPage() {
           {/* Row 8: 400x46 (5.26% height) */}
           <div className="w-full h-[5.26%] border border-[#3B3B3B]"></div>
 
-          {/* Row 9: 400x176 (20.14% height) */}
-          <div className="w-full h-[20.14%] border border-[#3B3B3B] flex items-center justify-center">
+          {/* Row 9: 400x176 (20.14% height) - Daily Notes Prompt Box */}
+          <div className="w-full h-[20.14%] border border-[#3B3B3B] flex flex-col p-2">
             {isLoading ? (
-              <Skeleton className="w-20 sm:w-28 md:w-32 h-10 sm:h-14 md:h-16" />
+              <Skeleton className="w-full h-full" />
             ) : (
-              <svg 
-                width="80" 
-                height="40" 
-                viewBox="0 0 120 60" 
-                fill="none" 
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-auto h-auto max-w-[60%] max-h-[60%]"
-              >
-                <path d="M20 30L100 30M70 10L100 30L70 50" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+              <PromptBox
+                placeholder="Add your daily activity notes..."
+                value={dailyNotes}
+                onChange={setDailyNotes}
+                onSend={() => {}} // No send, just auto-save
+                autoGrow
+              />
             )}
           </div>
         </div>
