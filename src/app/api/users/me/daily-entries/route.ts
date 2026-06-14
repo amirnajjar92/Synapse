@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { email, planId, date, notes, metrics, media } = body;
+    const { email, planId, date, notes, metrics, media, aiAnalysis, todos } = body;
 
     if (!email || !planId || !date) {
       return NextResponse.json({ error: 'Email, planId, and date are required' }, { status: 400 });
@@ -66,6 +66,8 @@ export async function POST(req: NextRequest) {
       },
       update: {
         notes,
+        aiAnalysis: aiAnalysis !== undefined ? aiAnalysis : undefined,
+        todos: todos !== undefined ? todos : undefined,
         metrics: metrics ? {
           deleteMany: {},
           create: metrics,
@@ -80,6 +82,8 @@ export async function POST(req: NextRequest) {
         planId,
         date: entryDate,
         notes,
+        aiAnalysis,
+        todos: todos || [],
         metrics: metrics ? { create: metrics } : undefined,
         media: media ? { create: media } : undefined,
       },

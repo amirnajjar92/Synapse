@@ -72,10 +72,26 @@ export default function PlanDetailPage() {
         setPlan(planData);
 
         // Convert the plan.tables to the planTypes format we use in Redux
+        const iconMap: Record<string, string> = {
+          'MEALS': '/vectors/meals-icon.svg',
+          'CARDIO': '/vectors/cardio-icon.svg',
+          'NUTRIENTS': '/vectors/nutrients-icon.svg',
+          'RECOMMENDED': '/vectors/recomended-icon.svg',
+          'CHALLENGES': '/vectors/challenges-icon.svg',
+          'SUPPLEMENTS': '/vectors/suppliments-icon.svg'
+        };
+        const defaultIcons = [
+          '/vectors/meals-icon.svg',
+          '/vectors/cardio-icon.svg',
+          '/vectors/nutrients-icon.svg',
+          '/vectors/recomended-icon.svg',
+          '/vectors/challenges-icon.svg',
+          '/vectors/suppliments-icon.svg'
+        ];
         const convertedPlanTypes: PlanTableData[] = (planData.tables || []).map((table: any, index: number) => ({
           id: index,
           title: table.title || `Table ${index + 1}`,
-          icon: planData.icon || '/vectors/plan-icon.svg',
+          icon: iconMap[table.title] || defaultIcons[index] || planData.icon || '/vectors/plan-icon.svg',
           tableData: (table.rows || []).map((row: any, rowIndex: number) => ({
             id: row.id || rowIndex,
             columns: row.columns || []
@@ -118,6 +134,44 @@ export default function PlanDetailPage() {
     router.push('/my-plans');
   };
 
+  // Function to ask AI for plan duration in days
+  const getPlanDurationInDays = async (prompt: string): Promise<number> => {
+    // First try simple regex parsing for common durations like "8 weeks" etc.
+    const weekMatch = prompt.match(/(\d+)\s*week/i);
+    if (weekMatch) {
+      return parseInt(weekMatch[1]) * 7;
+    }
+    const monthMatch = prompt.match(/(\d+)\s*month/i);
+    if (monthMatch) {
+      return parseInt(monthMatch[1]) * 30;
+    }
+    const dayMatch = prompt.match(/(\d+)\s*day/i);
+    if (dayMatch) {
+      return parseInt(dayMatch[1]);
+    }
+    // If regex fails, use ask-moole API
+    try {
+      const apiUrl = 'https://moole-back.vercel.app/ask-moole';
+      const systemPrompt = `You are a helpful assistant that extracts only responds with a single number: the total number of days for the fitness plan described in the user's prompt. If you only respond with a number, no extra text.`;
+      const userPrompt = `What is the total number of days for this fitness plan? ${prompt}`;
+      
+      const res = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: `${systemPrompt}\n\n${userPrompt}` }),
+      });
+      if (!res.ok) throw new Error('Failed to get duration');
+      const data = await res.json();
+      const answer = data.answer?.trim();
+      const number = parseInt(answer);
+      if (!isNaN(number)) return number;
+    } catch (err) {
+      console.error('Error getting plan duration from AI:', err);
+    }
+    // Default to 30 days if all fails
+    return 30;
+  };
+
   // Handle plan status change
   const handleStatusChange = async () => {
     if (!plan || !id) return;
@@ -133,6 +187,18 @@ export default function PlanDetailPage() {
     if (plan.status === 'NOT_STARTED') {
       newStatus = 'IN_PROGRESS';
       startDate = new Date().toISOString();
+      try {
+        const durationDays = await getPlanDurationInDays(plan.prompt);
+        const end = new Date(startDate);
+        end.setDate(end.getDate() + durationDays);
+        endDate = end.toISOString();
+      } catch (err) {
+        console.error('Error calculating end date:', err);
+        // Fallback to 30 days
+        const end = new Date(startDate);
+        end.setDate(end.getDate() + 30);
+        endDate = end.toISOString();
+      }
     } else if (plan.status === 'IN_PROGRESS') {
       newStatus = 'PAUSED';
     } else if (plan.status === 'PAUSED') {

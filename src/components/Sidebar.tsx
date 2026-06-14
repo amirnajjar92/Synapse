@@ -9,12 +9,44 @@ interface UserData {
   picture?: string | null;
 }
 
+interface Plan {
+  id: string;
+  title: string;
+  prompt: string;
+  icon: string;
+  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'PAUSED' | 'COMPLETED';
+  startDate?: string;
+  endDate?: string;
+}
+
 export default function Sidebar() {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<UserData | null>(null);
   const [mounted, setMounted] = useState(false);
   const [hasToken, setHasToken] = useState(false);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [activePlans, setActivePlans] = useState<Plan[]>([]);
+
+  // Fetch plans for user
+  const fetchPlans = async () => {
+    if (!user?.email) return;
+
+    try {
+      const response = await fetch('/api/users/me/plans', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user.email })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setPlans(data.plans || []);
+      }
+    } catch (error) {
+      console.error('Error fetching plans:', error);
+    }
+  };
 
   // Check for user data on mount and periodically
   useEffect(() => {
@@ -32,6 +64,16 @@ export default function Sidebar() {
     const interval = setInterval(checkAuth, 500);
     return () => clearInterval(interval);
   }, []);
+
+  // Fetch plans when user is available
+  useEffect(() => {
+    fetchPlans();
+  }, [user]);
+
+  // Filter active plans (IN_PROGRESS)
+  useEffect(() => {
+    setActivePlans(plans.filter(p => p.status === 'IN_PROGRESS'));
+  }, [plans]);
 
   const handleLogout = () => {
     localStorage.removeItem('synapse_token');
@@ -136,6 +178,43 @@ export default function Sidebar() {
               </svg>
               My Plans
             </button>
+
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                router.push('/plan-progress-tracker');
+              }}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Plan Progress
+            </button>
+
+            {/* Active Plans Section */}
+            {activePlans.length > 0 && (
+              <div className="mt-4">
+                <p className="text-xs text-gray-500 px-4 mb-2 uppercase tracking-wider">
+                  Active Plans
+                </p>
+                <div className="flex flex-col gap-1">
+                  {activePlans.map((plan) => (
+                    <button
+                      key={plan.id}
+                      onClick={() => {
+                        setIsOpen(false);
+                        router.push(`/plan-progress-tracker?planId=${plan.id}`);
+                      }}
+                      className="flex items-center gap-3 px-4 py-2 rounded-xl text-left text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+                    >
+                      <div className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
+                      <span className="truncate">{plan.title}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Logout at Bottom */}
