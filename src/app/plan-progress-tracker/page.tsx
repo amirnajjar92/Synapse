@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAnalysePlanProgress } from '@/lib/hooks/useAnalysePlanProgress';
 import { useTodayTable } from '@/lib/hooks/useTodayTable';
@@ -47,13 +47,13 @@ function PlanProgressContent() {
   const [analysis, setAnalysis] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  const getCurrentDay = () => {
+  const getCurrentDay = useCallback(() => {
     if (!selectedPlan?.startDate) return 0;
     const start = new Date(selectedPlan.startDate);
     const today = new Date();
     const diffTime = Math.abs(today.getTime() - start.getTime());
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  };
+  }, [selectedPlan?.startDate]);
 
   const { todayTable, isLoading: isTodayTableLoading, regenerate: regenerateTodayTable } = useTodayTable(selectedPlan, getCurrentDay);
   const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
@@ -66,7 +66,13 @@ function PlanProgressContent() {
     setMounted(true);
     const userStr = localStorage.getItem('synapse_user');
     if (userStr) {
-      setUser(JSON.parse(userStr));
+      const newUser = JSON.parse(userStr);
+      setUser(prevUser => {
+        if (JSON.stringify(prevUser) === JSON.stringify(newUser)) {
+          return prevUser;
+        }
+        return newUser;
+      });
     } else {
       router.push('/');
     }

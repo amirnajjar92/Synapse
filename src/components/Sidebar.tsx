@@ -56,7 +56,14 @@ export default function Sidebar() {
       const token = localStorage.getItem('synapse_token');
       setHasToken(!!token);
       if (userStr) {
-        setUser(JSON.parse(userStr));
+        const newUser = JSON.parse(userStr);
+        // Only update user if it's actually different
+        setUser(prevUser => {
+          if (JSON.stringify(prevUser) === JSON.stringify(newUser)) {
+            return prevUser;
+          }
+          return newUser;
+        });
       }
     };
     checkAuth();
