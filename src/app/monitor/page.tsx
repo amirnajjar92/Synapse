@@ -1,7 +1,6 @@
 'use client';
 
 import { BarChart } from '@/components/BarChart';
-import PromptBox from '@/components/PromptBox';
 import CustomButton from '@/components/CustomButton';
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
@@ -327,17 +326,16 @@ export default function MonitorPage() {
           {/* Row 8: 400x46 (5.26% height) */}
           <div className="w-full h-[5.26%] border border-[#3B3B3B]"></div>
 
-          {/* Row 9: 400x176 (20.14% height) - Daily Notes Prompt Box */}
+          {/* Row 9: 400x176 (20.14% height) - Daily Notes */}
           <div className="w-full h-[20.14%] border border-[#3B3B3B] flex flex-col p-2">
             {isLoading ? (
               <Skeleton className="w-full h-full" />
             ) : (
-              <PromptBox
+              <textarea
+                className="w-full h-full bg-white text-gray-800 text-sm sm:text-base md:text-xl font-light text-left rounded-lg p-3 border-none resize-none outline-none focus:ring-0"
                 placeholder="Add your daily activity notes..."
                 value={dailyNotes}
-                onChange={setDailyNotes}
-                onSend={() => {}} // No send, just auto-save
-                autoGrow
+                onChange={(e) => setDailyNotes(e.target.value)}
               />
             )}
           </div>
