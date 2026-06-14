@@ -23,6 +23,9 @@ interface Plan {
   prompt: string;
   icon: string;
   tables: any[];
+  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'PAUSED' | 'COMPLETED';
+  startDate: string | null;
+  endDate: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -39,18 +42,12 @@ export default function PlanDetailPage() {
   const { planTypes, currentTableIndex, promptText, isGenerating } = useAppSelector((state) => state.plan);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [mockPlanStatus, setMockPlanStatus] = useState<'NOT_STARTED' | 'IN_PROGRESS' | 'PAUSED' | 'COMPLETED'>('NOT_STARTED');
+  const [plan, setPlan] = useState<Plan | null>(null);
 
   // Fetch plan from API using id OR use existing Redux plan if available
   useEffect(() => {
     const fetchPlan = async () => {
       if (!id || typeof id !== 'string') return;
-
-      // First, check if we already have a plan in Redux (just generated)
-      if (planTypes.length > 0) {
-        setHasLoaded(true);
-        return;
-      }
 
       // Otherwise, fetch from API
       // Get user email from localStorage
@@ -69,13 +66,16 @@ export default function PlanDetailPage() {
           throw new Error('Failed to fetch plan');
         }
         const data = await finalResponse.json();
-        const plan: Plan = data.plan;
+        const planData: Plan = data.plan;
+
+        // Set plan state
+        setPlan(planData);
 
         // Convert the plan.tables to the planTypes format we use in Redux
-        const convertedPlanTypes: PlanTableData[] = (plan.tables || []).map((table: any, index: number) => ({
+        const convertedPlanTypes: PlanTableData[] = (planData.tables || []).map((table: any, index: number) => ({
           id: index,
           title: table.title || `Table ${index + 1}`,
-          icon: plan.icon || '/vectors/plan-icon.svg',
+          icon: planData.icon || '/vectors/plan-icon.svg',
           tableData: (table.rows || []).map((row: any, rowIndex: number) => ({
             id: row.id || rowIndex,
             columns: row.columns || []
@@ -85,7 +85,7 @@ export default function PlanDetailPage() {
         }));
         
         dispatch(setPlanTypes(convertedPlanTypes));
-        dispatch(setPromptText(plan.prompt));
+        dispatch(setPromptText(planData.prompt));
         setError(null);
       } catch (err) {
         console.error('Error fetching plan:', err);
@@ -96,7 +96,7 @@ export default function PlanDetailPage() {
     };
 
     fetchPlan();
-  }, [id, dispatch, planTypes.length]);
+  }, [id, dispatch]);
 
   // Get current plan
   const currentPlan = planTypes[currentTableIndex];
@@ -116,6 +116,56 @@ export default function PlanDetailPage() {
   // Handle back button click
   const handleBackClick = () => {
     router.push('/my-plans');
+  };
+
+  // Handle plan status change
+  const handleStatusChange = async () => {
+    if (!plan || !id) return;
+
+    // Get user email from localStorage
+    const userStr = localStorage.getItem('synapse_user');
+    const user = userStr ? JSON.parse(userStr) : null;
+
+    let newStatus: Plan['status'];
+    let startDate = plan.startDate;
+    let endDate = plan.endDate;
+
+    if (plan.status === 'NOT_STARTED') {
+      newStatus = 'IN_PROGRESS';
+      startDate = new Date().toISOString();
+    } else if (plan.status === 'IN_PROGRESS') {
+      newStatus = 'PAUSED';
+    } else if (plan.status === 'PAUSED') {
+      newStatus = 'IN_PROGRESS';
+    } else {
+      newStatus = 'NOT_STARTED';
+      startDate = null;
+      endDate = null;
+    }
+
+    try {
+      // Call API to update status
+      const url = new URL(`/api/plans/${id}`, window.location.origin);
+      if (user?.email) {
+        url.searchParams.set('email', user.email);
+      }
+      const response = await fetch(url.toString(), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: newStatus,
+          startDate,
+          endDate,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setPlan(data.plan);
+      }
+    } catch (err) {
+      console.error('Error updating plan status:', err);
+    }
   };
 
   // Base dimensions (original design)
@@ -215,25 +265,20 @@ export default function PlanDetailPage() {
             className="w-full border border-[#3B3B3B00] flex items-center justify-center"
             style={{ height: `${(emptyRowHeight / baseHeight) * 100}%` }}
           >
-            <CustomButton
-              mirror={true}
-              text={
-                mockPlanStatus === 'NOT_STARTED' ? 'START PLAN' :
-                mockPlanStatus === 'IN_PROGRESS' ? 'PAUSE PLAN' :
-                mockPlanStatus === 'PAUSED' ? 'RESUME PLAN' :
-                'RESTART PLAN'
-              }
-              onClick={() => {
-                // Mock handler to cycle through statuses for preview
-                if (mockPlanStatus === 'NOT_STARTED') setMockPlanStatus('IN_PROGRESS');
-                else if (mockPlanStatus === 'IN_PROGRESS') setMockPlanStatus('PAUSED');
-                else if (mockPlanStatus === 'PAUSED') setMockPlanStatus('IN_PROGRESS');
-                else setMockPlanStatus('NOT_STARTED');
-              }}
-
-              width="150px"
-              fontSize="16px"
-            />
+            {plan && (
+              <CustomButton
+                mirror={true}
+                text={
+                  plan.status === 'NOT_STARTED' ? 'START PLAN' :
+                  plan.status === 'IN_PROGRESS' ? 'PAUSE PLAN' :
+                  plan.status === 'PAUSED' ? 'RESUME PLAN' :
+                  'RESTART PLAN'
+                }
+                onClick={handleStatusChange}
+                width="150px"
+                fontSize="16px"
+              />
+            )}
           </div>
 
           {/* Row 4: Prompt Section */}

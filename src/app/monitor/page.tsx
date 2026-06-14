@@ -34,10 +34,22 @@ export default function MonitorPage() {
   // Fetch user's plans
   useEffect(() => {
     const fetchPlans = async () => {
-      if (!session?.user?.email) return;
+      // Try to get email from session first, then localStorage
+      let email = session?.user?.email;
+      
+      if (!email) {
+        const userStr = localStorage.getItem('synapse_user');
+        const user = userStr ? JSON.parse(userStr) : null;
+        email = user?.email;
+      }
+      
+      if (!email) {
+        setIsLoading(false);
+        return;
+      }
       
       try {
-        const response = await fetch(`/api/users/me/plans?email=${encodeURIComponent(session.user.email)}`);
+        const response = await fetch(`/api/users/me/plans?email=${encodeURIComponent(email)}`);
         if (response.ok) {
           const data = await response.json();
           setPlans(data.plans);
@@ -58,14 +70,23 @@ export default function MonitorPage() {
   // Save daily notes with debounce
   useEffect(() => {
     const timer = setTimeout(async () => {
-      if (!session?.user?.email || !selectedPlan || !dailyNotes) return;
+      // Try to get email from session first, then localStorage
+      let email = session?.user?.email;
+      
+      if (!email) {
+        const userStr = localStorage.getItem('synapse_user');
+        const user = userStr ? JSON.parse(userStr) : null;
+        email = user?.email;
+      }
+      
+      if (!email || !selectedPlan || !dailyNotes) return;
       
       try {
         const response = await fetch('/api/users/me/daily-entries', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            email: session.user.email,
+            email,
             planId: selectedPlan.id,
             date: currentDate.toISOString(),
             notes: dailyNotes,
