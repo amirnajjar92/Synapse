@@ -12,17 +12,18 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
+  id            String        @id @default(cuid())
   name          String?
-  email         String?   @unique
+  email         String?       @unique
   emailVerified DateTime?
   image         String?
   accounts      Account[]
   sessions      Session[]
   plans         Plan[]
   userPrompts   UserPrompt[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  dailyEntries  DailyEntry[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 }
 
 model Account {
@@ -61,17 +62,28 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+enum PlanStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  PAUSED
+  COMPLETED
+}
+
 model Plan {
   id        String       @id @default(cuid())
   userId    String
   title     String
   prompt    String
   icon      String
+  status    PlanStatus   @default(NOT_STARTED)
+  startDate DateTime?
+  endDate   DateTime?
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
   tables    PlanTable[]
   user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   userPrompts UserPrompt[]
+  dailyEntries DailyEntry[]
 }
 
 model PlanTable {
@@ -100,4 +112,44 @@ model UserPrompt {
   
   user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   plan Plan? @relation(fields: [planId], references: [id], onDelete: Cascade)
+}
+
+model DailyEntry {
+  id          String         @id @default(cuid())
+  userId      String
+  planId      String
+  date        DateTime
+  notes       String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan        Plan           @relation(fields: [planId], references: [id], onDelete: Cascade)
+  metrics     DailyMetric[]
+  media       DailyMedia[]
+
+  @@unique([userId, planId, date])
+}
+
+model DailyMetric {
+  id          String         @id @default(cuid())
+  dailyEntryId String
+  type        String         // e.g., "weight", "distance", "pace", "time", "calories"
+  value       Float
+  unit        String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  dailyEntry  DailyEntry     @relation(fields: [dailyEntryId], references: [id], onDelete: Cascade)
+}
+
+model DailyMedia {
+  id          String         @id @default(cuid())
+  dailyEntryId String
+  type        String         // e.g., "screenshot", "photo", "video"
+  url         String
+  fileName    String?
+  createdAt   DateTime       @default(now())
+
+  dailyEntry  DailyEntry     @relation(fields: [dailyEntryId], references: [id], onDelete: Cascade)
 }
