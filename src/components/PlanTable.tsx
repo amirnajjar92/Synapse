@@ -143,7 +143,7 @@ const PlanTable: React.FC<PlanTableProps> = ({
                   onClick={() => onTabClick && onTabClick(index)}
                   className={`px-2 py-1 rounded-full text-xs transition-all whitespace-nowrap ${
                     index === currentTableIndex
-                      ? 'bg-purple-600 text-white font-semibold'
+                      ? 'bg-white text-black font-semibold'
                       : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                   }`}
                 >
