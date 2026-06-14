@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAnalysePlanProgress } from '@/lib/hooks/useAnalysePlanProgress';
+import { useTodayTable } from '@/lib/hooks/useTodayTable';
 
 interface Plan {
   id: string;
@@ -45,8 +46,16 @@ function PlanProgressContent() {
   const [mounted, setMounted] = useState(false);
   const [analysis, setAnalysis] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [todayTodos, setTodayTodos] = useState<string[]>([]);
-  const [isGeneratingTodos, setIsGeneratingTodos] = useState(false);
+
+  const getCurrentDay = () => {
+    if (!selectedPlan?.startDate) return 0;
+    const start = new Date(selectedPlan.startDate);
+    const today = new Date();
+    const diffTime = Math.abs(today.getTime() - start.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
+
+  const { todayTable, isLoading: isTodayTableLoading, regenerate: regenerateTodayTable } = useTodayTable(selectedPlan, getCurrentDay);
   const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
   const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
   const [activeTab, setActiveTab] = useState(0);
@@ -110,14 +119,6 @@ function PlanProgressContent() {
   useEffect(() => {
     fetchPlans();
   }, [user]);
-
-  const getCurrentDay = () => {
-    if (!selectedPlan?.startDate) return 0;
-    const start = new Date(selectedPlan.startDate);
-    const today = new Date();
-    const diffTime = Math.abs(today.getTime() - start.getTime());
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  };
 
   const getTotalDays = () => {
     if (!selectedPlan?.startDate || !selectedPlan?.endDate) return 0;
@@ -213,82 +214,10 @@ function PlanProgressContent() {
     }
   };
 
-  const saveTodos = async (todos: string[]) => {
-    if (!selectedPlan || !user?.email) return;
-
-    try {
-      const response = await fetch('/api/users/me/daily-entries', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: user.email,
-          planId: selectedPlan.id,
-          date: getTodayDateStr(),
-          todos,
-        }),
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        return data.dailyEntry;
-      }
-    } catch (error) {
-      console.error('Error saving todos:', error);
-    }
-  };
-
-  const generateTodayTodos = async (plan: Plan) => {
-    setIsGeneratingTodos(true);
-    try {
-      // First check if we have saved todos
-      const existingEntry = await fetchTodayEntry();
-      if (existingEntry?.todos && existingEntry.todos.length > 0) {
-        setTodayTodos(existingEntry.todos);
-        setIsGeneratingTodos(false);
-        return;
-      }
-
-      // Otherwise generate new
-      const apiUrl = 'https://moole-back.vercel.app/ask-moole';
-      const systemPrompt = `You are a fitness coach who generates daily to-do items for a user based on their fitness plan. Return a JSON array of strings ONLY, no extra text.`;
-      const userPrompt = `Generate 3-5 daily to-do items for this fitness plan: ${plan.prompt}. Current day of plan: ${getCurrentDay()}. Return as JSON array of strings.`;
-      
-      const res = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: `${systemPrompt}\n\n${userPrompt}` })
-      });
-      
-      if (!res.ok) throw new Error('Failed to get todos');
-      const data = await res.json();
-      
-      let todos: string[] = [];
-      try {
-        todos = JSON.parse(data.answer);
-        if (!Array.isArray(todos)) throw new Error('Not an array');
-      } catch (parseError) {
-        todos = data.answer.split('\n').filter(Boolean);
-      }
-      
-      const finalTodos = todos.length > 0 ? todos : ['Complete your workout', 'Follow your meal plan', 'Stay hydrated'];
-      setTodayTodos(finalTodos);
-      // Save to DB
-      await saveTodos(finalTodos);
-    } catch (error) {
-      console.error('Error generating todos:', error);
-      const fallbackTodos = ['Complete your workout', 'Follow your meal plan', 'Stay hydrated'];
-      setTodayTodos(fallbackTodos);
-      await saveTodos(fallbackTodos);
-    } finally {
-      setIsGeneratingTodos(false);
-    }
-  };
-
   // Analyze progress when selected plan changes
   useEffect(() => {
     if (selectedPlan && selectedPlan.startDate && selectedPlan.endDate) {
       handleAnalyzeProgress();
-      generateTodayTodos(selectedPlan);
     }
   }, [selectedPlan]);
 
@@ -542,19 +471,26 @@ function PlanProgressContent() {
                 <div className="w-full h-full flex flex-col">
                   {/* Table */}
                   <div className="flex-1 min-h-0 overflow-y-auto border border-gray-700 rounded-lg">
-                    {isGeneratingTodos ? (
+                    {isTodayTableLoading ? (
                       <div className="flex items-center justify-center h-32">
                         <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
                       </div>
                     ) : (
-                      <table className="text-gray-300 text-xs sm:text-sm font-light w-full table-fixed">
+                      <table className="text-gray-300 text-xs sm:text-sm font-light w-full">
                         <tbody>
-                          {todayTodos.map((todo: string, idx: number) => (
+                          {todayTable.map((item, idx: number) => (
                             <tr key={idx} className="border-b border-gray-700 last:border-b-0">
                               <td className="p-3 align-middle">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-5 h-5 rounded-full border-2 border-purple-500 flex items-center justify-center flex-shrink-0" />
-                                  <span>{todo}</span>
+                                <div className="flex flex-col gap-1">
+                                  {item.category && (
+                                    <span className="text-purple-400 text-xs font-semibold uppercase">
+                                      {item.category}
+                                    </span>
+                                  )}
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-5 h-5 rounded-full border-2 border-purple-500 flex items-center justify-center flex-shrink-0" />
+                                    <span className="text-gray-200">{item.task}</span>
+                                  </div>
                                 </div>
                               </td>
                             </tr>
