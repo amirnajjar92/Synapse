@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import BurgerMenuButton from '@/components/BurgerMenuButton';
 
 // Skeleton Component
 const Skeleton = ({ className = '' }: { className?: string }) => (
@@ -112,9 +113,14 @@ export default function WaterTrackerPage() {
       >
         {/* Main Container */}
         <div 
-          className="w-full h-full flex flex-col"
+          className="w-full h-full flex flex-col relative"
           style={{ backgroundColor: '#2C2C2C' }}
         >
+          {/* Burger Menu Button */}
+          <div className="absolute top-4 left-4 z-10">
+            <BurgerMenuButton />
+          </div>
+          
           {/* Row 1: 400x144 */}
           <div className="flex w-full h-[16.48%]">
             {/* Column 1 - left cell */}

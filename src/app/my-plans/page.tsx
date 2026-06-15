@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import BurgerMenuButton from '@/components/BurgerMenuButton';
 
 interface Plan {
   id: string;
@@ -133,18 +134,23 @@ export default function MyPlansPage() {
         >
           {/* Header */}
           <div className="p-6 border-b border-gray-700">
-            <h1
-              className="text-white font-bold"
-              style={{
-                fontFamily: 'var(--font-hanalei-fill)',
-                fontSize: '2.5rem'
-              }}
-            >
-              My Plans
-            </h1>
-            <p className="text-gray-400 mt-2">
-              {plans.length === 0 ? 'No plans yet' : `You have ${plans.length} plan${plans.length === 1 ? '' : 's'}`}
-            </p>
+            <div className="flex items-start gap-4">
+              <BurgerMenuButton />
+              <div className="flex-1 min-w-0">
+                <h1
+                  className="text-white font-bold"
+                  style={{
+                    fontFamily: 'var(--font-hanalei-fill)',
+                    fontSize: '2.5rem'
+                  }}
+                >
+                  My Plans
+                </h1>
+                <p className="text-gray-400 mt-2">
+                  {plans.length === 0 ? 'No plans yet' : `You have ${plans.length} plan${plans.length === 1 ? '' : 's'}`}
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Plans List */}

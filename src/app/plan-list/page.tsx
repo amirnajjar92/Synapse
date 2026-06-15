@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import CustomButton from '@/components/CustomButton';
+import BurgerMenuButton from '@/components/BurgerMenuButton';
 
 // Skeleton Component
 const Skeleton = ({ className = '' }: { className?: string }) => (
@@ -56,14 +57,20 @@ export default function PlanListPage() {
           style={{ backgroundColor: '#0b0b0bff' }}
         >
           {/* Header */}
-          <div className="flex items-center justify-center mb-6 min-h-[40px]">
-            {isLoading ? (
-              <Skeleton className="w-3/4 h-6" />
-            ) : (
-              <p className="text-gray-400 text-base sm:text-lg md:text-xl font-light">
-                SELECT ITEMS TO VIEW DETAILE
-              </p>
-            )}
+          <div className="flex items-center mb-6 min-h-[40px]">
+            <div className="flex-shrink-0">
+              <BurgerMenuButton />
+            </div>
+            <div className="flex-1 flex items-center justify-center">
+              {isLoading ? (
+                <Skeleton className="w-3/4 h-6" />
+              ) : (
+                <p className="text-gray-400 text-base sm:text-lg md:text-xl font-light">
+                  SELECT ITEMS TO VIEW DETAILE
+                </p>
+              )}
+            </div>
+            <div className="w-10"></div>
           </div>
 
           {/* Items List */}

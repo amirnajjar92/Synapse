@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import PromptBox from '@/components/PromptBox';
 import CustomButton from '@/components/CustomButton';
 import PlanTable from '@/components/PlanTable';
+import BurgerMenuButton from '@/components/BurgerMenuButton';
 import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks';
 import { setCurrentTableIndex, setPromptText, setPlanTypes } from '@/lib/redux/slices/planSlice';
 
@@ -280,9 +281,14 @@ export default function PlanDetailPage() {
       >
         {/* Main Container */}
         <div 
-          className="w-full h-full flex flex-col pb-2 sm:pb-3 md:pb-4"
+          className="w-full h-full flex flex-col pb-2 sm:pb-3 md:pb-4 relative"
           style={{ backgroundColor: '#0b0b0bff' }}
         >
+          {/* Burger Menu Button */}
+          <div className="absolute top-4 left-4 z-10">
+            <BurgerMenuButton />
+          </div>
+          
           {/* Row 1: Header - 400 X 100 */}
           <div 
             className="w-full border border-[#3B3B3B00] flex items-center justify-between px-3 sm:px-4 md:px-6 transition-all duration-300"
@@ -291,7 +297,7 @@ export default function PlanDetailPage() {
             {/* No skeletons while generating, show the header directly */}
             <>
               <h2 
-                className="text-white font-bold"
+                className="text-white font-bold ml-12"
                 style={{ 
                   fontFamily: 'var(--font-hanalei-fill)', 
                   fontSize: 'calc((100vh * 0.95) * (36 / 874))',

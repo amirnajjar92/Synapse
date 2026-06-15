@@ -3,6 +3,7 @@ import './globals.css';
 import { StoreProvider } from '@/lib/redux/StoreProvider';
 import Providers from './providers';
 import Sidebar from '@/components/Sidebar';
+import { SidebarProvider } from '@/components/SidebarContext';
 import { Hanalei_Fill } from "next/font/google";
 
 const hanaleiFill = Hanalei_Fill({
@@ -28,8 +29,10 @@ export default function RootLayout({
       >
         <Providers>
           <StoreProvider>
-            <Sidebar />
-            {children}
+            <SidebarProvider>
+              <Sidebar />
+              {children}
+            </SidebarProvider>
           </StoreProvider>
         </Providers>
       </body>

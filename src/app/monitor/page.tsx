@@ -2,6 +2,7 @@
 
 import { BarChart } from '@/components/BarChart';
 import CustomButton from '@/components/CustomButton';
+import BurgerMenuButton from '@/components/BurgerMenuButton';
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Plan } from '@prisma/client';
@@ -121,9 +122,14 @@ export default function MonitorPage() {
       >
         {/* Main Container - scales proportionally */}
         <div 
-          className="w-full h-full flex flex-col"
+          className="w-full h-full flex flex-col relative"
           style={{ backgroundColor: '#2C2C2C' }}
         >
+          {/* Burger Menu Button */}
+          <div className="absolute top-4 left-4 z-10">
+            <BurgerMenuButton />
+          </div>
+          
           {/* Row 1: 400x153 (17.51% height) - 2 columns matching below */}
           <div className="flex w-full h-[17.51%]">
             {/* Column 1 - left cell: Plan Selection */}

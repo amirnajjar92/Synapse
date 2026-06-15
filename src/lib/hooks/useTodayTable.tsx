@@ -25,11 +25,16 @@ interface TodayTableItem {
   icon?: string;
 }
 
+interface GroupedTodayTasks {
+  [category: string]: TodayTableItem[];
+}
+
 export const useTodayTable = (
   plan: Plan | null,
   getCurrentDay: () => number
 ) => {
   const [todayTable, setTodayTable] = useState<TodayTableItem[]>([]);
+  const [groupedTodayTable, setGroupedTodayTable] = useState<GroupedTodayTasks>({});
   const [isLoading, setIsLoading] = useState(false);
 
   const getCurrentDayNumber = () => {
@@ -129,6 +134,16 @@ export const useTodayTable = (
       }
 
       setTodayTable(extracted);
+      
+      // Group tasks by category
+      const grouped: GroupedTodayTasks = {};
+      extracted.forEach(item => {
+        if (!grouped[item.category]) {
+          grouped[item.category] = [];
+        }
+        grouped[item.category].push(item);
+      });
+      setGroupedTodayTable(grouped);
     } finally {
       setIsLoading(false);
     }
@@ -140,6 +155,7 @@ export const useTodayTable = (
 
   return {
     todayTable,
+    groupedTodayTable,
     isLoading,
     regenerate: generateTodayTable
   };

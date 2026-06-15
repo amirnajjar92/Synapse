@@ -7,6 +7,7 @@ import CustomButton from '@/components/CustomButton';
 import GoalsSection from '@/components/GoalsSection';
 import ViewPlanButton from '@/components/ViewPlanButton';
 import ChatRow from '@/components/ChatRow';
+import BurgerMenuButton from '@/components/BurgerMenuButton';
 import useMakePlan from '@/lib/hooks/useMakePlan';
 import usePromptEnhancer from '@/lib/hooks/usePromptEnhancer';
 import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks';
@@ -289,9 +290,14 @@ export default function PlannerPage() {
       >
         {/* Main Container */}
         <div 
-          className="w-full h-full flex flex-col"
+          className="w-full h-full flex flex-col relative"
           style={{ backgroundColor: '#0b0b0bff' }}
         >
+          {/* Burger Menu Button */}
+          <div className="absolute top-4 left-4 z-10">
+            <BurgerMenuButton />
+          </div>
+          
           {/* Row 1: 400 X (370 or 302) - ORIGINAL HEIGHT */}
           <div 
             className="w-full border border-[#3B3B3B00] flex items-center justify-center overflow-hidden transition-all duration-500 ease-out"

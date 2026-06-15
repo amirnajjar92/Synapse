@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSidebar } from './SidebarContext';
 
 interface UserData {
   email: string;
@@ -21,7 +22,7 @@ interface Plan {
 
 export default function Sidebar() {
   const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false);
+  const { isOpen, setIsOpen } = useSidebar();
   const [user, setUser] = useState<UserData | null>(null);
   const [mounted, setMounted] = useState(false);
   const [hasToken, setHasToken] = useState(false);
@@ -96,22 +97,6 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Burger Menu Button - Only when closed */}
-      {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="fixed top-4 left-4 z-[60] w-10 h-10 rounded-full bg-white flex items-center justify-center text-black font-bold text-lg shadow-lg hover:scale-110 transition-transform"
-          style={{
-            boxShadow: '0 0 15px rgba(59, 130, 246, 0.8)',
-            border: '2px solid rgba(59, 130, 246)'
-          }}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M4 6h16M4 12h16M4 18h16" stroke="black" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-        </button>
-      )}
-
       {/* Overlay when sidebar is open */}
       {isOpen && (
         <div

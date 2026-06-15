@@ -3,14 +3,22 @@
 import { Suspense, useEffect, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAnalysePlanProgress } from '@/lib/hooks/useAnalysePlanProgress';
-import { useTodayTable } from '@/lib/hooks/useTodayTable';
+import BurgerMenuButton from '@/components/BurgerMenuButton';
+import { ProgressComparisonChart } from '@/components/ProgressComparisonChart';
 
 interface Plan {
   id: string;
   title: string;
   prompt: string;
   icon: string;
-  tables: any[];
+  tables: Array<{
+    id?: string | number;
+    title: string;
+    rows: Array<{
+      id?: string | number;
+      columns: string[];
+    }>;
+  }>;
   status: 'NOT_STARTED' | 'IN_PROGRESS' | 'PAUSED' | 'COMPLETED';
   startDate: string | null;
   endDate: string | null;
@@ -25,7 +33,7 @@ interface DailyEntry {
 }
 
 const Skeleton = ({ className = '' }: { className?: string }) => (
-  <div className={`animate-pulse bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 bg-[length:200%_100%] opacity-50 ${className}`} />
+  <div className={`animate-pulse bg-gradient-to-r from-[#3B3B3B] via-black to-[#3B3B3B] bg-[length:200%_100%] opacity-50 ${className}`} />
 );
 
 // Hide scrollbar styles
@@ -46,6 +54,32 @@ function PlanProgressContent() {
   const [mounted, setMounted] = useState(false);
   const [analysis, setAnalysis] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [openSections, setOpenSections] = useState<{ [key: string]: boolean }>({});
+
+  // Get today's day name (e.g., "Monday")
+  const getTodayDayName = () => {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return days[new Date().getDay()];
+  };
+  const todayDayName = getTodayDayName();
+
+  // Icon map for categories
+  const iconMap: { [key: string]: React.ReactNode } = {
+    'CARDIO': <img src="/vectors/cardio-icon.svg" alt="Cardio" className="w-12 h-12 object-contain" />,
+    'MEALS': <img src="/vectors/meals-icon.svg" alt="Meals" className="w-12 h-12 object-contain" />,
+    'SUPPLEMENTS': <img src="/vectors/suppliments-icon.svg" alt="Supplements" className="w-12 h-12 object-contain" />,
+    'NUTRIENTS': <img src="/vectors/nutrients-icon.svg" alt="Nutrients" className="w-12 h-12 object-contain" />,
+    'CHALLENGES': <img src="/vectors/challenges-icon.svg" alt="Challenges" className="w-12 h-12 object-contain" />,
+    'RECOMMENDED': <img src="/vectors/recomended-icon.svg" alt="Recommended" className="w-12 h-12 object-contain" />
+  };
+
+  // Toggle section open/close
+  const toggleSection = (category: string) => {
+    setOpenSections(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }));
+  };
 
   const getCurrentDay = useCallback(() => {
     if (!selectedPlan?.startDate) return 0;
@@ -55,7 +89,6 @@ function PlanProgressContent() {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   }, [selectedPlan?.startDate]);
 
-  const { todayTable, isLoading: isTodayTableLoading, regenerate: regenerateTodayTable } = useTodayTable(selectedPlan, getCurrentDay);
   const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
   const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
   const [activeTab, setActiveTab] = useState(0);
@@ -299,58 +332,78 @@ function PlanProgressContent() {
         >
           <style dangerouslySetInnerHTML={{ __html: hideScrollbarStyle }} />
           {/* Small Header */}
-          <div className="p-4 border-b border-gray-700 flex items-center gap-3">
-            {/* Burger button for sidebar (since Sidebar component needs to control state, we'll adjust Sidebar to allow external control later or just use position fixed still) */}
-            {/* We'll keep Sidebar as is but just position it more naturally, but let's add a burger icon in header */}
-            <h1
-              className="text-white font-bold flex-1"
-              style={{
-                fontFamily: 'var(--font-hanalei-fill)',
-                fontSize: '1.5rem'
-              }}
-            >
-              Plan Progress
-            </h1>
+          <div className="p-4 border-b border-[#3B3B3B]">
+            <div className="flex items-center gap-4">
+              <BurgerMenuButton />
+              <h1
+                className="text-white font-bold flex-1 min-w-0"
+                style={{
+                  fontFamily: 'var(--font-hanalei-fill)',
+                  fontSize: '1.5rem'
+                }}
+              >
+                Plan Progress
+              </h1>
+            </div>
           </div>
 
-          {/* Progress Bar */}
+          {/* Current Date & Day */}
           {selectedPlan && (
-            <div className="flex w-full border-b border-gray-700">
-              {/* Left Cell: Progress Bar */}
-              <div className="w-1/2 h-full border-r border-gray-700 flex flex-col p-4">
-                <div className="flex justify-between text-gray-300 text-xs mb-1">
-                  <span>Day {getCurrentDay()}</span>
-                  <span>{getTotalDays()} Days</span>
-                </div>
-                <div className="w-full h-2 bg-gray-700 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-500"
-                    style={{ width: `${Math.min((getCurrentDay() / getTotalDays()) * 100, 100)}%` }}
-                  />
-                </div>
-              </div>
-              {/* Right Cell: Day Number */}
-              <div className="w-1/2 h-full flex items-center justify-center p-4">
+            <div className="flex w-full border-b border-[#3B3B3B]">
+              {/* Left Cell: Day Name + Date (stacked) */}
+              <div className="w-1/2 h-full border-r border-[#3B3B3B] flex flex-col items-center justify-center p-4 ">
                 <span 
-                  className="text-white font-bold text-center" 
+                  className="text-white font-bold" 
                   style={{ 
                     fontFamily: 'var(--font-hanalei-fill)', 
                     fontSize: '2rem'
                   }}
                 >
-                  DAY {getCurrentDay()}
+                  {todayDayName.toUpperCase()}
                 </span>
+                <span 
+                  className="text-white font-medium" 
+                  style={{ 
+                    fontFamily: 'var(--font-hanalei-fill)', 
+                    fontSize: '1rem'
+                  }}
+                >
+                  {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </span>
+              </div>
+              {/* Right Cell: Day Counter */}
+              <div className="w-1/2 h-full flex items-center justify-center p-4">
+                <div className="flex items-baseline gap-1">
+                  <span 
+                    className="text-white font-bold"
+                    style={{
+                      fontFamily: 'var(--font-hanalei-fill)',
+                      fontSize: '2rem'
+                    }}
+                  >
+                    DAY{getCurrentDay()}
+                  </span>
+                  <span 
+                    className="text-[#FFFFFF50]"
+                    style={{
+                      fontFamily: 'var(--font-hanalei-fill)',
+                      fontSize: '1.25rem'
+                    }}
+                  >
+                    /{getTotalDays()}DAYS
+                  </span>
+                </div>
               </div>
             </div>
           )}
 
           {/* Tabs with Prev/Next */}
           {selectedPlan && (
-            <div className="flex items-center justify-between p-2 gap-2">
+            <div className="flex items-center justify-between p-2 ">
               {/* Previous button */}
               <button
                 onClick={() => setActiveTab((prev) => (prev - 1 + tabs.length) % tabs.length)}
-                className="p-2 text-white hover:bg-gray-700 rounded-full transition-colors flex-shrink-0"
+                className="p-2 text-white hover:bg-[#3B3B3B] rounded-full transition-colors flex-shrink-0"
                 aria-label="Previous tab"
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -367,7 +420,7 @@ function PlanProgressContent() {
                     className={`flex-1 px-2 py-1.5 rounded-full text-xs transition-all whitespace-nowrap ${
                       index === activeTab
                         ? 'bg-white text-black font-semibold'
-                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                        : 'bg-[#3B3B3B] text-white hover:bg-[#3B63CF]'
                     }`}
                   >
                     {tab}
@@ -378,7 +431,7 @@ function PlanProgressContent() {
               {/* Next button */}
               <button
                 onClick={() => setActiveTab((prev) => (prev + 1) % tabs.length)}
-                className="p-2 text-white hover:bg-gray-700 rounded-full transition-colors flex-shrink-0"
+                className="p-2 text-white hover:bg-[#3B3B3B] rounded-full transition-colors flex-shrink-0"
                 aria-label="Next tab"
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -395,165 +448,216 @@ function PlanProgressContent() {
               <div className="flex-1 min-h-0 overflow-y-auto">
                 {activeTab === 0 && (
                   /* Simple Dark Calendar */
-                  <div className="bg-black rounded-2xl p-3 border border-gray-700">
-                    {/* Header with navigation */}
-                    <div className="flex items-center justify-between mb-2">
-                      <button
-                        onClick={() => {
-                          let newMonth = calendarMonth - 1;
-                          let newYear = calendarYear;
-                          if (newMonth < 0) {
-                            newMonth = 11;
-                            newYear--;
-                          }
-                          setCalendarMonth(newMonth);
-                          setCalendarYear(newYear);
-                        }}
-                        className="p-1 rounded-lg hover:bg-gray-700"
-                      >
-                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                        </svg>
-                      </button>
-                      <h3 className="text-white font-bold text-sm">
-                        {new Date(calendarYear, calendarMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                      </h3>
-                      <button
-                        onClick={() => {
-                          let newMonth = calendarMonth + 1;
-                          let newYear = calendarYear;
-                          if (newMonth > 11) {
-                            newMonth = 0;
-                            newYear++;
-                          }
-                          setCalendarMonth(newMonth);
-                          setCalendarYear(newYear);
-                        }}
-                        className="p-1 rounded-lg hover:bg-gray-700"
-                      >
-                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </button>
-                    </div>
-                    {/* Weekday headers */}
-                    <div className="grid grid-cols-7 gap-1 mb-1">
-                      {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => (
-                        <div
-                          key={idx}
-                          className="text-center text-xs font-semibold text-gray-400"
-                        >
-                          {day}
-                        </div>
-                      ))}
-                    </div>
-                    {/* Fade line indicator */}
-                    <div className="h-1 bg-gradient-to-r from-transparent via-blue-400 to-transparent mb-1 rounded-full" />
-                    <div className="grid grid-cols-7 gap-1">
-                      {calendarDays.map((day, idx) => (
-                        <div
-                          key={idx}
-                          className={`
-                            aspect-square rounded-lg flex items-center justify-center text-xs font-semibold
-                            ${!day.date 
-                              ? 'invisible' 
-                              : day.isToday 
-                                ? 'bg-blue-500 text-white ring-2 ring-blue-300' 
-                                : day.isInPlan 
-                                  ? day.isPast 
-                                    ? 'bg-purple-900 text-purple-300' 
-                                    : 'bg-purple-800 text-purple-200' 
-                                  : 'bg-gray-800 text-gray-500'
+                  <div className="flex flex-col gap-4">
+                    <div className="bg-black rounded-2xl p-3 border border-[#3B3B3B00]">
+                      {/* Header with navigation */}
+                      <div className="flex items-center justify-between mb-2">
+                        <button
+                          onClick={() => {
+                            let newMonth = calendarMonth - 1;
+                            let newYear = calendarYear;
+                            if (newMonth < 0) {
+                              newMonth = 11;
+                              newYear--;
                             }
-                          `}
+                            setCalendarMonth(newMonth);
+                            setCalendarYear(newYear);
+                          }}
+                          className="p-1 rounded-lg hover:bg-[#3B3B3B]"
                         >
-                          {day.dayNum}
-                        </div>
-                      ))}
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                          </svg>
+                        </button>
+                        <h3 className="text-white font-bold text-sm">
+                          {new Date(calendarYear, calendarMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                        </h3>
+                        <button
+                          onClick={() => {
+                            let newMonth = calendarMonth + 1;
+                            let newYear = calendarYear;
+                            if (newMonth > 11) {
+                              newMonth = 0;
+                              newYear++;
+                            }
+                            setCalendarMonth(newMonth);
+                            setCalendarYear(newYear);
+                          }}
+                          className="p-1 rounded-lg hover:bg-[#3B3B3B]"
+                        >
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                      </div>
+                      {/* Weekday headers */}
+                      <div className="grid grid-cols-7 gap-1 mb-1">
+                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => (
+                          <div
+                            key={idx}
+                            className="text-center text-xs font-semibold text-white"
+                          >
+                            {day}
+                          </div>
+                        ))}
+                      </div>
+                      {/* Fade line indicator */}
+                      <div className="h-1 bg-gradient-to-r from-transparent via-[#3B63CF] to-transparent mb-1 rounded-full" />
+                      <div className="grid grid-cols-7 gap-1">
+                        {calendarDays.map((day, idx) => (
+                          <div
+                            key={idx}
+                            className={`
+                              aspect-square rounded-lg flex items-center justify-center text-xs font-semibold
+                              ${!day.date 
+                                ? 'invisible' 
+                                : day.isToday 
+                                  ? 'bg-[#3B63CF] text-white' 
+                                  : day.isInPlan 
+                                    ? 'bg-[#3B3B3B] text-white' 
+                                    : 'bg-black text-[#3B3B3B]'
+                              }
+                            `}
+                          >
+                            {day.dayNum}
+                          </div>
+                        ))}
+                      </div>
                     </div>
+
+                    {/* Progress Comparison Chart */}
+                    {selectedPlan && selectedPlan.startDate && selectedPlan.endDate && (
+                      <ProgressComparisonChart
+                        totalDays={getTotalDays()}
+                        currentDay={getCurrentDay()}
+                      />
+                    )}
                   </div>
                 )}
 
                 {activeTab === 1 && (
-                /* Today's Focus */
-                <div className="w-full h-full flex flex-col">
-                  {/* Header with refresh button */}
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-white font-semibold text-sm">Today's Focus</h3>
-                    <button
-                      onClick={regenerateTodayTable}
-                      disabled={isTodayTableLoading}
-                      className="p-2 rounded-full hover:bg-gray-700 transition-colors disabled:opacity-50"
-                    >
-                      <svg 
-                        className={`w-4 h-4 text-gray-300 ${isTodayTableLoading ? 'animate-spin' : ''}`}
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                      >
-                        <path 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round" 
-                          strokeWidth="2" 
-                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" 
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                  {/* Table */}
-                  <div className="flex-1 min-h-0 overflow-y-auto border border-gray-700 rounded-lg">
-                    {isTodayTableLoading ? (
-                      <div className="flex items-center justify-center h-32">
-                        <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                  /* Today's Focus */
+                  <div className="w-full h-full flex flex-col">
+                    {/* Header with refresh button */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-4">
+                        <h2
+                          className="text-white font-bold"
+                          style={{
+                            fontFamily: 'var(--font-hanalei-fill)',
+                            fontSize: '2.5rem'
+                          }}
+                        >
+                          TODAY
+                        </h2>
+                        <div className="w-px h-8 bg-[#3B3B3B]" />
+                        <p className="text-white text-sm">
+                          This is your today plan. Goodluck Baby
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Sections */}
+                    {!selectedPlan || selectedPlan.tables.length === 0 ? (
+                      <div className="text-center text-white py-8">
+                        No plan data available
                       </div>
                     ) : (
-                      <table className="text-gray-300 text-xs sm:text-sm font-light w-full">
-                        <tbody>
-                          {todayTable.map((item, idx: number) => (
-                            <tr key={idx} className="border-b border-gray-700 last:border-b-0">
-                              <td className="p-3 align-middle">
-                                <div className="flex flex-col gap-1">
-                                  {item.category && (
-                                    <span className="text-purple-400 text-xs font-semibold uppercase">
-                                      {item.category}
-                                    </span>
-                                  )}
-                                  <div className="flex items-center gap-3">
-                                    <div className="w-5 h-5 rounded-full border-2 border-purple-500 flex items-center justify-center flex-shrink-0" />
-                                    <span className="text-gray-200">{item.task}</span>
-                                  </div>
+                      <div className="flex-1 min-h-0 overflow-y-auto space-y-4">
+                        {selectedPlan.tables
+                          .sort((a, b) => {
+                            if (a.title.toUpperCase() === 'CARDIO') return -1;
+                            if (b.title.toUpperCase() === 'CARDIO') return 1;
+                            return 0;
+                          })
+                          .map((table, index) => {
+                          const isOpen = openSections[table.title] ?? true; // Default open
+                          const categoryUpper = table.title.toUpperCase();
+                          
+                          // Filter rows for cardio table to only show today's day
+                          const filteredRows = categoryUpper === 'CARDIO' 
+                            ? table.rows.filter(row => 
+                                row.columns[0]?.toLowerCase().includes(todayDayName.toLowerCase())
+                              )
+                            : table.rows;
+                          
+                          return (
+                            <div key={index} className="border-b border-[#3B3B3B]">
+                              {/* Section Header */}
+                              <button
+                                onClick={() => toggleSection(table.title)}
+                                className="w-full flex items-center gap-4 py-4 text-left"
+                              >
+                                {/* Category Title and Icon */}
+                                <div className="flex items-center gap-4 flex-1">
+                                  <h3
+                                    className="text-white font-bold"
+                                    style={{
+                                      fontFamily: 'var(--font-hanalei-fill)',
+                                      fontSize: '1.75rem'
+                                    }}
+                                  >
+                                    {categoryUpper}
+                                  </h3>
+                                  {iconMap[categoryUpper]}
                                 </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                                {/* Chevron Icon */}
+                                <svg
+                                  className={`w-6 h-6 text-white transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M19 9l-7 7-7-7"
+                                  />
+                                </svg>
+                              </button>
+
+                              {/* Section Content */}
+                              <div
+                                className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'max-h-[500px] opacity-100 pb-4' : 'max-h-0 opacity-0'}`}
+                              >
+                                <div className="overflow-x-auto">
+                                  <table className="text-white text-xs sm:text-sm font-light min-w-max">
+                                    <tbody>
+                                      {filteredRows.map((row, rowIndex) => (
+                                        <tr key={rowIndex} className="border-b border-[#3B3B3B] last:border-b-0">
+                                          {row.columns.map((cell, colIndex) => (
+                                            <td key={colIndex} className="p-3 align-middle">
+                                              {cell}
+                                            </td>
+                                          ))}
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     )}
                   </div>
-                </div>
-              )}
+                )}
 
                 {activeTab === 2 && (
                   /* Progress Analysis */
-                  <div className="bg-[#1a1a1a] rounded-2xl p-4 border border-gray-700">
+                  <div className=" rounded-2xl p-4 border border-[#3B3B3B00]">
                     <h3 className="text-white font-bold text-base mb-3">
                       AI Progress Analysis
                     </h3>
                     {isAnalyzing ? (
                       <div className="flex flex-col items-center gap-2 py-6">
-                        <div className="w-8 h-8 border-3 border-purple-500 border-t-transparent rounded-full animate-spin" />
-                        <p className="text-gray-400 text-sm">Analyzing your progress...</p>
+                        <div className="w-8 h-8 border-3 border-[#3B63CF] border-t-transparent rounded-full animate-spin" />
+                        <p className="text-white text-sm">Analyzing your progress...</p>
                       </div>
                     ) : (
-                      <div>
-                        <p className="text-gray-300 text-sm whitespace-pre-line">{analysis}</p>
-                        <button
-                          onClick={() => handleAnalyzeProgress(true)}
-                          className="mt-3 px-4 py-2 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl font-semibold hover:scale-105 transition-transform text-sm"
-                        >
-                          Refresh Analysis
-                        </button>
-                      </div>
+                      <p className="text-white text-sm whitespace-pre-line">{analysis}</p>
                     )}
                   </div>
                 )}
@@ -564,11 +668,11 @@ function PlanProgressContent() {
           {/* No Active Plan Message */}
           {plans.length === 0 && (
             <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-              <div className="text-gray-500 text-5xl mb-4">📈</div>
-              <p className="text-gray-400 text-lg mb-4">No plans yet!</p>
+              <div className="text-[#3B3B3B] text-5xl mb-4">📈</div>
+              <p className="text-white text-lg mb-4">No plans yet!</p>
               <button
                 onClick={() => router.push('/planner')}
-                className="px-6 py-3 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-full font-semibold hover:scale-105 transition-transform"
+                className="px-6 py-3 bg-[#3B63CF] text-white rounded-full font-semibold hover:opacity-90 transition-opacity"
               >
                 Create Your First Plan
               </button>
