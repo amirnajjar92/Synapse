@@ -4,7 +4,7 @@ import prisma from '@/lib/db';
 export async function POST(request: Request, { params }: { params: Promise<{ date: string }> }) {
   const resolvedParams = await params;
   
-  // Get email from form data
+  // Read form data once
   const formData = await request.formData();
   const email = formData.get('email') as string;
   
@@ -29,7 +29,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ dat
       return NextResponse.json({ error: 'No active plan found' }, { status: 404 });
     }
 
-    const formData = await request.formData();
     const prompt = formData.get('prompt') as string;
     const imageFile = formData.get('image') as File | null;
 
