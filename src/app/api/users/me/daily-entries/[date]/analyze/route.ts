@@ -141,7 +141,8 @@ Rules:
 
     return NextResponse.json({
       success: true,
-      dailyEntry: { ...dailyEntry, metrics }
+      dailyEntry: { ...dailyEntry, metrics },
+      extractedData
     });
   } catch (error) {
     console.error('Error analyzing daily entry:', error);

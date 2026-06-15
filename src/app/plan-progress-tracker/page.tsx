@@ -5,7 +5,13 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAnalysePlanProgress } from '@/lib/hooks/useAnalysePlanProgress';
 import BurgerMenuButton from '@/components/BurgerMenuButton';
 import { ProgressComparisonChart } from '@/components/ProgressComparisonChart';
-import { BarChart } from '@/components/BarChart';
+import { WeightChart } from '@/components/WeightChart';
+import {
+  parseWeightGoalFromPrompt,
+  generateMockWeightKg,
+  buildWeightKgFromEntries,
+  type WeightGoalInfo,
+} from '@/lib/weightGoal';
 import AIIcon from '@/components/AIIcon';
 import CustomButton from '@/components/CustomButton';
 import ChatRow from '@/components/ChatRow';
@@ -34,6 +40,20 @@ interface DailyEntry {
   id: string;
   aiAnalysis?: string | null;
   todos?: string[];
+}
+
+interface DailyEntryWithMetrics {
+  date: string;
+  planId: string;
+  metrics: Array<{ type: string; value: number }>;
+}
+
+function getPlanTotalDays(startDate: string | null, endDate: string | null): number {
+  if (!startDate || !endDate) return 45;
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const days = Math.ceil(Math.abs(end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  return Math.max(days, 1);
 }
 
 const Skeleton = ({ className = '' }: { className?: string }) => (
@@ -96,7 +116,11 @@ function PlanProgressContent() {
   const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
   const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
   const [activeTab, setActiveTab] = useState(0);
-  const tabs = ['Calendar', "Today's Focus", 'AI Analysis'];
+  const tabs = [
+    { label: 'Calendar' },
+    { label: "Today's Focus" },
+    { label: 'Analyser', icon: '/vectors/ai-icon.svg' },
+  ];
 
   // AI Modal state
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
@@ -105,17 +129,9 @@ function PlanProgressContent() {
   const [isAnalyzingEntry, setIsAnalyzingEntry] = useState(false);
   const [chatMessages, setChatMessages] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Sample weight data (kg) for 45 days
-  const weightData = Array.from({ length: 45 }, (_, i) => {
-    // Natural weight loss pattern
-    const progress = i / 44; // 0 to 1
-    const startWeight = 80; // Starting weight
-    const targetWeight = 65; // Target weight
-    const base = startWeight - (progress * (startWeight - targetWeight));
-    // Add some natural variation (±0.5kg)
-    const variation = (Math.random() - 0.5) * 1;
-    return Math.max(50, base + variation);
+  const [weightsKg, setWeightsKg] = useState<number[]>([]);
+  const [weightGoal, setWeightGoal] = useState<WeightGoalInfo>({
+    mode: 'regularweighttracker',
   });
 
   // Check authentication and get user
@@ -183,13 +199,59 @@ function PlanProgressContent() {
     fetchPlans();
   }, [user]);
 
-  const getTotalDays = () => {
-    if (!selectedPlan?.startDate || !selectedPlan?.endDate) return 0;
-    const start = new Date(selectedPlan.startDate);
-    const end = new Date(selectedPlan.endDate);
-    const diffTime = Math.abs(end.getTime() - start.getTime());
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  };
+  const getTotalDays = () => getPlanTotalDays(selectedPlan?.startDate ?? null, selectedPlan?.endDate ?? null);
+
+  const fetchWeightData = useCallback(async () => {
+    if (!selectedPlan || !user?.email) return;
+
+    const goal = parseWeightGoalFromPrompt(selectedPlan.prompt);
+    setWeightGoal(goal);
+
+    const totalDays =
+      selectedPlan.startDate && selectedPlan.endDate
+        ? getPlanTotalDays(selectedPlan.startDate, selectedPlan.endDate)
+        : 45;
+
+    const applyMock = () =>
+      setWeightsKg(generateMockWeightKg(totalDays, goal, selectedPlan.id));
+
+    if (!selectedPlan.startDate) {
+      applyMock();
+      return;
+    }
+
+    try {
+      const url = new URL('/api/users/me/daily-entries', window.location.origin);
+      url.searchParams.set('email', user.email);
+      const response = await fetch(url.toString());
+
+      if (!response.ok) {
+        applyMock();
+        return;
+      }
+
+      const data = await response.json();
+      const planEntries = (data.dailyEntries || []).filter(
+        (entry: DailyEntryWithMetrics) => entry.planId === selectedPlan.id
+      );
+      const realData = buildWeightKgFromEntries(
+        planEntries,
+        selectedPlan.startDate,
+        totalDays
+      );
+
+      setWeightsKg(
+        realData ?? generateMockWeightKg(totalDays, goal, selectedPlan.id)
+      );
+    } catch (error) {
+      console.error('Error fetching weight data:', error);
+      applyMock();
+    }
+  }, [selectedPlan, user?.email]);
+
+  useEffect(() => {
+    fetchWeightData();
+  }, [fetchWeightData]);
 
   const getTodayDateStr = () => {
     const today = new Date();
@@ -336,18 +398,19 @@ function PlanProgressContent() {
         
         await new Promise(r => setTimeout(r, 500));
         
+        // Show extracted data in chat
+        if (data.extractedData) {
+          setChatMessages(prev => [...prev, '📊 Here\'s the data I extracted from your entry:']);
+          Object.entries(data.extractedData).forEach(([key, value]: [string, any]) => {
+            setChatMessages(prev => [...prev, `  • ${key}: ${value.value} ${value.unit || ''}`]);
+          });
+        }
+        
         setChatMessages(prev => [...prev, '✅ Done! Your entry has been saved successfully!']);
         
-        // Wait a bit then close modal
-        setTimeout(() => {
-          setIsAIModalOpen(false);
-          setAiPrompt('');
-          setUploadedFiles([]);
-          setChatMessages([]);
-          
-          // Refresh today's entry
-          fetchTodayEntry();
-        }, 1500);
+        // Refresh weight chart with any newly saved metrics
+        fetchWeightData();
+        fetchTodayEntry();
       } else {
         setChatMessages(prev => [...prev, '❌ Error: Failed to analyze entry']);
       }
@@ -516,13 +579,22 @@ function PlanProgressContent() {
                   <button
                     key={index}
                     onClick={() => setActiveTab(index)}
-                    className={`flex-1 px-2 py-1.5 rounded-full text-xs transition-all whitespace-nowrap ${
+                    className={`flex-1 px-2 py-1.5 rounded-full text-xs transition-all whitespace-nowrap flex items-center justify-center gap-1 ${
                       index === activeTab
                         ? 'bg-white text-black font-semibold'
                         : 'bg-[#3B3B3B] text-white hover:bg-[#3B63CF]'
                     }`}
                   >
-                    {tab}
+                    {tab.icon && (
+                      <img
+                        src={tab.icon}
+                        alt=""
+                        className={`w-3 h-3 object-contain flex-shrink-0 ${
+                          index === activeTab ? 'brightness-0' : ''
+                        }`}
+                      />
+                    )}
+                    {tab.label}
                   </button>
                 ))}
               </div>
@@ -621,37 +693,6 @@ function PlanProgressContent() {
                             {day.dayNum}
                           </div>
                         ))}
-                      </div>
-                    </div>
-
-                    {/* Progress Comparison Chart */}
-                    {selectedPlan && selectedPlan.startDate && selectedPlan.endDate && (
-                      <ProgressComparisonChart
-                        totalDays={getTotalDays()}
-                        currentDay={getCurrentDay()}
-                      />
-                    )}
-
-                    {/* Weight Chart */}
-                    <div className="bg-black rounded-2xl p-3 border border-[#3B3B3B00]">
-                      <div className="flex justify-between text-[10px] sm:text-xs text-gray-400 mb-1 sm:mb-1.5 md:mb-2">
-                        <span>WEIGHT</span>
-                        <span>45 DAYS</span>
-                      </div>
-                      <div className="relative">
-                        <BarChart 
-                          data={weightData} 
-                          color="#3B63CF" 
-                          reversed 
-                          showConnectingLine
-                          connectingLineColor="#ffffff"
-                          connectingLineWidth={1}
-                          connectingLineShadow="#EFE9E9"
-                          activeBarCount={getCurrentDay()}
-                          inactiveColor="#666666"
-                          showCurrentDayArrow
-                          currentDayArrowColor="#ffffff"
-                        />
                       </div>
                     </div>
                   </div>
@@ -768,19 +809,46 @@ function PlanProgressContent() {
                 )}
 
                 {activeTab === 2 && (
-                  /* Progress Analysis */
-                  <div className=" rounded-2xl p-4 border border-[#3B3B3B00]">
-                    <h3 className="text-white font-bold text-base mb-3">
-                      AI Progress Analysis
-                    </h3>
-                    {isAnalyzing ? (
-                      <div className="flex flex-col items-center gap-2 py-6">
-                        <div className="w-8 h-8 border-3 border-[#3B63CF] border-t-transparent rounded-full animate-spin" />
-                        <p className="text-white text-sm">Analyzing your progress...</p>
-                      </div>
-                    ) : (
-                      <p className="text-white text-sm whitespace-pre-line">{analysis}</p>
+                  /* Analyser */
+                  <div className="flex flex-col gap-4">
+                    {/* Progress Comparison Chart */}
+                    {selectedPlan.startDate && selectedPlan.endDate && (
+                      <ProgressComparisonChart
+                        totalDays={getTotalDays()}
+                        currentDay={getCurrentDay()}
+                      />
                     )}
+
+                    {/* Weight Chart */}
+                    <WeightChart
+                      mode={weightGoal.mode}
+                      goalWeight={weightGoal.goalWeight}
+                      weightsKg={
+                        weightsKg.length > 0
+                          ? weightsKg
+                          : generateMockWeightKg(
+                              getTotalDays() || 45,
+                              weightGoal,
+                              selectedPlan.id
+                            )
+                      }
+                      totalDays={getTotalDays() || 45}
+                      currentDay={Math.max(getCurrentDay(), 1)}
+                    />
+
+                    <div className="rounded-2xl p-4 border border-[#3B3B3B00]">
+                      <h3 className="text-white font-bold text-base mb-3">
+                        AI Progress Analysis
+                      </h3>
+                      {isAnalyzing ? (
+                        <div className="flex flex-col items-center gap-2 py-6">
+                          <div className="w-8 h-8 border-3 border-[#3B63CF] border-t-transparent rounded-full animate-spin" />
+                          <p className="text-white text-sm">Analyzing your progress...</p>
+                        </div>
+                      ) : (
+                        <p className="text-white text-sm whitespace-pre-line">{analysis}</p>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -906,6 +974,19 @@ Weight: 74.8kg"
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
                       <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
                     </svg>
+                  </button>
+                  
+                  {/* Close Button */}
+                  <button
+                    onClick={() => {
+                      setIsAIModalOpen(false);
+                      setAiPrompt('');
+                      setUploadedFiles([]);
+                      setChatMessages([]);
+                    }}
+                    className="px-4 py-3 bg-[#3B3B3B] text-white rounded-xl font-semibold hover:bg-[#4A4A4A] transition-colors"
+                  >
+                    Close
                   </button>
 
                   {/* Analyze Button */}
