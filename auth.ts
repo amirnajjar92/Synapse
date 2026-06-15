@@ -1,5 +1,6 @@
 import NextAuth, { type AuthOptions } from 'next-auth'
 import Google from 'next-auth/providers/google'
+// import Strava from 'next-auth/providers/strava'
 import Credentials from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import prisma from '@/lib/db'
@@ -11,6 +12,15 @@ export const authOptions: AuthOptions = {
       clientId: process.env.AUTH_GOOGLE_ID as string,
       clientSecret: process.env.AUTH_GOOGLE_SECRET as string,
     }),
+    // Strava({
+    //   clientId: process.env.STRAVA_CLIENT_ID as string,
+    //   clientSecret: process.env.STRAVA_CLIENT_SECRET as string,
+    //   authorization: {
+    //     params: {
+    //       scope: 'read,activity:read_all',
+    //     },
+    //   },
+    // }),
     Credentials({
       name: 'Test  Credentials',
       credentials: {

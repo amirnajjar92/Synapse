@@ -1,10 +1,12 @@
 'use client';
 
-import { Suspense, useEffect, useState, useCallback } from 'react';
+import { Suspense, useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAnalysePlanProgress } from '@/lib/hooks/useAnalysePlanProgress';
 import BurgerMenuButton from '@/components/BurgerMenuButton';
 import { ProgressComparisonChart } from '@/components/ProgressComparisonChart';
+import { BarChart } from '@/components/BarChart';
+import AIIcon from '@/components/AIIcon';
 
 interface Plan {
   id: string;
@@ -93,6 +95,25 @@ function PlanProgressContent() {
   const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
   const [activeTab, setActiveTab] = useState(0);
   const tabs = ['Calendar', "Today's Focus", 'AI Analysis'];
+
+  // AI Modal state
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [isAnalyzingEntry, setIsAnalyzingEntry] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Sample weight data (kg) for 45 days
+  const weightData = Array.from({ length: 45 }, (_, i) => {
+    // Natural weight loss pattern
+    const progress = i / 44; // 0 to 1
+    const startWeight = 80; // Starting weight
+    const targetWeight = 65; // Target weight
+    const base = startWeight - (progress * (startWeight - targetWeight));
+    // Add some natural variation (±0.5kg)
+    const variation = (Math.random() - 0.5) * 1;
+    return Math.max(50, base + variation);
+  });
 
   // Check authentication and get user
   useEffect(() => {
@@ -259,6 +280,55 @@ function PlanProgressContent() {
       handleAnalyzeProgress();
     }
   }, [selectedPlan]);
+
+  // Handle file selection
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setUploadedFiles(prev => [...prev, ...Array.from(e.target.files!)]);
+    }
+  };
+
+  // Remove uploaded file
+  const removeFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Handle AI analysis submission
+  const handleAnalyzeEntry = async () => {
+    if (!user?.email || !selectedPlan) return;
+    
+    setIsAnalyzingEntry(true);
+    try {
+      const formData = new FormData();
+      formData.append('prompt', aiPrompt);
+      
+      // Add all uploaded files
+      uploadedFiles.forEach(file => {
+        formData.append('image', file);
+      });
+
+      const response = await fetch(`/api/users/me/daily-entries/${encodeURIComponent(getTodayDateStr())}/analyze`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert('Successfully analyzed and saved your daily entry!');
+        setIsAIModalOpen(false);
+        setAiPrompt('');
+        setUploadedFiles([]);
+        
+        // Refresh today's entry
+        await fetchTodayEntry();
+      }
+    } catch (error) {
+      console.error('Error analyzing entry:', error);
+      alert('Failed to analyze your entry.');
+    } finally {
+      setIsAnalyzingEntry(false);
+    }
+  };
 
   // Generate calendar days for current month
   const generateCalendarDays = () => {
@@ -532,6 +602,29 @@ function PlanProgressContent() {
                         currentDay={getCurrentDay()}
                       />
                     )}
+
+                    {/* Weight Chart */}
+                    <div className="bg-black rounded-2xl p-3 border border-[#3B3B3B00]">
+                      <div className="flex justify-between text-[10px] sm:text-xs text-gray-400 mb-1 sm:mb-1.5 md:mb-2">
+                        <span>WEIGHT</span>
+                        <span>45 DAYS</span>
+                      </div>
+                      <div className="relative">
+                        <BarChart 
+                          data={weightData} 
+                          color="#3B63CF" 
+                          reversed 
+                          showConnectingLine
+                          connectingLineColor="#ffffff"
+                          connectingLineWidth={1}
+                          connectingLineShadow="#EFE9E9"
+                          activeBarCount={getCurrentDay()}
+                          inactiveColor="#666666"
+                          showCurrentDayArrow
+                          currentDayArrowColor="#ffffff"
+                        />
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -679,6 +772,130 @@ function PlanProgressContent() {
             </div>
           )}
         </div>
+
+        {/* Floating AI Button */}
+        {selectedPlan && (
+          <button
+            onClick={() => setIsAIModalOpen(true)}
+            className="fixed bottom-8 right-8 w-16 h-16 bg-[#3B63CF] rounded-full flex items-center justify-center shadow-xl z-50 hover:scale-110 transition-transform"
+          >
+            <AIIcon />
+          </button>
+        )}
+
+        {/* Glass Overlay Modal */}
+        {isAIModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+            <div className="bg-[#0b0b0b] rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden shadow-2xl border border-[#3B3B3B]">
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-4 border-b border-[#3B3B3B]">
+                <h3
+                  className="text-white font-bold"
+                  style={{
+                    fontFamily: 'var(--font-hanalei-fill)',
+                    fontSize: '1.5rem'
+                  }}
+                >
+                  DAILY ACTIVITY
+                </h3>
+                <button
+                  onClick={() => setIsAIModalOpen(false)}
+                  className="p-2 hover:bg-[#3B3B3B] rounded-full"
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                    <path d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Modal Content */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {/* Uploaded Files */}
+                {uploadedFiles.length > 0 && (
+                  <div className="flex gap-2 overflow-x-auto">
+                    {uploadedFiles.map((file, index) => (
+                      <div key={index} className="relative flex-shrink-0">
+                        {file.type.startsWith('image/') ? (
+                          <img
+                            src={URL.createObjectURL(file)}
+                            alt={file.name}
+                            className="w-20 h-20 object-cover rounded-lg"
+                          />
+                        ) : (
+                          <div className="w-20 h-20 bg-[#3B3B3B] rounded-lg flex items-center justify-center text-white text-xs">
+                            {file.name.slice(0, 10)}
+                          </div>
+                        )}
+                        <button
+                          onClick={() => removeFile(index)}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Text Area */}
+                <textarea
+                  className="w-full h-40 bg-black text-white p-3 rounded-xl border border-[#3B3B3B] resize-none focus:outline-none focus:border-[#3B63CF]"
+                  placeholder="Describe your daily activity here...
+Example:
+Distance: 6.34/km
+Pace: 08:07/km
+Total Time: 1:05:37
+Weight: 74.8kg"
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                />
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-4 border-t border-[#3B3B3B] space-y-3">
+                {/* Action Buttons */}
+                <div className="flex gap-3">
+                  {/* Upload Button */}
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    multiple
+                    onChange={handleFileSelect}
+                  />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex-1 py-3 bg-[#3B3B3B] text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-[#4A4A4A]"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                    Upload Image
+                  </button>
+
+                  {/* Analyze Button */}
+                  <button
+                    onClick={handleAnalyzeEntry}
+                    disabled={isAnalyzingEntry}
+                    className="flex-1 py-3 bg-[#3B63CF] text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-50"
+                  >
+                    {isAnalyzingEntry ? (
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <AIIcon />
+                        Analyze
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSidebar } from './SidebarContext';
+import { useSession, signIn } from 'next-auth/react';
 
 interface UserData {
   email: string;
@@ -23,11 +24,15 @@ interface Plan {
 export default function Sidebar() {
   const router = useRouter();
   const { isOpen, setIsOpen } = useSidebar();
+  const { data: session } = useSession();
   const [user, setUser] = useState<UserData | null>(null);
   const [mounted, setMounted] = useState(false);
   const [hasToken, setHasToken] = useState(false);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [activePlans, setActivePlans] = useState<Plan[]>([]);
+  // Strava integration (disabled for now)
+  // const [isStravaConnected, setIsStravaConnected] = useState(false);
+  // const [isSyncing, setIsSyncing] = useState(false);
 
   // Fetch plans for user
   const fetchPlans = async () => {
@@ -82,6 +87,42 @@ export default function Sidebar() {
   useEffect(() => {
     setActivePlans(plans.filter(p => p.status === 'IN_PROGRESS'));
   }, [plans]);
+
+  // Strava integration (disabled for now)
+  /*
+  // Check Strava connection status
+  const checkStravaStatus = async () => {
+    try {
+      const res = await fetch('/api/strava/status');
+      const data = await res.json();
+      setIsStravaConnected(data.connected);
+    } catch (err) {
+      console.error('Error checking Strava status:', err);
+    }
+  };
+
+  // Sync Strava activities
+  const handleSyncActivities = async () => {
+    setIsSyncing(true);
+    try {
+      const res = await fetch('/api/strava/sync');
+      const data = await res.json();
+      if (data.success) alert('Activities synced!');
+    } catch (err) {
+      console.error('Error syncing activities:', err);
+      alert('Failed to sync activities');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  // Check Strava status when session is available
+  useEffect(() => {
+    if (session?.user) {
+      checkStravaStatus();
+    }
+  }, [session]);
+  */
 
   const handleLogout = () => {
     localStorage.removeItem('synapse_token');
@@ -171,7 +212,33 @@ export default function Sidebar() {
               My Plans
             </button>
 
-            <button
+            {/* Strava integration (disabled for now) */}
+            {/* 
+            {isStravaConnected ? (
+              <button
+                onClick={handleSyncActivities}
+                disabled={isSyncing}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-800 hover:text-white transition-colors disabled:opacity-50"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 11c-2.21 0-4-1.79-4-4h2c0 1.1.9 2 2 2s2-.9 2-2h2c0 2.21-1.79 4-4 4zm0-8c-1.66 0-3 1.34-3 3h2c0-.55.45-1 1-1s1 .45 1 1h2c0-1.66-1.34-3-3-3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                {isSyncing ? 'Syncing...' : 'Sync Activities'}
+              </button>
+            ) : (
+              <button
+                onClick={() => signIn('strava')}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-orange-400 hover:bg-orange-500/10 transition-colors"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M15 3h-2c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h2c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-6 0H7c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h2c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                Connect Strava
+              </button>
+            )}
+            */}
+
+            {/* <button
               onClick={() => {
                 setIsOpen(false);
                 router.push('/plan-progress-tracker');
@@ -182,7 +249,7 @@ export default function Sidebar() {
                 <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               Plan Progress
-            </button>
+            </button> */}
 
             {/* Active Plans Section */}
             {activePlans.length > 0 && (
