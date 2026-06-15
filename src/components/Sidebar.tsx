@@ -100,7 +100,7 @@ export default function Sidebar() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed top-4 left-3 z-[60] w-10 h-10 rounded-full bg-white flex items-center justify-center text-black font-bold text-lg shadow-lg hover:scale-110 transition-transform"
+          className="fixed top-4 left-4 z-[60] w-10 h-10 rounded-full bg-white flex items-center justify-center text-black font-bold text-lg shadow-lg hover:scale-110 transition-transform"
           style={{
             boxShadow: '0 0 15px rgba(59, 130, 246, 0.8)',
             border: '2px solid rgba(59, 130, 246)'

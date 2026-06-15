@@ -299,9 +299,11 @@ function PlanProgressContent() {
         >
           <style dangerouslySetInnerHTML={{ __html: hideScrollbarStyle }} />
           {/* Small Header */}
-          <div className="p-4 border-b border-gray-700">
+          <div className="p-4 border-b border-gray-700 flex items-center gap-3">
+            {/* Burger button for sidebar (since Sidebar component needs to control state, we'll adjust Sidebar to allow external control later or just use position fixed still) */}
+            {/* We'll keep Sidebar as is but just position it more naturally, but let's add a burger icon in header */}
             <h1
-              className="text-white font-bold"
+              className="text-white font-bold flex-1"
               style={{
                 fontFamily: 'var(--font-hanalei-fill)',
                 fontSize: '1.5rem'
