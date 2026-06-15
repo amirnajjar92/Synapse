@@ -7,6 +7,7 @@ import BurgerMenuButton from '@/components/BurgerMenuButton';
 import { ProgressComparisonChart } from '@/components/ProgressComparisonChart';
 import { BarChart } from '@/components/BarChart';
 import AIIcon from '@/components/AIIcon';
+import CustomButton from '@/components/CustomButton';
 
 interface Plan {
   id: string;
@@ -854,7 +855,7 @@ Weight: 74.8kg"
               {/* Modal Footer */}
               <div className="p-4 border-t border-[#3B3B3B] space-y-3">
                 {/* Action Buttons */}
-                <div className="flex gap-3">
+                <div className="flex gap-3 items-center">
                   {/* Upload Button */}
                   <input
                     type="file"
@@ -866,31 +867,22 @@ Weight: 74.8kg"
                   />
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex-1 py-3 bg-[#3B3B3B] text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-[#4A4A4A]"
+                    className="p-3 bg-[#3B3B3B] rounded-full flex items-center justify-center hover:bg-[#4A4A4A] transition-colors"
                   >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                      <polyline points="17 8 12 3 7 8" />
-                      <line x1="12" y1="3" x2="12" y2="15" />
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                      <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
                     </svg>
-                    Upload Image
                   </button>
 
                   {/* Analyze Button */}
-                  <button
-                    onClick={handleAnalyzeEntry}
-                    disabled={isAnalyzingEntry}
-                    className="flex-1 py-3 bg-[#3B63CF] text-white rounded-xl font-semibold flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-50"
-                  >
-                    {isAnalyzingEntry ? (
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <>
-                        <AIIcon />
-                        Analyze
-                      </>
-                    )}
-                  </button>
+                  <div className="flex-1">
+                    <CustomButton
+                      text="Analyze"
+                      isLoading={isAnalyzingEntry}
+                      onClick={handleAnalyzeEntry}
+                      fontSize="calc((100vh * 0.95 * 0.0595) * 0.8)"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
