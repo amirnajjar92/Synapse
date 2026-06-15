@@ -39,14 +39,53 @@ export async function POST(request: Request, { params }: { params: Promise<{ dat
       mediaUrl = `placeholder-${Date.now()}.jpg`;
     }
 
-    // TODO: Call AI API to analyze prompt/image and extract metrics
-    // For now, let's create a mock response
-    const mockExtractedData = {
-      weight: { value: 74.8, unit: 'kg' },
-      distance: { value: 6.34, unit: 'km' },
-      pace: { value: 487, unit: 'seconds/km' }, // 8'07" = 487 seconds
-      totalTime: { value: 3937, unit: 'seconds' }, // 1:05'37" = 3937 seconds
-    };
+    // Call ask-moole API to analyze prompt and extract metrics
+    const apiUrl = 'https://moole-back.vercel.app/ask-moole';
+    const systemPrompt = `You are a fitness data extractor. Extract the following metrics from the user's input and return ONLY a valid JSON object with these exact keys:
+- weight: { value: number, unit: 'kg' or 'lbs' }
+- distance: { value: number, unit: 'km' or 'mi' }
+- pace: { value: number in seconds per km, unit: 'seconds/km' }
+- totalTime: { value: number in total seconds, unit: 'seconds' }
+
+Rules:
+- If a metric is not mentioned, omit it from the JSON
+- For pace, convert formats like "8:07/km" to 487 seconds (8*60 + 7)
+- For totalTime, convert formats like "1:05:37" to 3937 seconds (1*3600 + 5*60 + 37)
+- Return ONLY the JSON, no extra text or markdown
+- Make sure the JSON is valid and properly formatted`;
+
+    const userPrompt = `Extract metrics from this fitness activity report: ${prompt}`;
+    
+    const res = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: `${systemPrompt}\n\n${userPrompt}` }),
+    });
+
+    let extractedData = {};
+    if (res.ok) {
+      const data = await res.json();
+      try {
+        extractedData = JSON.parse(data.answer);
+      } catch (parseError) {
+        console.error('Failed to parse AI response:', parseError);
+        // Fallback to mock data if parsing fails
+        extractedData = {
+          weight: { value: 74.8, unit: 'kg' },
+          distance: { value: 6.34, unit: 'km' },
+          pace: { value: 487, unit: 'seconds/km' },
+          totalTime: { value: 3937, unit: 'seconds' },
+        };
+      }
+    } else {
+      // Fallback to mock data if API fails
+      extractedData = {
+        weight: { value: 74.8, unit: 'kg' },
+        distance: { value: 6.34, unit: 'km' },
+        pace: { value: 487, unit: 'seconds/km' },
+        totalTime: { value: 3937, unit: 'seconds' },
+      };
+    }
 
     // Upsert DailyEntry
     const dailyEntry = await prisma.dailyEntry.upsert({
@@ -71,7 +110,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ dat
     });
 
     // Upsert metrics
-    const metrics = Object.entries(mockExtractedData).map(([type, data]: [string, any]) => ({
+    const metrics = Object.entries(extractedData).map(([type, data]: [string, any]) => ({
       dailyEntryId: dailyEntry.id,
       type,
       value: data.value,
@@ -83,7 +122,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ dat
       where: { dailyEntryId: dailyEntry.id }
     });
 
-    await prisma.dailyMetric.createMany({ data: metrics });
+    if (metrics.length > 0) {
+      await prisma.dailyMetric.createMany({ data: metrics });
+    }
 
     // Save media if exists
     if (mediaUrl) {

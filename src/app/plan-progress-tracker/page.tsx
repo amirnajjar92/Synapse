@@ -881,6 +881,7 @@ Weight: 74.8kg"
                       isLoading={isAnalyzingEntry}
                       onClick={handleAnalyzeEntry}
                       fontSize="calc((100vh * 0.95 * 0.0595) * 0.8)"
+                      mirror={true}
                     />
                   </div>
                 </div>
