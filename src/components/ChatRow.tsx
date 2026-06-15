@@ -44,18 +44,37 @@ const ChatRow: React.FC<ChatRowProps> = ({ targetHeight, chatMessages }) => {
           <h3 className="text-white font-semibold text-xs sm:text-sm">AI Thought Process</h3>
         </div>
         <div ref={chatContainerRef} className="flex-1 overflow-y-auto space-y-1">
-          {chatMessages.map((msg, index) => (
-            <div 
-              key={index}
-              className={`p-1 rounded text-xs sm:text-sm transition-all duration-300 ease-out ${
-                msg.startsWith('User:') 
-                  ? 'bg-blue-600/20 text-blue-200 ml-3' 
-                  : 'bg-gray-700/30 text-gray-200 mr-3'
-              }`}
-            >
-              {msg}
-            </div>
-          ))}
+          {chatMessages.map((msg, index) => {
+            const isUser = msg.startsWith('User:');
+            const isExtracted = msg.startsWith('📊');
+            const isChanges = msg.startsWith('✏️');
+            const isSaved = msg.startsWith('📋');
+            const isSuccess = msg.startsWith('✅');
+            const isError = msg.startsWith('❌');
+            const isBullet = msg.startsWith('  •');
+
+            let className = 'p-1.5 rounded text-xs sm:text-sm transition-all duration-300 ease-out mr-3 ';
+
+            if (isUser) {
+              className += 'bg-blue-600/20 text-blue-200 ml-3';
+            } else if (isExtracted || isChanges || isSaved) {
+              className += 'bg-[#3B63CF]/15 text-white font-medium';
+            } else if (isSuccess) {
+              className += 'bg-green-600/20 text-green-200';
+            } else if (isError) {
+              className += 'bg-red-600/20 text-red-200';
+            } else if (isBullet) {
+              className += 'bg-gray-800/40 text-gray-100 ml-4';
+            } else {
+              className += 'bg-gray-700/30 text-gray-200';
+            }
+
+            return (
+              <div key={index} className={className}>
+                {msg}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

@@ -22,15 +22,32 @@ export async function POST(request: Request, { params }: { params: Promise<{ dat
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Get current plan (first active plan or first plan)
-    const currentPlan = user.plans.find(p => p.status === 'IN_PROGRESS') || user.plans[0];
+    const prompt = formData.get('prompt') as string;
+    const planId = formData.get('planId') as string | null;
+    const imageFile = formData.get('image') as File | null;
 
-    if (!currentPlan) {
+    const activePlan =
+      (planId && user.plans.find((p) => p.id === planId)) ||
+      user.plans.find((p) => p.status === 'IN_PROGRESS') ||
+      user.plans[0];
+
+    if (!activePlan) {
       return NextResponse.json({ error: 'No active plan found' }, { status: 404 });
     }
 
-    const prompt = formData.get('prompt') as string;
-    const imageFile = formData.get('image') as File | null;
+    const entryDate = new Date(decodeURIComponent(resolvedParams.date));
+    entryDate.setHours(0, 0, 0, 0);
+
+    const existingEntry = await prisma.dailyEntry.findUnique({
+      where: {
+        userId_planId_date: {
+          userId: user.id,
+          planId: activePlan.id,
+          date: entryDate,
+        },
+      },
+      include: { metrics: true },
+    });
 
     // Save media if image is provided
     let mediaUrl = null;
@@ -63,23 +80,20 @@ Rules:
       body: JSON.stringify({ question: `${systemPrompt}\n\n${userPrompt}` }),
     });
 
-    let extractedData = {};
+    let extractedData: Record<string, { value: number; unit?: string }> = {};
     if (res.ok) {
       const data = await res.json();
       try {
         extractedData = JSON.parse(data.answer);
       } catch (parseError) {
         console.error('Failed to parse AI response:', parseError);
-        // Fallback to mock data if parsing fails
-        extractedData = {
-          weight: { value: 74.8, unit: 'kg' },
-          distance: { value: 6.34, unit: 'km' },
-          pace: { value: 487, unit: 'seconds/km' },
-          totalTime: { value: 3937, unit: 'seconds' },
-        };
       }
     } else {
-      // Fallback to mock data if API fails
+      console.error('AI extraction API failed:', res.status);
+    }
+
+    // Avoid overwriting existing metrics with mock data when AI extraction fails
+    if (Object.keys(extractedData).length === 0 && !existingEntry) {
       extractedData = {
         weight: { value: 74.8, unit: 'kg' },
         distance: { value: 6.34, unit: 'km' },
@@ -88,44 +102,72 @@ Rules:
       };
     }
 
+    const mergedNotes = existingEntry?.notes
+      ? `${existingEntry.notes}\n${prompt}`.trim()
+      : prompt || '';
+
     // Upsert DailyEntry
     const dailyEntry = await prisma.dailyEntry.upsert({
       where: {
         userId_planId_date: {
           userId: user.id,
-          planId: currentPlan.id,
-          date: new Date(decodeURIComponent(resolvedParams.date))
-        }
+          planId: activePlan.id,
+          date: entryDate,
+        },
       },
       update: {
-        notes: prompt || undefined
+        notes: mergedNotes,
       },
       create: {
         userId: user.id,
-        planId: currentPlan.id,
-        date: new Date(decodeURIComponent(resolvedParams.date)),
+        planId: activePlan.id,
+        date: entryDate,
         notes: prompt || '',
-        todos: []
+        todos: [],
       },
-      include: { metrics: true }
+      include: { metrics: true },
     });
 
-    // Upsert metrics
-    const metrics = Object.entries(extractedData).map(([type, data]: [string, any]) => ({
-      dailyEntryId: dailyEntry.id,
-      type,
-      value: data.value,
-      unit: data.unit
-    }));
+    const updatedMetricTypes = Object.keys(extractedData);
 
-    // Delete existing metrics and create new ones
-    await prisma.dailyMetric.deleteMany({
-      where: { dailyEntryId: dailyEntry.id }
+    const metricChanges = updatedMetricTypes.map((type) => {
+      const previous = existingEntry?.metrics.find((m) => m.type === type);
+      const next = extractedData[type];
+      return {
+        type,
+        action: previous ? ('updated' as const) : ('created' as const),
+        previousValue: previous?.value,
+        previousUnit: previous?.unit,
+        newValue: next.value,
+        newUnit: next.unit,
+      };
     });
 
-    if (metrics.length > 0) {
-      await prisma.dailyMetric.createMany({ data: metrics });
+    // Only replace metrics mentioned in the new input; keep existing ones untouched
+    if (updatedMetricTypes.length > 0) {
+      await prisma.dailyMetric.deleteMany({
+        where: {
+          dailyEntryId: dailyEntry.id,
+          type: { in: updatedMetricTypes },
+        },
+      });
+
+      await prisma.dailyMetric.createMany({
+        data: updatedMetricTypes.map((type) => {
+          const data = (extractedData as Record<string, { value: number; unit?: string }>)[type];
+          return {
+            dailyEntryId: dailyEntry.id,
+            type,
+            value: data.value,
+            unit: data.unit,
+          };
+        }),
+      });
     }
+
+    const metrics = await prisma.dailyMetric.findMany({
+      where: { dailyEntryId: dailyEntry.id },
+    });
 
     // Save media if exists
     if (mediaUrl) {
@@ -142,7 +184,10 @@ Rules:
     return NextResponse.json({
       success: true,
       dailyEntry: { ...dailyEntry, metrics },
-      extractedData
+      extractedData,
+      updatedMetricTypes,
+      metricChanges,
+      hadExistingEntry: !!existingEntry,
     });
   } catch (error) {
     console.error('Error analyzing daily entry:', error);

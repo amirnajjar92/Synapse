@@ -67,6 +67,80 @@ const hideScrollbarStyle = `
   }
 `;
 
+function formatSeconds(seconds: number): string {
+  const total = Math.round(seconds);
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const secs = total % 60;
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  }
+  return `${minutes}:${String(secs).padStart(2, '0')}`;
+}
+
+function formatMetricLabel(type: string, value: number, unit?: string): string {
+  if (type === 'pace' && unit?.includes('second')) {
+    return `${formatSeconds(value)}/km`;
+  }
+  if (type === 'totalTime' && unit?.includes('second')) {
+    return formatSeconds(value);
+  }
+  return `${value}${unit ? ` ${unit}` : ''}`;
+}
+
+interface MetricChange {
+  type: string;
+  action: 'created' | 'updated';
+  previousValue?: number;
+  previousUnit?: string | null;
+  newValue: number;
+  newUnit?: string | null;
+}
+
+function buildDailyEntryResultMessages(data: {
+  extractedData?: Record<string, { value: number; unit?: string }>;
+  metricChanges?: MetricChange[];
+  dailyEntry?: { metrics?: Array<{ type: string; value: number; unit?: string | null }> };
+}): string[] {
+  const messages: string[] = [];
+  const extracted = data.extractedData ?? {};
+  const extractedKeys = Object.keys(extracted);
+
+  if (extractedKeys.length > 0) {
+    messages.push('📊 Extracted from your input:');
+    extractedKeys.forEach((key) => {
+      const metric = extracted[key];
+      messages.push(`  • ${key}: ${formatMetricLabel(key, metric.value, metric.unit)}`);
+    });
+  } else {
+    messages.push('ℹ️ No new metrics found in your input.');
+  }
+
+  if (data.metricChanges && data.metricChanges.length > 0) {
+    messages.push('✏️ Changes applied:');
+    data.metricChanges.forEach((change) => {
+      if (change.action === 'updated' && change.previousValue !== undefined) {
+        const before = formatMetricLabel(change.type, change.previousValue, change.previousUnit ?? undefined);
+        const after = formatMetricLabel(change.type, change.newValue, change.newUnit ?? undefined);
+        messages.push(`  • ${change.type}: ${before} → ${after}`);
+      } else {
+        messages.push(
+          `  • ${change.type}: ${formatMetricLabel(change.type, change.newValue, change.newUnit ?? undefined)} (new)`
+        );
+      }
+    });
+  }
+
+  if (data.dailyEntry?.metrics && data.dailyEntry.metrics.length > 0) {
+    messages.push('📋 Today\'s saved metrics:');
+    data.dailyEntry.metrics.forEach((metric) => {
+      messages.push(`  • ${metric.type}: ${formatMetricLabel(metric.type, metric.value, metric.unit ?? undefined)}`);
+    });
+  }
+
+  return messages;
+}
+
 function PlanProgressContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -360,24 +434,24 @@ function PlanProgressContent() {
 
   // Handle AI analysis submission
   const handleAnalyzeEntry = async () => {
-    if (!user?.email || !selectedPlan) return;
+    if (!user?.email || !selectedPlan || !aiPrompt.trim()) return;
     
+    const userPrompt = aiPrompt.trim();
     setIsAnalyzingEntry(true);
-    setChatMessages([]); // Clear previous messages
+    setChatMessages([`User: ${userPrompt}`]);
     
     try {
-      setChatMessages(prev => [...prev, 'Starting analysis...']);
-      
+      setChatMessages((prev) => [...prev, 'Starting analysis...', 'Sending data to AI...']);
+
       const formData = new FormData();
-      formData.append('prompt', aiPrompt);
+      formData.append('prompt', userPrompt);
       formData.append('email', user.email);
+      formData.append('planId', selectedPlan.id);
       
       // Add all uploaded files
       uploadedFiles.forEach(file => {
         formData.append('image', file);
       });
-      
-      setChatMessages(prev => [...prev, 'Sending data to AI...']);
 
       const response = await fetch(`/api/users/me/daily-entries/${encodeURIComponent(getTodayDateStr())}/analyze`, {
         method: 'POST',
@@ -385,38 +459,29 @@ function PlanProgressContent() {
       });
 
       if (response.ok) {
-        setChatMessages(prev => [...prev, 'AI is analyzing your activity...']);
-        
         const data = await response.json();
-        
-        setChatMessages(prev => [...prev, 'Extracting metrics...']);
-        
-        // Simulate processing steps
-        await new Promise(r => setTimeout(r, 500));
-        
-        setChatMessages(prev => [...prev, 'Saving your daily entry to the database...']);
-        
-        await new Promise(r => setTimeout(r, 500));
-        
-        // Show extracted data in chat
-        if (data.extractedData) {
-          setChatMessages(prev => [...prev, '📊 Here\'s the data I extracted from your entry:']);
-          Object.entries(data.extractedData).forEach(([key, value]: [string, any]) => {
-            setChatMessages(prev => [...prev, `  • ${key}: ${value.value} ${value.unit || ''}`]);
-          });
-        }
-        
-        setChatMessages(prev => [...prev, '✅ Done! Your entry has been saved successfully!']);
+
+        setChatMessages((prev) => [
+          ...prev,
+          'AI is analyzing your activity...',
+          'Extracting metrics...',
+          data.hadExistingEntry
+            ? 'Found existing data for today — merging your updates...'
+            : 'Creating today\'s daily entry...',
+          'Saving your daily entry to the database...',
+          ...buildDailyEntryResultMessages(data),
+          '✅ Done! Your entry has been saved successfully!',
+        ]);
         
         // Refresh weight chart with any newly saved metrics
         fetchWeightData();
         fetchTodayEntry();
       } else {
-        setChatMessages(prev => [...prev, '❌ Error: Failed to analyze entry']);
+        setChatMessages((prev) => [...prev, '❌ Error: Failed to analyze entry']);
       }
     } catch (error) {
       console.error('Error analyzing entry:', error);
-      setChatMessages(prev => [...prev, '❌ Error: Something went wrong']);
+      setChatMessages((prev) => [...prev, '❌ Error: Something went wrong']);
     } finally {
       setIsAnalyzingEntry(false);
     }
@@ -907,7 +972,7 @@ function PlanProgressContent() {
 
               {/* ChatRow */}
               <ChatRow 
-                targetHeight={chatMessages.length > 0 ? "200px" : "0%"} 
+                targetHeight={chatMessages.length > 0 ? (chatMessages.length > 6 ? '320px' : '240px') : '0%'} 
                 chatMessages={chatMessages} 
               />
               
