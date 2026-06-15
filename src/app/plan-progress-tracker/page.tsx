@@ -10,11 +10,15 @@ import {
   parseWeightGoalFromPrompt,
   generateMockWeightKg,
   buildWeightKgFromEntries,
+  buildActualProgressFromEntries,
+  formatMetricsSummaryForAI,
   type WeightGoalInfo,
+  type PlanEntryWithMetrics,
 } from '@/lib/weightGoal';
 import AIIcon from '@/components/AIIcon';
 import CustomButton from '@/components/CustomButton';
 import ChatRow from '@/components/ChatRow';
+import LogoAnimation from '@/components/LogoAnimation';
 
 interface Plan {
   id: string;
@@ -40,12 +44,8 @@ interface DailyEntry {
   id: string;
   aiAnalysis?: string | null;
   todos?: string[];
-}
-
-interface DailyEntryWithMetrics {
-  date: string;
-  planId: string;
-  metrics: Array<{ type: string; value: number }>;
+  metrics?: Array<{ type: string; value: number; unit?: string | null }>;
+  updatedAt?: string;
 }
 
 function getPlanTotalDays(startDate: string | null, endDate: string | null): number {
@@ -55,10 +55,6 @@ function getPlanTotalDays(startDate: string | null, endDate: string | null): num
   const days = Math.ceil(Math.abs(end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
   return Math.max(days, 1);
 }
-
-const Skeleton = ({ className = '' }: { className?: string }) => (
-  <div className={`animate-pulse bg-gradient-to-r from-[#3B3B3B] via-black to-[#3B3B3B] bg-[length:200%_100%] opacity-50 ${className}`} />
-);
 
 // Hide scrollbar styles
 const hideScrollbarStyle = `
@@ -148,6 +144,7 @@ function PlanProgressContent() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [introDone, setIntroDone] = useState(false);
   const [user, setUser] = useState<{ email: string } | null>(null);
   const [mounted, setMounted] = useState(false);
   const [analysis, setAnalysis] = useState<string>('');
@@ -204,6 +201,10 @@ function PlanProgressContent() {
   const [chatMessages, setChatMessages] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [weightsKg, setWeightsKg] = useState<number[]>([]);
+  const [actualProgress, setActualProgress] = useState<number[]>([]);
+  const [hasRealWeightData, setHasRealWeightData] = useState(false);
+  const [hasRealProgressData, setHasRealProgressData] = useState(false);
+  const [planEntries, setPlanEntries] = useState<PlanEntryWithMetrics[]>([]);
   const [weightGoal, setWeightGoal] = useState<WeightGoalInfo>({
     mode: 'regularweighttracker',
   });
@@ -275,8 +276,8 @@ function PlanProgressContent() {
 
   const getTotalDays = () => getPlanTotalDays(selectedPlan?.startDate ?? null, selectedPlan?.endDate ?? null);
 
-  const fetchWeightData = useCallback(async () => {
-    if (!selectedPlan || !user?.email) return;
+  const fetchPlanDailyData = useCallback(async (): Promise<PlanEntryWithMetrics[]> => {
+    if (!selectedPlan || !user?.email) return [];
 
     const goal = parseWeightGoalFromPrompt(selectedPlan.prompt);
     setWeightGoal(goal);
@@ -286,12 +287,17 @@ function PlanProgressContent() {
         ? getPlanTotalDays(selectedPlan.startDate, selectedPlan.endDate)
         : 45;
 
-    const applyMock = () =>
+    const applyMockCharts = () => {
+      setPlanEntries([]);
+      setHasRealWeightData(false);
+      setHasRealProgressData(false);
       setWeightsKg(generateMockWeightKg(totalDays, goal, selectedPlan.id));
+      setActualProgress([]);
+    };
 
     if (!selectedPlan.startDate) {
-      applyMock();
-      return;
+      applyMockCharts();
+      return [];
     }
 
     try {
@@ -300,32 +306,54 @@ function PlanProgressContent() {
       const response = await fetch(url.toString());
 
       if (!response.ok) {
-        applyMock();
-        return;
+        applyMockCharts();
+        return [];
       }
 
       const data = await response.json();
-      const planEntries = (data.dailyEntries || []).filter(
-        (entry: DailyEntryWithMetrics) => entry.planId === selectedPlan.id
-      );
-      const realData = buildWeightKgFromEntries(
-        planEntries,
+      const entries: PlanEntryWithMetrics[] = (data.dailyEntries || [])
+        .filter((entry: { planId: string }) => entry.planId === selectedPlan.id)
+        .map((entry: { date: string; metrics?: PlanEntryWithMetrics['metrics']; notes?: string | null }) => ({
+          date: entry.date,
+          metrics: entry.metrics ?? [],
+          notes: entry.notes ?? null,
+        }));
+
+      setPlanEntries(entries);
+
+      const realWeights = buildWeightKgFromEntries(entries, selectedPlan.startDate, totalDays);
+      if (realWeights) {
+        setWeightsKg(realWeights);
+        setHasRealWeightData(true);
+      } else {
+        setWeightsKg(generateMockWeightKg(totalDays, goal, selectedPlan.id));
+        setHasRealWeightData(false);
+      }
+
+      const realProgress = buildActualProgressFromEntries(
+        entries,
         selectedPlan.startDate,
         totalDays
       );
+      if (realProgress) {
+        setActualProgress(realProgress);
+        setHasRealProgressData(true);
+      } else {
+        setActualProgress([]);
+        setHasRealProgressData(false);
+      }
 
-      setWeightsKg(
-        realData ?? generateMockWeightKg(totalDays, goal, selectedPlan.id)
-      );
+      return entries;
     } catch (error) {
-      console.error('Error fetching weight data:', error);
-      applyMock();
+      console.error('Error fetching plan daily data:', error);
+      applyMockCharts();
+      return [];
     }
   }, [selectedPlan, user?.email]);
 
   useEffect(() => {
-    fetchWeightData();
-  }, [fetchWeightData]);
+    fetchPlanDailyData();
+  }, [fetchPlanDailyData]);
 
   const getTodayDateStr = () => {
     const today = new Date();
@@ -375,22 +403,24 @@ function PlanProgressContent() {
     }
   };
 
-  const handleAnalyzeProgress = async (forceRefresh = false) => {
+  const handleAnalyzeProgress = async (forceRefresh = false, entriesOverride?: PlanEntryWithMetrics[]) => {
     if (!selectedPlan || !selectedPlan.startDate || !selectedPlan.endDate) return;
 
     setIsAnalyzing(true);
     try {
-      // Check if we have existing analysis first
+      const entries =
+        entriesOverride ?? (planEntries.length > 0 ? planEntries : await fetchPlanDailyData());
+      const hasLoggedMetrics = entries.some((entry) => entry.metrics.length > 0);
+      const metricsSummary = formatMetricsSummaryForAI(entries, selectedPlan.startDate);
+
       if (!forceRefresh) {
         const existingEntry = await fetchTodayEntry();
-        if (existingEntry?.aiAnalysis) {
+        if (existingEntry?.aiAnalysis && !hasLoggedMetrics) {
           setAnalysis(existingEntry.aiAnalysis);
-          setIsAnalyzing(false);
           return;
         }
       }
 
-      // Otherwise call API
       const start = new Date(selectedPlan.startDate);
       const today = new Date();
       const diffTime = Math.abs(today.getTime() - start.getTime());
@@ -400,11 +430,11 @@ function PlanProgressContent() {
         selectedPlan.prompt,
         selectedPlan.startDate,
         selectedPlan.endDate,
-        diffDays
+        diffDays,
+        metricsSummary
       );
       setAnalysis(result);
 
-      // Save the analysis
       await saveAnalysis(result);
     } catch (error) {
       console.error('Error analyzing progress:', error);
@@ -473,8 +503,9 @@ function PlanProgressContent() {
           '✅ Done! Your entry has been saved successfully!',
         ]);
         
-        // Refresh weight chart with any newly saved metrics
-        fetchWeightData();
+        // Refresh charts and AI analysis with latest saved metrics
+        const refreshedEntries = await fetchPlanDailyData();
+        await handleAnalyzeProgress(true, refreshedEntries);
         fetchTodayEntry();
       } else {
         setChatMessages((prev) => [...prev, '❌ Error: Failed to analyze entry']);
@@ -531,13 +562,15 @@ function PlanProgressContent() {
   const baseWidth = 402;
   const baseHeight = 874;
 
-  if (!mounted || isLoading) {
+  if (!mounted || isLoading || !introDone) {
     return (
-      <div className="w-full h-screen bg-[#151515] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Skeleton className="w-20 h-20 rounded-full" />
-          <Skeleton className="w-40 h-6 rounded" />
-        </div>
+      <div className="w-full h-screen bg-[#0a0a0a]">
+        {!introDone && <LogoAnimation onComplete={() => setIntroDone(true)} />}
+        {introDone && isLoading && (
+          <div className="flex h-full items-center justify-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+          </div>
+        )}
       </div>
     );
   }
@@ -881,6 +914,7 @@ function PlanProgressContent() {
                       <ProgressComparisonChart
                         totalDays={getTotalDays()}
                         currentDay={getCurrentDay()}
+                        actualProgressData={hasRealProgressData ? actualProgress : undefined}
                       />
                     )}
 
@@ -889,7 +923,7 @@ function PlanProgressContent() {
                       mode={weightGoal.mode}
                       goalWeight={weightGoal.goalWeight}
                       weightsKg={
-                        weightsKg.length > 0
+                        hasRealWeightData && weightsKg.length > 0
                           ? weightsKg
                           : generateMockWeightKg(
                               getTotalDays() || 45,
@@ -1077,11 +1111,8 @@ Weight: 74.8kg"
 export default function PlanProgressTrackerPage() {
   return (
     <Suspense fallback={
-      <div className="w-full h-screen bg-[#151515] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Skeleton className="w-20 h-20 rounded-full" />
-          <Skeleton className="w-40 h-6 rounded" />
-        </div>
+      <div className="w-full h-screen bg-[#0a0a0a]">
+        <LogoAnimation onComplete={() => {}} />
       </div>
     }>
       <PlanProgressContent />

@@ -123,6 +123,12 @@ export function generateMockWeightKg(
   });
 }
 
+export interface PlanEntryWithMetrics {
+  date: string;
+  metrics: Array<{ type: string; value: number; unit?: string | null }>;
+  notes?: string | null;
+}
+
 export function buildWeightKgFromEntries(
   entries: Array<{ date: string; metrics: Array<{ type: string; value: number }> }>,
   startDate: string,
@@ -160,6 +166,132 @@ export function buildWeightKgFromEntries(
     if (i < sortedDays[0]) return firstKnown;
     return lastKnown;
   });
+}
+
+export function buildActualProgressFromEntries(
+  entries: PlanEntryWithMetrics[],
+  startDate: string,
+  totalDays: number
+): number[] | null {
+  const dayScores = new Map<number, number>();
+  const start = new Date(startDate);
+  start.setHours(0, 0, 0, 0);
+
+  for (const entry of entries) {
+    if (!entry.metrics?.length) continue;
+
+    const entryDate = new Date(entry.date);
+    entryDate.setHours(0, 0, 0, 0);
+    const dayIndex = Math.round(
+      (entryDate.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    if (dayIndex < 0 || dayIndex >= totalDays) continue;
+
+    const types = new Set(entry.metrics.map((m) => m.type));
+    let score = 20;
+    if (types.has('distance')) score += 25;
+    if (types.has('weight')) score += 25;
+    if (types.has('pace')) score += 15;
+    if (types.has('totalTime')) score += 15;
+    dayScores.set(dayIndex, Math.min(100, score));
+  }
+
+  if (dayScores.size === 0) return null;
+
+  let lastScore = 15;
+  let loggedCount = 0;
+
+  return Array.from({ length: totalDays }, (_, i) => {
+    if (dayScores.has(i)) {
+      lastScore = dayScores.get(i)!;
+      loggedCount++;
+    }
+    const adherence = loggedCount / (i + 1);
+    return Math.min(100, Math.round(lastScore * 0.6 + adherence * 40));
+  });
+}
+
+function formatMetricValue(type: string, value: number, unit?: string | null): string {
+  if (type === 'pace' && unit?.includes('second')) {
+    const total = Math.round(value);
+    const minutes = Math.floor(total / 60);
+    const seconds = total % 60;
+    return `${minutes}:${String(seconds).padStart(2, '0')}/km`;
+  }
+  if (type === 'totalTime' && unit?.includes('second')) {
+    const total = Math.round(value);
+    const hours = Math.floor(total / 3600);
+    const minutes = Math.floor((total % 3600) / 60);
+    const seconds = total % 60;
+    if (hours > 0) {
+      return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+    return `${minutes}:${String(seconds).padStart(2, '0')}`;
+  }
+  return `${value}${unit ? ` ${unit}` : ''}`;
+}
+
+export function formatMetricsSummaryForAI(
+  entries: PlanEntryWithMetrics[],
+  startDate: string
+): string {
+  const withMetrics = entries.filter((entry) => entry.metrics?.length);
+  if (withMetrics.length === 0) {
+    return 'No activity metrics logged yet.';
+  }
+
+  const start = new Date(startDate);
+  start.setHours(0, 0, 0, 0);
+  const sorted = [...withMetrics].sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
+
+  const lines: string[] = ['Logged activity metrics by day:'];
+
+  for (const entry of sorted) {
+    const entryDate = new Date(entry.date);
+    entryDate.setHours(0, 0, 0, 0);
+    const dayIndex =
+      Math.round((entryDate.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    const dateLabel = entryDate.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    });
+    const metricLine = entry.metrics
+      .map((metric) =>
+        `${metric.type}: ${formatMetricValue(metric.type, metric.value, metric.unit)}`
+      )
+      .join(', ');
+    lines.push(`- Day ${dayIndex} (${dateLabel}): ${metricLine}`);
+  }
+
+  const latestByType = new Map<
+    string,
+    { value: number; unit?: string | null; date: string }
+  >();
+
+  for (const entry of sorted) {
+    for (const metric of entry.metrics) {
+      latestByType.set(metric.type, {
+        value: metric.value,
+        unit: metric.unit,
+        date: entry.date,
+      });
+    }
+  }
+
+  lines.push('', 'Latest recorded values:');
+  for (const [type, metric] of latestByType) {
+    const dateLabel = new Date(metric.date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    });
+    lines.push(
+      `- ${type}: ${formatMetricValue(type, metric.value, metric.unit)} (as of ${dateLabel})`
+    );
+  }
+
+  return lines.join('\n');
 }
 
 export function getWeightDeltaLabel(

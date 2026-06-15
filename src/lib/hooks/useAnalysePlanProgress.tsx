@@ -1,16 +1,23 @@
 'use client';
 
 export function useAnalysePlanProgress() {
-  const getProgressAnalysis = async (prompt: string, startDate: string, endDate: string, currentDay: number) => {
+  const getProgressAnalysis = async (
+    prompt: string,
+    startDate: string,
+    endDate: string,
+    currentDay: number,
+    metricsSummary?: string
+  ) => {
     try {
       const apiUrl = 'https://moole-back.vercel.app/ask-moole';
       const systemPrompt = `You are a helpful fitness and nutrition coach that provides personalized progress analysis. 
-      You analyze the user's fitness plan and give insights on:
-      - What they've accomplished so far
+      You analyze the user's fitness plan and their logged activity metrics to give insights on:
+      - What they've accomplished so far based on their real logged data
       - What they need to focus on today
       - What's coming next in their plan
       - Encouragement and tips
       
+      When logged metrics are provided, reference specific numbers (weight, distance, pace, time) in your analysis.
       Keep the response conversational, supportive, and actionable.`;
       
       const userPrompt = `Analyze my fitness plan: ${prompt}
@@ -19,8 +26,10 @@ export function useAnalysePlanProgress() {
       Plan ends on: ${endDate}
       Current day of plan: ${currentDay}
       
+      ${metricsSummary ? `My logged activity data from the database:\n${metricsSummary}\n` : 'No activity metrics logged yet.\n'}
+      
       Provide a progress analysis with:
-      1. What I've accomplished so far
+      1. What I've accomplished so far (use my logged metrics when available)
       2. Today's focus and tasks
       3. What's coming up next
       4. Encouragement and tips`;
