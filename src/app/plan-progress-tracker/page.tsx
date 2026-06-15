@@ -302,6 +302,7 @@ function PlanProgressContent() {
     try {
       const formData = new FormData();
       formData.append('prompt', aiPrompt);
+      formData.append('email', user.email);
       
       // Add all uploaded files
       uploadedFiles.forEach(file => {

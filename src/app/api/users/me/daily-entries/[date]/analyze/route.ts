@@ -1,18 +1,20 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/db';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/../auth';
 
 export async function POST(request: Request, { params }: { params: Promise<{ date: string }> }) {
   const resolvedParams = await params;
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.email) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  
+  // Get email from form data
+  const formData = await request.formData();
+  const email = formData.get('email') as string;
+  
+  if (!email) {
+    return NextResponse.json({ error: 'Email is required' }, { status: 400 });
   }
 
   try {
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { email },
       include: { plans: true }
     });
 
