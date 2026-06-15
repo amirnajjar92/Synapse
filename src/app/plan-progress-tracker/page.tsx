@@ -8,6 +8,7 @@ import { ProgressComparisonChart } from '@/components/ProgressComparisonChart';
 import { BarChart } from '@/components/BarChart';
 import AIIcon from '@/components/AIIcon';
 import CustomButton from '@/components/CustomButton';
+import ChatRow from '@/components/ChatRow';
 
 interface Plan {
   id: string;
@@ -102,6 +103,7 @@ function PlanProgressContent() {
   const [aiPrompt, setAiPrompt] = useState('');
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isAnalyzingEntry, setIsAnalyzingEntry] = useState(false);
+  const [chatMessages, setChatMessages] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sample weight data (kg) for 45 days
@@ -299,7 +301,11 @@ function PlanProgressContent() {
     if (!user?.email || !selectedPlan) return;
     
     setIsAnalyzingEntry(true);
+    setChatMessages([]); // Clear previous messages
+    
     try {
+      setChatMessages(prev => [...prev, 'Starting analysis...']);
+      
       const formData = new FormData();
       formData.append('prompt', aiPrompt);
       formData.append('email', user.email);
@@ -308,6 +314,8 @@ function PlanProgressContent() {
       uploadedFiles.forEach(file => {
         formData.append('image', file);
       });
+      
+      setChatMessages(prev => [...prev, 'Sending data to AI...']);
 
       const response = await fetch(`/api/users/me/daily-entries/${encodeURIComponent(getTodayDateStr())}/analyze`, {
         method: 'POST',
@@ -315,18 +323,37 @@ function PlanProgressContent() {
       });
 
       if (response.ok) {
-        const data = await response.json();
-        alert('Successfully analyzed and saved your daily entry!');
-        setIsAIModalOpen(false);
-        setAiPrompt('');
-        setUploadedFiles([]);
+        setChatMessages(prev => [...prev, 'AI is analyzing your activity...']);
         
-        // Refresh today's entry
-        await fetchTodayEntry();
+        const data = await response.json();
+        
+        setChatMessages(prev => [...prev, 'Extracting metrics...']);
+        
+        // Simulate processing steps
+        await new Promise(r => setTimeout(r, 500));
+        
+        setChatMessages(prev => [...prev, 'Saving your daily entry to the database...']);
+        
+        await new Promise(r => setTimeout(r, 500));
+        
+        setChatMessages(prev => [...prev, '✅ Done! Your entry has been saved successfully!']);
+        
+        // Wait a bit then close modal
+        setTimeout(() => {
+          setIsAIModalOpen(false);
+          setAiPrompt('');
+          setUploadedFiles([]);
+          setChatMessages([]);
+          
+          // Refresh today's entry
+          fetchTodayEntry();
+        }, 1500);
+      } else {
+        setChatMessages(prev => [...prev, '❌ Error: Failed to analyze entry']);
       }
     } catch (error) {
       console.error('Error analyzing entry:', error);
-      alert('Failed to analyze your entry.');
+      setChatMessages(prev => [...prev, '❌ Error: Something went wrong']);
     } finally {
       setIsAnalyzingEntry(false);
     }
@@ -810,6 +837,12 @@ function PlanProgressContent() {
                 </button>
               </div>
 
+              {/* ChatRow */}
+              <ChatRow 
+                targetHeight={chatMessages.length > 0 ? "200px" : "0%"} 
+                chatMessages={chatMessages} 
+              />
+              
               {/* Modal Content */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {/* Uploaded Files */}
