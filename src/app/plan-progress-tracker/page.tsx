@@ -781,7 +781,7 @@ function PlanProgressContent() {
                               ${!day.date 
                                 ? 'invisible' 
                                 : day.isToday 
-                                  ? 'bg-[#3B63CF] text-white' 
+                                  ? 'bg-[#3F87FF] text-white' 
                                   : day.isInPlan 
                                     ? 'bg-[#3B3B3B] text-white' 
                                     : 'bg-black text-[#3B3B3B]'
@@ -973,7 +973,7 @@ function PlanProgressContent() {
         {selectedPlan && (
           <button
             onClick={() => setIsAIModalOpen(true)}
-            className="fixed bottom-8 right-8 w-16 h-16 bg-[#3B63CF] rounded-full flex items-center justify-center shadow-xl z-50 hover:scale-110 transition-transform"
+            className="fixed bottom-8 right-8 w-16 h-16 bg-black rounded-full flex items-center justify-center shadow-xl z-50 hover:scale-110 transition-transform"
           >
             <AIIcon />
           </button>
@@ -1082,6 +1082,9 @@ Weight: 74.8kg"
                       setAiPrompt('');
                       setUploadedFiles([]);
                       setChatMessages([]);
+                    }}
+                    style={{
+                      visibility: 'hidden'
                     }}
                     className="px-4 py-3 bg-[#3B3B3B] text-white rounded-xl font-semibold hover:bg-[#4A4A4A] transition-colors"
                   >
