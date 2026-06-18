@@ -991,9 +991,18 @@ function PlanProgressContent() {
                     />
 
                     <div className="rounded-2xl p-4 border border-[#3B3B3B00]">
-                      <h3 className="text-white font-bold text-base mb-3">
-                        AI Progress Analysis
-                      </h3>
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-white font-bold text-base">AI Progress Analysis</h3>
+                        <button
+                          onClick={() => router.push(`/monitor?planId=${selectedPlan.id}`)}
+                          className="flex items-center gap-1.5 px-3 py-1 bg-[#1e1e1e] border border-[#3B3B3B] rounded-full text-[10px] text-gray-300 hover:border-[#3B63CF] hover:text-white transition-colors"
+                        >
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                            <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                          Monitor
+                        </button>
+                      </div>
                       {isAnalyzing ? (
                         <div className="flex flex-col items-center gap-2 py-6">
                           <div className="w-8 h-8 border-3 border-[#3B63CF] border-t-transparent rounded-full animate-spin" />
