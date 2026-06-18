@@ -57,8 +57,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ dat
       mediaUrl = `placeholder-${Date.now()}.jpg`;
     }
 
-    // Call ask-moole API to analyze prompt and extract metrics
-    const apiUrl = 'https://moole-back.vercel.app/ask-moole';
+    // Call internal AI analyse route to extract metrics
     const systemPrompt = `You are a fitness data extractor. Extract the following metrics from the user's input and return ONLY a valid JSON object with these exact keys:
 - weight: { value: number, unit: 'kg' or 'lbs' }
 - distance: { value: number, unit: 'km' or 'mi' }
@@ -73,8 +72,9 @@ Rules:
 - Make sure the JSON is valid and properly formatted`;
 
     const userPrompt = `Extract metrics from this fitness activity report: ${prompt}`;
-    
-    const res = await fetch(apiUrl, {
+
+    const internalApiUrl = new URL('/api/ai/analyse', request.url);
+    const res = await fetch(internalApiUrl.toString(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ question: `${systemPrompt}\n\n${userPrompt}` }),

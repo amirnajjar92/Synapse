@@ -81,10 +81,13 @@ export function toWeightChartHeights(weights: number[]): number[] {
   if (weights.length === 0) return [];
   const min = Math.min(...weights);
   const max = Math.max(...weights);
-  const padding = Math.max((max - min) * 0.15, 2);
-  const lo = min - padding;
-  const hi = max + padding;
-  const range = hi - lo || 1;
+  // Use at least 5kg range so variance always has room to breathe visually
+  const naturalRange = max - min;
+  const displayRange = Math.max(naturalRange, 5);
+  const mid = (min + max) / 2;
+  const lo = mid - displayRange / 2;
+  const hi = mid + displayRange / 2;
+  const range = hi - lo;
   return weights.map((w) => 18 + ((w - lo) / range) * 72);
 }
 
@@ -108,8 +111,10 @@ export function generateMockWeightKg(
   const startWeight =
     goal.currentWeight ??
     (goal.mode === 'lose'
-      ? (goal.goalWeight ?? baseWeight) + 12
-      : (goal.goalWeight ?? baseWeight) - 8);
+      ? (goal.goalWeight ? goal.goalWeight + 10 : baseWeight)
+      : goal.mode === 'gain'
+        ? (goal.goalWeight ? goal.goalWeight - 8 : baseWeight)
+        : baseWeight);
   const endWeight = goal.goalWeight ?? startWeight;
 
   return Array.from({ length: totalDays }, (_, i) => {
@@ -187,10 +192,11 @@ export function buildActualProgressFromEntries(
     );
     if (dayIndex < 0 || dayIndex >= totalDays) continue;
 
+    // Score based on richness of the log for that day
     const types = new Set(entry.metrics.map((m) => m.type));
-    let score = 20;
-    if (types.has('distance')) score += 25;
-    if (types.has('weight')) score += 25;
+    let score = 30; // base: anything logged
+    if (types.has('distance')) score += 20;
+    if (types.has('weight')) score += 20;
     if (types.has('pace')) score += 15;
     if (types.has('totalTime')) score += 15;
     dayScores.set(dayIndex, Math.min(100, score));
@@ -198,16 +204,23 @@ export function buildActualProgressFromEntries(
 
   if (dayScores.size === 0) return null;
 
-  let lastScore = 15;
+  // Build a running cumulative progress:
+  // On logged days the score rises; on unlogged days it holds (not decays).
+  // The final value is the weighted average of all logged day scores so far.
+  let runningSum = 0;
   let loggedCount = 0;
 
   return Array.from({ length: totalDays }, (_, i) => {
     if (dayScores.has(i)) {
-      lastScore = dayScores.get(i)!;
+      runningSum += dayScores.get(i)!;
       loggedCount++;
     }
-    const adherence = loggedCount / (i + 1);
-    return Math.min(100, Math.round(lastScore * 0.6 + adherence * 40));
+    if (loggedCount === 0) return 0;
+    // Average of logged scores so far, scaled up by the share of days logged
+    // so consistent logging genuinely drives the number up over time
+    const avgScore = runningSum / loggedCount;
+    const consistency = loggedCount / (i + 1); // 0..1
+    return Math.min(100, Math.round(avgScore * (0.6 + consistency * 0.4)));
   });
 }
 

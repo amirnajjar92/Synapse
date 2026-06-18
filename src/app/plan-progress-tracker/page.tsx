@@ -191,6 +191,7 @@ function PlanProgressContent() {
     { label: 'Calendar' },
     { label: "Today's Focus" },
     { label: 'Analyser', icon: '/vectors/ai-icon.svg' },
+    { label: 'History' },
   ];
 
   // AI Modal state
@@ -812,9 +813,63 @@ function PlanProgressContent() {
                           TODAY
                         </h2>
                         <div className="w-px h-8 bg-[#3B3B3B]" />
-                        <p className="text-white text-sm">
-                          This is your today plan. Goodluck Baby
-                        </p>
+                        {/* Last metrics mini-board */}
+                        {(() => {
+                          const todayStr = getTodayDateStr();
+                          // Gather the most recent value per metric type from entries BEFORE today
+                          const latestMetrics: Record<string, { value: number; unit?: string | null; date: string }> = {};
+                          [...planEntries]
+                            .filter((entry) => entry.date.slice(0, 10) < todayStr)
+                            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                            .forEach((entry) => {
+                              entry.metrics.forEach((m) => {
+                                latestMetrics[m.type] = { value: m.value, unit: m.unit, date: entry.date.slice(0, 10) };
+                              });
+                            });
+
+                          const priority = ['weight', 'distance', 'calories', 'pace', 'totalTime', 'steps'];
+                          const keys = [
+                            ...priority.filter((k) => latestMetrics[k]),
+                            ...Object.keys(latestMetrics).filter((k) => !priority.includes(k)),
+                          ].slice(0, 4);
+
+                          if (keys.length === 0) {
+                            return (
+                              <p className="text-[#ffffff50] text-xs italic">No previous data</p>
+                            );
+                          }
+
+                          const labelMap: Record<string, string> = {
+                            weight: 'WT',
+                            distance: 'DIST',
+                            calories: 'CAL',
+                            pace: 'PACE',
+                            totalTime: 'TIME',
+                            steps: 'STEPS',
+                          };
+
+                          return (
+                            <div className="flex gap-1.5 flex-wrap">
+                              {keys.map((key) => {
+                                const m = latestMetrics[key];
+                                const label = labelMap[key] ?? key.toUpperCase().slice(0, 4);
+                                const display = formatMetricLabel(key, m.value, m.unit ?? undefined);
+                                // Format date as "Jun 17"
+                                const dateLabel = new Date(m.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                                return (
+                                  <div
+                                    key={key}
+                                    className="flex flex-col items-center bg-[#1a1a1a] border border-[#2a2a2a] rounded-lg px-2 py-1 min-w-[40px]"
+                                  >
+                                    <span className="text-[#3F87FF] text-[8px] font-bold leading-none tracking-wide">{label}</span>
+                                    <span className="text-white text-[10px] font-semibold leading-tight mt-0.5">{display}</span>
+                                    <span className="text-[#ffffff35] text-[7px] leading-none mt-0.5">{dateLabel}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
 
@@ -948,6 +1003,109 @@ function PlanProgressContent() {
                         <p className="text-white text-sm whitespace-pre-line">{analysis}</p>
                       )}
                     </div>
+                  </div>
+                )}
+
+                {activeTab === 3 && (
+                  /* Activity History */
+                  <div className="flex flex-col gap-3">
+                    {(() => {
+                      const metricLabelMap: Record<string, string> = {
+                        weight: 'Weight',
+                        distance: 'Distance',
+                        calories: 'Calories',
+                        pace: 'Pace',
+                        totalTime: 'Time',
+                        steps: 'Steps',
+                      };
+
+                      const sorted = [...planEntries]
+                        .filter((e) => e.metrics.length > 0)
+                        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+                      if (sorted.length === 0) {
+                        return (
+                          <div className="flex flex-col items-center justify-center py-12 gap-3">
+                            <span className="text-4xl">🏃</span>
+                            <p className="text-[#ffffff50] text-sm text-center">
+                              No activity logged yet.<br />Use the AI button to log your first session.
+                            </p>
+                          </div>
+                        );
+                      }
+
+                      const planStart = selectedPlan?.startDate
+                        ? (() => { const d = new Date(selectedPlan.startDate); d.setHours(0,0,0,0); return d; })()
+                        : null;
+
+                      return sorted.map((entry, idx) => {
+                        const entryDate = new Date(entry.date);
+                        entryDate.setHours(0, 0, 0, 0);
+                        const dateLabel = entryDate.toLocaleDateString('en-US', {
+                          weekday: 'short',
+                          month: 'short',
+                          day: 'numeric',
+                        });
+
+                        const dayNum = planStart
+                          ? Math.round((entryDate.getTime() - planStart.getTime()) / (1000 * 60 * 60 * 24)) + 1
+                          : null;
+
+                        // Pick a headline metric
+                        const highlight =
+                          entry.metrics.find((m) => m.type === 'distance') ||
+                          entry.metrics.find((m) => m.type === 'totalTime') ||
+                          entry.metrics[0];
+
+                        return (
+                          <div
+                            key={idx}
+                            className="bg-[#111111] border border-[#2a2a2a] rounded-2xl p-3 flex flex-col gap-2"
+                          >
+                            {/* Header */}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                {dayNum !== null && (
+                                  <span className="text-[#3F87FF] text-[10px] font-bold uppercase tracking-wider">
+                                    Day {dayNum}
+                                  </span>
+                                )}
+                                <span className="text-[#ffffff35] text-[9px]">{dateLabel}</span>
+                              </div>
+                              {highlight && (
+                                <span className="text-white text-xs font-semibold">
+                                  {formatMetricLabel(highlight.type, highlight.value, highlight.unit ?? undefined)}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Metric chips */}
+                            <div className="flex flex-wrap gap-1.5">
+                              {entry.metrics.map((m, mIdx) => (
+                                <div
+                                  key={mIdx}
+                                  className="flex items-center gap-1 bg-[#1a1a1a] border border-[#2e2e2e] rounded-lg px-2 py-0.5"
+                                >
+                                  <span className="text-[#ffffff45] text-[9px] uppercase tracking-wide">
+                                    {metricLabelMap[m.type] ?? m.type}
+                                  </span>
+                                  <span className="text-white text-[10px] font-semibold">
+                                    {formatMetricLabel(m.type, m.value, m.unit ?? undefined)}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Notes preview */}
+                            {entry.notes && (
+                              <p className="text-[#ffffff35] text-[9px] leading-tight line-clamp-2 italic">
+                                {entry.notes}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      });
+                    })()}
                   </div>
                 )}
               </div>

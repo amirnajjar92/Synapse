@@ -71,7 +71,7 @@ export function WeightChart({
         <BarChart
           data={chartHeights}
           color={modeColors[mode]}
-          reversed={isLoseMode}
+          reversed={false}
           showConnectingLine
           connectingLineColor="#ffffff"
           connectingLineWidth={1}
