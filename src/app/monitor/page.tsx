@@ -5,6 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { BarChart } from '@/components/BarChart';
 import BurgerMenuButton from '@/components/BurgerMenuButton';
+import PromptBox from '@/components/PromptBox';
+import CustomButton from '@/components/CustomButton';
+import ChatRow from '@/components/ChatRow';
 import {
   parseWeightGoalFromPrompt,
   generateMockWeightKg,
@@ -94,6 +97,15 @@ function MonitorContent() {
   const [dailyNotes, setDailyNotes] = useState('');
   const saveNotesTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Adaptive border radius
+  const [borderRadius, setBorderRadius] = useState('40px');
+
+  // AI extraction
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [extractionResult, setExtractionResult] = useState<string>('');
+  const [chatMessages, setChatMessages] = useState<string[]>([]);
+  const [showChat, setShowChat] = useState(false);
+
   // Weight chart data
   const [weightsKg, setWeightsKg] = useState<number[]>([]);
   const [activityBarData, setActivityBarData] = useState<number[]>([]);
@@ -110,6 +122,29 @@ function MonitorContent() {
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
+  }, []);
+
+  // Adaptive border radius based on screen size
+  useEffect(() => {
+    const updateBorderRadius = () => {
+      const vh = window.innerHeight;
+      const vw = window.innerWidth;
+      const minDimension = Math.min(vh, vw);
+      
+      // Calculate border radius as percentage of screen size
+      // Smaller screens get proportionally smaller radius
+      if (minDimension < 400) {
+        setBorderRadius('20px');
+      } else if (minDimension < 600) {
+        setBorderRadius('30px');
+      } else {
+        setBorderRadius('40px');
+      }
+    };
+
+    updateBorderRadius();
+    window.addEventListener('resize', updateBorderRadius);
+    return () => window.removeEventListener('resize', updateBorderRadius);
   }, []);
 
   // ── fetch plans ──────────────────────────────────────────────────────────
@@ -225,6 +260,72 @@ function MonitorContent() {
     }, 1000);
   };
 
+  // ── AI metric extraction ─────────────────────────────────────────────────
+  const handleSendToAI = async () => {
+    if (!user?.email || !selectedPlan || !dailyNotes.trim()) return;
+    
+    setIsExtracting(true);
+    setExtractionResult('');
+    setChatMessages([]);
+    setShowChat(true);
+    
+    try {
+      setChatMessages(['🤖 Analyzing your activity notes...']);
+      
+      const formData = new FormData();
+      formData.append('email', user.email);
+      formData.append('prompt', dailyNotes);
+      formData.append('planId', selectedPlan.id);
+
+      const res = await fetch(
+        `/api/users/me/daily-entries/${encodeURIComponent(getTodayStr())}/analyze`,
+        { method: 'POST', body: formData }
+      );
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          setChatMessages(prev => [...prev, '📊 Extracted metrics from your notes']);
+          
+          // Show what was extracted
+          const changes = data.metricChanges || [];
+          if (changes.length > 0) {
+            setChatMessages(prev => [...prev, '✏️ Updated metrics:']);
+            changes.forEach((c: { type: string; action: string; newValue: number; newUnit?: string }) => {
+              setChatMessages(prev => [...prev, `  • ${c.type}: ${c.newValue}${c.newUnit ? ' ' + c.newUnit : ''}`]);
+            });
+          } else {
+            setChatMessages(prev => [...prev, '❌ No metrics found in notes']);
+          }
+          
+          setChatMessages(prev => [...prev, '📋 Saved to today\'s entry']);
+          
+          // Refresh metrics display
+          await fetchData();
+          
+          setChatMessages(prev => [...prev, '✅ All done! Metrics updated.']);
+          setExtractionResult('success');
+        } else {
+          setChatMessages(prev => [...prev, '❌ Failed to extract metrics']);
+          setExtractionResult('error');
+        }
+      } else {
+        setChatMessages(prev => [...prev, '❌ Error calling AI']);
+        setExtractionResult('error');
+      }
+    } catch (e) {
+      console.error(e);
+      setChatMessages(prev => [...prev, '❌ Network error']);
+      setExtractionResult('error');
+    } finally {
+      setIsExtracting(false);
+      setTimeout(() => {
+        setShowChat(false);
+        setChatMessages([]);
+      }, 5000);
+    }
+  };
+
   // ── derived values ────────────────────────────────────────────────────────
   const planDay = getPlanDay(selectedPlan?.startDate ?? null);
   const totalDays = getPlanTotalDays(selectedPlan?.startDate ?? null, selectedPlan?.endDate ?? null);
@@ -267,15 +368,20 @@ function MonitorContent() {
   return (
     <div className="w-full h-screen bg-[#151515] flex items-center justify-center p-2 sm:p-4">
       <div
-        className="bg-black rounded-[40px] overflow-hidden shadow-2xl relative flex-shrink-0"
-        style={{ width: `min(95vw, ${baseWidth}px)`, aspectRatio: baseWidth / baseHeight, maxHeight: '95vh' }}
+        className="bg-black overflow-hidden shadow-2xl relative flex-shrink-0"
+        style={{ 
+          width: `min(95vw, ${baseWidth}px)`, 
+          aspectRatio: baseWidth / baseHeight, 
+          maxHeight: '95vh',
+          borderRadius: borderRadius
+        }}
       >
         <div className="w-full h-full flex flex-col relative" style={{ backgroundColor: '#2C2C2C' }}>
-          <div className="absolute top-4 left-4 z-10"><BurgerMenuButton /></div>
+          <div className="absolute top-3 left-3 z-20"><BurgerMenuButton /></div>
 
           {/* Row 1 — plan selector + date */}
           <div className="flex w-full h-[17.51%]">
-            <div className="w-1/2 h-full flex items-center justify-center px-2">
+            <div className="w-1/2 h-full flex items-center justify-center px-3 pl-14">
               {isLoading ? <Skeleton className="w-28 h-8" /> : (
                 <select
                   value={selectedPlan?.id ?? ''}
@@ -283,7 +389,7 @@ function MonitorContent() {
                     const p = plans.find(p => p.id === e.target.value);
                     setSelectedPlan(p ?? null);
                   }}
-                  className="bg-transparent text-white text-lg font-light border-none outline-none text-center w-full truncate"
+                  className="bg-transparent text-white text-base sm:text-lg font-light border-none outline-none text-center w-full truncate cursor-pointer"
                 >
                   {plans.length === 0
                     ? <option value="">No Plans</option>
@@ -292,9 +398,9 @@ function MonitorContent() {
                 </select>
               )}
             </div>
-            <div className="w-1/2 h-full flex items-center justify-center">
+            <div className="w-1/2 h-full flex items-center justify-center px-3">
               {isLoading ? <Skeleton className="w-24 h-10" /> : (
-                <span className="text-white text-3xl sm:text-4xl font-light">
+                <span className="text-white text-2xl sm:text-3xl md:text-4xl font-light tabular-nums">
                   {now.toLocaleDateString('en-US', { month: 'numeric', year: 'numeric' })}
                 </span>
               )}
@@ -483,15 +589,66 @@ function MonitorContent() {
             )}
           </div>
 
-          {/* Row 9 — notes */}
-          <div className="w-full h-[20.14%] border border-[#3B3B3B] flex flex-col p-2">
+          {/* Row 9 — notes with AI extraction using design system */}
+          <div className="w-full h-[20.14%] border border-[#3B3B3B] flex flex-col overflow-hidden">
             {isLoading ? <Skeleton className="w-full h-full" /> : (
-              <textarea
-                className="w-full h-full bg-[#1a1a1a] text-white text-sm font-light rounded-lg p-2 border border-[#3B3B3B] resize-none outline-none focus:border-[#3B63CF] placeholder:text-gray-600"
-                placeholder="Today's activity notes (auto-saved)..."
-                value={dailyNotes}
-                onChange={e => handleNotesChange(e.target.value)}
-              />
+              <div className="w-full h-full flex flex-col relative">
+                {/* PromptBox-style notes input */}
+                <div className="flex-1 p-2 relative">
+                  <div className="w-full h-full relative">
+                    {/* Mini frame effect */}
+                    <div className="absolute inset-0 bg-[#1a1a1a] rounded-lg border border-[#3B63CF]/30" />
+                    
+                    {/* Label */}
+                    <div className="absolute top-[-12px] left-2 px-2 bg-[#2C2C2C] z-10">
+                      <span className="text-[#3B63CF] text-[10px] font-bold tracking-wider">TODAY'S NOTES</span>
+                    </div>
+                    
+                    {/* Text area */}
+                    <textarea
+                      className="absolute inset-2 bg-transparent text-white text-xs font-light resize-none outline-none placeholder:text-gray-600 focus:ring-0"
+                      placeholder="Log your activity here... (e.g., Ran 8km in 40min, pace 5:00/km, weight 72.5kg)"
+                      value={dailyNotes}
+                      onChange={e => handleNotesChange(e.target.value)}
+                      style={{ paddingTop: '4px' }}
+                    />
+                  </div>
+                </div>
+
+                {/* Button row - right aligned */}
+                <div className="h-[32px] px-2 pb-1 flex items-center justify-end gap-2">
+                  {!showChat && extractionResult && (
+                    <span className={`text-[9px] font-medium ${extractionResult === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                      {extractionResult === 'success' ? '✓ Updated' : '✗ Failed'}
+                    </span>
+                  )}
+                  <div className="flex-shrink-0" style={{ width: '120px', height: '26px' }}>
+                    <CustomButton
+                      text={isExtracting ? "ANALYZING..." : "SEND TO AI"}
+                      onClick={handleSendToAI}
+                      fontSize="9px"
+                      width="120px"
+                      mirror={true}
+                    />
+                  </div>
+                </div>
+
+                {/* Chat overlay - slides in from bottom */}
+                {showChat && (
+                  <div 
+                    className="absolute bottom-0 left-0 right-0 bg-[#1a1a1a]/95 border-t border-[#3B63CF]/50 backdrop-blur-sm"
+                    style={{ 
+                      height: showChat ? '60%' : '0%',
+                      transition: 'height 300ms ease-out'
+                    }}
+                  >
+                    <ChatRow 
+                      targetHeight="100%" 
+                      chatMessages={chatMessages}
+                    />
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>
