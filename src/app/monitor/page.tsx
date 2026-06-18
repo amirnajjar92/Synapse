@@ -377,12 +377,18 @@ function MonitorContent() {
         }}
       >
         <div className="w-full h-full flex flex-col relative" style={{ backgroundColor: '#2C2C2C' }}>
-          <div className="absolute top-3 left-3 z-20"><BurgerMenuButton /></div>
+          {/* Header — burger menu + plan selector + date */}
+          <div className="flex w-full h-[12%] relative">
+            {/* Burger menu */}
+            <div className="absolute top-3 left-3 z-20">
+              <BurgerMenuButton />
+            </div>
 
-          {/* Row 1 — plan selector + date */}
-          <div className="flex w-full h-[17.51%]">
+            {/* Plan selector */}
             <div className="w-1/2 h-full flex items-center justify-center px-3 pl-14">
-              {isLoading ? <Skeleton className="w-28 h-8" /> : (
+              {isLoading ? (
+                <Skeleton className="w-28 h-8" />
+              ) : (
                 <select
                   value={selectedPlan?.id ?? ''}
                   onChange={e => {
@@ -398,8 +404,12 @@ function MonitorContent() {
                 </select>
               )}
             </div>
+
+            {/* Date display */}
             <div className="w-1/2 h-full flex items-center justify-center px-3">
-              {isLoading ? <Skeleton className="w-24 h-10" /> : (
+              {isLoading ? (
+                <Skeleton className="w-24 h-10" />
+              ) : (
                 <span className="text-white text-2xl sm:text-3xl md:text-4xl font-light tabular-nums">
                   {now.toLocaleDateString('en-US', { month: 'numeric', year: 'numeric' })}
                 </span>
@@ -589,10 +599,28 @@ function MonitorContent() {
             )}
           </div>
 
-          {/* Row 9 — notes with AI extraction using design system */}
+          {/* Row 9 — notes with AI extraction */}
           <div className="w-full h-[20.14%] border border-[#3B3B3B] flex flex-col overflow-hidden">
             {isLoading ? <Skeleton className="w-full h-full" /> : (
               <div className="w-full h-full flex flex-col relative">
+                {/* Chat messages area - shows above input when active */}
+                <div 
+                  className="border-b border-[#3B3B3B] bg-[#1a1a1a]/95 overflow-hidden transition-all duration-300"
+                  style={{ 
+                    height: showChat ? '55%' : '0%',
+                  }}
+                >
+                  {showChat && (
+                    <div className="w-full h-full p-2 overflow-y-auto">
+                      {chatMessages.map((msg, idx) => (
+                        <div key={idx} className="text-white text-[10px] mb-1 font-light">
+                          {msg}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 {/* PromptBox-style notes input */}
                 <div className="flex-1 p-2 relative">
                   <div className="w-full h-full relative">
@@ -632,22 +660,6 @@ function MonitorContent() {
                     />
                   </div>
                 </div>
-
-                {/* Chat overlay - slides in from bottom */}
-                {showChat && (
-                  <div 
-                    className="absolute bottom-0 left-0 right-0 bg-[#1a1a1a]/95 border-t border-[#3B63CF]/50 backdrop-blur-sm"
-                    style={{ 
-                      height: showChat ? '60%' : '0%',
-                      transition: 'height 300ms ease-out'
-                    }}
-                  >
-                    <ChatRow 
-                      targetHeight="100%" 
-                      chatMessages={chatMessages}
-                    />
-                  </div>
-                )}
               </div>
             )}
           </div>
