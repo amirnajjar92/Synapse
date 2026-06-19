@@ -5,6 +5,8 @@ import React, { useEffect, useRef, useState } from 'react';
 interface ChatRowProps {
   targetHeight: string;
   chatMessages: string[];
+  textColor?: string;
+  isDarkMode?: boolean;
 }
 
 const ChatRow: React.FC<ChatRowProps> = ({ targetHeight, chatMessages }) => {

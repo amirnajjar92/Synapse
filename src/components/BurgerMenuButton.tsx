@@ -13,7 +13,7 @@ export default function BurgerMenuButton() {
       className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-black font-bold text-lg shadow-lg hover:scale-110 transition-transform flex-shrink-0"
       style={{
         boxShadow: '0 0 15px rgba(59, 130, 246, 0.8)',
-        border: '2px solid rgba(59, 130, 246)'
+        border: '1px solid black'
       }}
     >
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none">

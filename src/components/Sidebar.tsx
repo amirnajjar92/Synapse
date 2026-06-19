@@ -158,36 +158,36 @@ export default function Sidebar() {
 
       {/* Sidebar */}
       <div
-        className={`fixed left-0 top-0 h-full w-64 bg-[#0b0b0b] z-[50] shadow-2xl transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`fixed left-0 top-0 h-full w-72 bg-gradient-to-b from-[#0f0f0f] to-[#0a0a0a] z-[50] shadow-2xl transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <div className="p-6 flex flex-col h-full">
           {/* Close Button + Profile Section at Top */}
-          <div className="mb-8 border-b border-gray-700 pb-6">
+          <div className="mb-6 pb-6 border-b border-white/5">
             <button
               onClick={() => setIsOpen(false)}
-              className="mb-4 w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center hover:bg-gray-600 transition-colors"
+              className="mb-6 w-10 h-10 rounded-full bg-white/5 backdrop-blur-sm flex items-center justify-center hover:bg-white/10 transition-all duration-200 hover:rotate-90"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M18 6L6 18M6 6l12 12" stroke="white" strokeWidth="2" strokeLinecap="round" />
+                <path d="M18 6L6 18M6 6l12 12" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
               </svg>
             </button>
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white font-bold text-xl">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 via-purple-600 to-blue-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-purple-500/20">
                 {user?.picture ? (
                   <img
                     src={user.picture}
                     alt={user.name || 'User'}
-                    className="w-full h-full rounded-full object-cover"
+                    className="w-full h-full rounded-2xl object-cover"
                   />
                 ) : (
                   (user?.name?.charAt(0) || user?.email?.charAt(0).toUpperCase() || 'U')
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-white font-semibold truncate">
+                <p className="text-white font-semibold truncate text-base">
                   {user?.name || user?.email || 'User'}
                 </p>
-                <p className="text-gray-400 text-sm truncate">
+                <p className="text-white/40 text-xs truncate mt-0.5">
                   {user?.email}
                 </p>
               </div>
@@ -195,18 +195,20 @@ export default function Sidebar() {
           </div>
 
           {/* Navigation Links */}
-          <div className="flex-1 flex flex-col gap-2">
+          <div className="flex-1 flex flex-col gap-1 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
             <button
               onClick={() => {
                 setIsOpen(false);
                 router.push('/planner');
               }}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+              className="group flex items-center gap-3 px-4 py-3.5 rounded-2xl text-white/60 hover:text-white hover:bg-white/5 transition-all duration-200"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              Planner
+              <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-all duration-200">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <span className="font-medium">Planner</span>
             </button>
 
             <button
@@ -214,12 +216,14 @@ export default function Sidebar() {
                 setIsOpen(false);
                 router.push('/my-plans');
               }}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+              className="group flex items-center gap-3 px-4 py-3.5 rounded-2xl text-white/60 hover:text-white hover:bg-white/5 transition-all duration-200"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              My Plans
+              <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-all duration-200">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <span className="font-medium">My Plans</span>
             </button>
 
             <button
@@ -227,12 +231,14 @@ export default function Sidebar() {
                 setIsOpen(false);
                 router.push('/water-tracker');
               }}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+              className="group flex items-center gap-3 px-4 py-3.5 rounded-2xl text-white/60 hover:text-white hover:bg-white/5 transition-all duration-200"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2C12 2 5 10 5 14a7 7 0 0014 0c0-4-7-12-7-12z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              Water Tracker
+              <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-all duration-200">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2C12 2 5 10 5 14a7 7 0 0014 0c0-4-7-12-7-12z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <span className="font-medium">Water Tracker</span>
             </button>
 
             <button
@@ -241,112 +247,79 @@ export default function Sidebar() {
                 const active = activePlans[0];
                 router.push(active ? `/monitor?planId=${active.id}` : '/monitor');
               }}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+              className="group flex items-center gap-3 px-4 py-3.5 rounded-2xl text-white/60 hover:text-white hover:bg-white/5 transition-all duration-200"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              Monitor
+              <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-all duration-200">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <span className="font-medium">Monitor</span>
             </button>
-
-            {/* Strava integration (disabled for now) */}
-            {/* 
-            {isStravaConnected ? (
-              <button
-                onClick={handleSyncActivities}
-                disabled={isSyncing}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-800 hover:text-white transition-colors disabled:opacity-50"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 11c-2.21 0-4-1.79-4-4h2c0 1.1.9 2 2 2s2-.9 2-2h2c0 2.21-1.79 4-4 4zm0-8c-1.66 0-3 1.34-3 3h2c0-.55.45-1 1-1s1 .45 1 1h2c0-1.66-1.34-3-3-3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                {isSyncing ? 'Syncing...' : 'Sync Activities'}
-              </button>
-            ) : (
-              <button
-                onClick={() => signIn('strava')}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl text-orange-400 hover:bg-orange-500/10 transition-colors"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path d="M15 3h-2c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h2c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-6 0H7c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h2c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                Connect Strava
-              </button>
-            )}
-            */}
-
-            {/* <button
-              onClick={() => {
-                setIsOpen(false);
-                router.push('/plan-progress-tracker');
-              }}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              Plan Progress
-            </button> */}
 
             {/* Active Plans Section */}
             {activePlans.length > 0 && (
-              <div className="mt-4">
-                <p className="text-xs text-gray-500 px-4 mb-2 uppercase tracking-wider">
-                  Active Plans
-                </p>
-                <div className="flex flex-col gap-1">
-                  {activePlans.map((plan) => (
-                    <button
-                      key={plan.id}
-                      onClick={() => {
-                        setIsOpen(false);
-                        router.push(`/plan-progress-tracker?planId=${plan.id}`);
-                      }}
-                      className="flex items-center gap-3 px-4 py-2 rounded-xl text-left text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
-                    >
-                      <div className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
-                      <span className="truncate">{plan.title}</span>
-                    </button>
-                  ))}
+              <div className="mt-6 space-y-1">
+                <div className="px-4 mb-3">
+                  <p className="text-xs text-white/30 uppercase tracking-widest font-semibold">
+                    Active Plans
+                  </p>
                 </div>
+                {activePlans.map((plan) => (
+                  <button
+                    key={plan.id}
+                    onClick={() => {
+                      setIsOpen(false);
+                      router.push(`/plan-progress-tracker?planId=${plan.id}`);
+                    }}
+                    className="group flex items-center gap-3 px-4 py-3 rounded-2xl text-left text-white/60 hover:text-white hover:bg-white/5 transition-all duration-200 w-full"
+                  >
+                    <div className="w-2 h-2 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex-shrink-0 shadow-lg shadow-green-500/50" />
+                    <span className="truncate text-sm font-medium">{plan.title}</span>
+                  </button>
+                ))}
               </div>
             )}
 
-            {/* Theme Switcher - Single Button */}
-            <div className="mt-6 border-t border-gray-700 pt-4">
+            {/* Theme Switcher */}
+            <div className="mt-6 pt-6 border-t border-white/5">
               <button
                 onClick={() => {
                   const currentIndex = themes.findIndex(t => t.id === currentTheme);
                   const nextIndex = (currentIndex + 1) % themes.length;
                   handleThemeChange(themes[nextIndex].id);
                 }}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-800 hover:text-white transition-colors w-full"
+                className="group flex items-center gap-3 px-4 py-3.5 rounded-2xl text-white/60 hover:text-white hover:bg-white/5 transition-all duration-200 w-full"
               >
                 <div
-                  className="w-6 h-6 rounded-full flex-shrink-0 border-2 border-gray-600"
+                  className="w-10 h-10 rounded-xl flex-shrink-0 border-2 border-white/10 group-hover:border-white/20 transition-all duration-200 shadow-inner"
                   style={{ backgroundColor: themes.find(t => t.id === currentTheme)?.colors.primary }}
                 />
                 <div className="flex-1 text-left">
-                  <p className="text-xs text-gray-500 uppercase tracking-wider">Theme</p>
-                  <p className="text-sm font-medium">{themes.find(t => t.id === currentTheme)?.name}</p>
+                  <p className="text-xs text-white/30 uppercase tracking-wider font-medium">Theme</p>
+                  <p className="text-sm font-semibold mt-0.5">{themes.find(t => t.id === currentTheme)?.name}</p>
                 </div>
-                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                <svg className="w-5 h-5 text-white/20 group-hover:text-white/40 transition-all duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
             </div>
           </div>
 
           {/* Logout at Bottom */}
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors mt-auto"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            Logout
-          </button>
+          <div className="pt-4 border-t border-white/5 mt-4">
+            <button
+              onClick={handleLogout}
+              className="group flex items-center gap-3 px-4 py-3.5 rounded-2xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-200 w-full"
+            >
+              <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center group-hover:bg-red-500/20 transition-all duration-200">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <span className="font-medium">Logout</span>
+            </button>
+          </div>
         </div>
       </div>
     </>

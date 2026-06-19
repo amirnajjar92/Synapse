@@ -9,13 +9,15 @@ interface CustomButtonProps {
   width?: string;
   fontSize?: string;
   mirror?: boolean;
+  color?: string;
+  lightMode?: boolean;
 }
 
 const Skeleton = ({ className = '' }: { className?: string }) => (
   <div className={`animate-pulse bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 bg-[length:200%_100%] opacity-50 ${className}`} />
 );
 
-const CustomButton: React.FC<CustomButtonProps> = ({ text, isLoading, onClick, width, fontSize, mirror }) => {
+const CustomButton: React.FC<CustomButtonProps> = ({ text, isLoading, onClick, width, fontSize, mirror, color, lightMode }) => {
   if (isLoading) {
     return <Skeleton className="w-full h-full rounded-lg" />;
   }
@@ -37,14 +39,18 @@ const CustomButton: React.FC<CustomButtonProps> = ({ text, isLoading, onClick, w
         src="/vectors/button-frame.svg"
         alt="Button Frame"
         className="w-full h-full object-contain absolute inset-0"
-        style={mirror ? { transform: 'scaleX(-1)' } : undefined}
+        style={{
+          transform: mirror ? 'scaleX(-1)' : undefined,
+          filter: lightMode ? 'invert(1)' : undefined
+        }}
       />
       <span 
-        className="text-white font-bold relative z-10" 
+        className="font-bold relative z-10" 
         style={{ 
           fontFamily: 'var(--font-hanalei-fill)', 
           fontSize: fontSize || 'calc((100vh * 0.95 * 0.0595) * 0.6)', 
-          lineHeight: '1' 
+          lineHeight: '1',
+          color: color || '#FFFFFF'
         }}
       >
         {text}

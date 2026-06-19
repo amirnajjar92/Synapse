@@ -733,70 +733,40 @@ function MonitorContent() {
       {/* Glass Overlay Modal */}
       {showAIModal && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 backdrop-blur-sm" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}>
-          <div className="rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden shadow-2xl border" style={{ backgroundColor: theme.colors.card, borderColor: theme.colors.border }}>
+          <div className="w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden shadow-2xl border" style={{ backgroundColor: theme.colors.card, borderColor: theme.colors.border }}>
             {/* Modal Header */}
             <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: theme.colors.border }}>
-              <h3 className="text-lg font-semibold" style={{ color: theme.colors.text }}>
+              <h3 className="text-lg font-semibold" style={{ color: currentTheme === 'light' ? '#000000' : theme.colors.text }}>
                 Activity Logger
               </h3>
               <button
                 onClick={() => setShowAIModal(false)}
                 className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-                style={{ backgroundColor: theme.colors.cardAlt, color: theme.colors.text }}
+                style={{ backgroundColor: theme.colors.cardAlt, color: currentTheme === 'light' ? '#000000' : theme.colors.text }}
               >
                 ✕
               </button>
-            </div>
-
-            {/* Chat History */}
-            <div className="flex-1 overflow-y-auto p-4" style={{ backgroundColor: theme.colors.cardAlt }}>
-              {notesHistory.length === 0 ? (
-                <div className="flex items-center justify-center h-full">
-                  <p className="text-sm text-center" style={{ color: theme.colors.textMuted }}>
-                    Log your activities and I'll extract the metrics for you
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {notesHistory.map((msg, idx) => (
-                    <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div 
-                        className={`max-w-[85%] px-3 py-2 rounded-lg text-sm ${
-                          msg.role === 'user' 
-                            ? 'rounded-br-none' 
-                            : 'rounded-bl-none'
-                        }`}
-                        style={{ 
-                          backgroundColor: msg.role === 'user' ? theme.colors.primary : theme.colors.card,
-                          color: theme.colors.text,
-                          border: `1px solid ${theme.colors.border}`
-                        }}
-                      >
-                        {msg.content}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
 
             {/* Live ChatRow for processing */}
             <ChatRow 
               targetHeight={chatMessages.length > 0 ? '160px' : '0px'}
               chatMessages={chatMessages}
+              textColor={currentTheme === 'light' ? '#000000' : '#FFFFFF'}
+              isDarkMode={currentTheme === 'dark'}
             />
 
             {/* Input Area */}
-            <div className="border-t p-4" style={{ borderColor: theme.colors.border }}>
+            <div className="p-4">
               <textarea
                 className="w-full rounded-lg border p-3 text-sm resize-none outline-none mb-3"
                 style={{ 
                   backgroundColor: theme.colors.cardAlt,
-                  color: theme.colors.text,
+                  color: currentTheme === 'light' ? '#000000' : theme.colors.text,
                   borderColor: theme.colors.border,
-                  minHeight: '80px'
+                  minHeight: '140px'
                 }}
-                placeholder="e.g., Ran 8km in 40min, pace 5:00/km, weight 72.5kg"
+                placeholder="Log your activities and I'll extract the metrics for you&#10;&#10;e.g., Ran 8km in 40min, pace 5:00/km, weight 72.5kg"
                 value={notesInput}
                 onChange={e => setNotesInput(e.target.value)}
                 onKeyDown={e => {
@@ -807,7 +777,7 @@ function MonitorContent() {
                 }}
               />
               <div className="flex justify-between items-center">
-                <span className="text-xs" style={{ color: theme.colors.textMuted }}>
+                <span className="text-xs" style={{ color: currentTheme === 'light' ? '#666666' : theme.colors.textMuted }}>
                   Press Enter to send
                 </span>
                 <div style={{ width: '120px', height: '32px' }}>
@@ -816,6 +786,9 @@ function MonitorContent() {
                     onClick={handleSendToAI}
                     fontSize="11px"
                     width="120px"
+                    mirror={true}
+                    color={currentTheme === 'light' ? '#000000' : undefined}
+                    lightMode={currentTheme === 'light'}
                   />
                 </div>
               </div>
