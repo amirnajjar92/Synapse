@@ -723,7 +723,9 @@ function MonitorContent() {
             className="absolute bottom-3 right-3 w-14 h-14 rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-transform z-10"
             style={{ backgroundColor: theme.colors.card, border: `2px solid ${theme.colors.primary}` }}
           >
-            <AIIcon />
+            <div style={{ filter: currentTheme === 'light' ? 'invert(1)' : 'none' }}>
+              <AIIcon />
+            </div>
           </button>
         )}
       </div>

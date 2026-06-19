@@ -312,35 +312,28 @@ export default function Sidebar() {
               </div>
             )}
 
-            {/* Theme Selector */}
+            {/* Theme Switcher - Single Button */}
             <div className="mt-6 border-t border-gray-700 pt-4">
-              <p className="text-xs text-gray-500 px-4 mb-3 uppercase tracking-wider">
-                Theme
-              </p>
-              <div className="flex flex-col gap-2">
-                {themes.map((theme) => (
-                  <button
-                    key={theme.id}
-                    onClick={() => handleThemeChange(theme.id)}
-                    className={`flex items-center gap-3 px-4 py-2 rounded-xl text-left text-sm transition-colors ${
-                      currentTheme === theme.id
-                        ? 'bg-gray-800 text-white'
-                        : 'text-gray-300 hover:bg-gray-800/50 hover:text-white'
-                    }`}
-                  >
-                    <div
-                      className="w-6 h-6 rounded-full flex-shrink-0 border-2 border-gray-600"
-                      style={{ backgroundColor: theme.colors.primary }}
-                    />
-                    <span className="truncate">{theme.name}</span>
-                    {currentTheme === theme.id && (
-                      <svg className="w-4 h-4 ml-auto" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    )}
-                  </button>
-                ))}
-              </div>
+              <button
+                onClick={() => {
+                  const currentIndex = themes.findIndex(t => t.id === currentTheme);
+                  const nextIndex = (currentIndex + 1) % themes.length;
+                  handleThemeChange(themes[nextIndex].id);
+                }}
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-800 hover:text-white transition-colors w-full"
+              >
+                <div
+                  className="w-6 h-6 rounded-full flex-shrink-0 border-2 border-gray-600"
+                  style={{ backgroundColor: themes.find(t => t.id === currentTheme)?.colors.primary }}
+                />
+                <div className="flex-1 text-left">
+                  <p className="text-xs text-gray-500 uppercase tracking-wider">Theme</p>
+                  <p className="text-sm font-medium">{themes.find(t => t.id === currentTheme)?.name}</p>
+                </div>
+                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
             </div>
           </div>
 
