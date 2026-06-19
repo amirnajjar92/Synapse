@@ -9,6 +9,7 @@ import PromptBox from '@/components/PromptBox';
 import CustomButton from '@/components/CustomButton';
 import ChatRow from '@/components/ChatRow';
 import AIIcon from '@/components/AIIcon';
+import FloatingNavBar from '@/components/FloatingNavBar';
 import { getTheme, loadTheme } from '@/lib/theme';
 import {
   parseWeightGoalFromPrompt,
@@ -390,17 +391,37 @@ function MonitorContent() {
         }}
       >
         <div className="w-full h-full flex flex-col relative">
-          {/* Header — burger menu + plan selector + date */}
-          <div className="flex w-full h-[12%] relative">
+          {/* Header Row 1 — burger menu + Synapse logo + brand name */}
+          <div className="flex w-full h-[6%] relative items-center">
             {/* Burger menu */}
             <div className="absolute top-3 left-3 z-20">
               <BurgerMenuButton />
             </div>
 
+            {/* Synapse Brand Name */}
+            <div className="w-full h-full flex items-center justify-center">
+              {isLoading ? (
+                <Skeleton className="w-32 h-8" />
+              ) : (
+                <span 
+                  className="text-xl sm:text-2xl font-bold tracking-wider" 
+                  style={{ 
+                    color: theme.colors.text,
+                    fontFamily: 'var(--font-hanalei-fill)'
+                  }}
+                >
+                  SYNAPSE
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Header Row 2 — plan selector + date */}
+          <div className="flex w-full h-[6%] relative">
             {/* Plan selector */}
             <div className="w-1/2 h-full flex items-center justify-center px-3 pl-14">
               {isLoading ? (
-                <Skeleton className="w-28 h-8" />
+                <Skeleton className="w-28 h-6" />
               ) : (
                 <select
                   value={selectedPlan?.id ?? ''}
@@ -408,7 +429,7 @@ function MonitorContent() {
                     const p = plans.find(p => p.id === e.target.value);
                     setSelectedPlan(p ?? null);
                   }}
-                  className="bg-transparent text-base sm:text-lg font-light border-none outline-none text-center w-full truncate cursor-pointer"
+                  className="bg-transparent text-sm sm:text-base font-light border-none outline-none text-center w-full truncate cursor-pointer"
                   style={{ color: theme.colors.text }}
                 >
                   {plans.length === 0
@@ -422,16 +443,16 @@ function MonitorContent() {
             {/* Date display */}
             <div className="w-1/2 h-full flex items-center justify-center px-3">
               {isLoading ? (
-                <Skeleton className="w-24 h-10" />
+                <Skeleton className="w-24 h-6" />
               ) : (
-                <span className="text-2xl sm:text-3xl md:text-4xl font-light tabular-nums" style={{ color: theme.colors.text }}>
+                <span className="text-lg sm:text-xl md:text-2xl font-light tabular-nums" style={{ color: theme.colors.text }}>
                   {now.toLocaleDateString('en-US', { month: 'numeric', year: 'numeric' })}
                 </span>
               )}
             </div>
           </div>
 
-          {/* Row 2 — ACTIVITY + day counter */}
+          {/* Row 3 — ACTIVITY + day counter */}
           <div className="flex w-full h-[9.61%]">
             <div className="w-1/2 h-full border flex items-center px-3" style={{ borderColor: theme.colors.border }}>
               {isLoading ? <Skeleton className="w-24 h-6" /> : (
@@ -715,19 +736,6 @@ function MonitorContent() {
             )}
           </div>
         </div>
-
-        {/* Floating AI Button - positioned relative to card */}
-        {!isLoading && !showAIModal && (
-          <button
-            onClick={() => setShowAIModal(true)}
-            className="absolute bottom-3 right-3 w-14 h-14 rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-transform z-10"
-            style={{ backgroundColor: theme.colors.card, border: `2px solid ${theme.colors.primary}` }}
-          >
-            <div style={{ filter: currentTheme === 'light' ? 'invert(1)' : 'none' }}>
-              <AIIcon />
-            </div>
-          </button>
-        )}
       </div>
 
       {/* Glass Overlay Modal */}
@@ -796,6 +804,9 @@ function MonitorContent() {
           </div>
         </div>
       )}
+
+      {/* Floating Navigation Bar */}
+      <FloatingNavBar onAIClick={() => setShowAIModal(true)} />
     </div>
   );
 }
