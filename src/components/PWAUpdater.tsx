@@ -4,7 +4,12 @@ import { useEffect } from 'react';
 
 export default function PWAUpdater() {
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+    // Only register service worker in production
+    if (
+      process.env.NODE_ENV === 'production' &&
+      typeof window !== 'undefined' && 
+      'serviceWorker' in navigator
+    ) {
       // Register service worker
       navigator.serviceWorker
         .register('/service-worker.js')
