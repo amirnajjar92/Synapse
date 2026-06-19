@@ -416,10 +416,21 @@ function MonitorContent() {
             </div>
           </div>
 
-          {/* Header Row 2 — plan selector + date */}
+          {/* Header Row 2 — date + plan selector */}
           <div className="flex w-full h-[6%] relative">
+            {/* Date display */}
+            <div className="w-1/2 h-full flex items-center justify-center px-3">
+              {isLoading ? (
+                <Skeleton className="w-24 h-6" />
+              ) : (
+                <span className="text-lg sm:text-xl md:text-2xl font-light tabular-nums" style={{ color: theme.colors.text }}>
+                  {now.toLocaleDateString('en-US', { month: 'numeric', year: 'numeric' })}
+                </span>
+              )}
+            </div>
+
             {/* Plan selector */}
-            <div className="w-1/2 h-full flex items-center justify-center px-3 pl-14">
+            <div className="w-1/2 h-full flex items-center justify-center px-3">
               {isLoading ? (
                 <Skeleton className="w-28 h-6" />
               ) : (
@@ -437,17 +448,6 @@ function MonitorContent() {
                     : plans.map(p => <option key={p.id} value={p.id}>{p.title}</option>)
                   }
                 </select>
-              )}
-            </div>
-
-            {/* Date display */}
-            <div className="w-1/2 h-full flex items-center justify-center px-3">
-              {isLoading ? (
-                <Skeleton className="w-24 h-6" />
-              ) : (
-                <span className="text-lg sm:text-xl md:text-2xl font-light tabular-nums" style={{ color: theme.colors.text }}>
-                  {now.toLocaleDateString('en-US', { month: 'numeric', year: 'numeric' })}
-                </span>
               )}
             </div>
           </div>
