@@ -96,8 +96,8 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
           onClick={() => setIsExpanded(!isExpanded)}
           className="absolute transition-all duration-500 rounded-full overflow-hidden flex items-center justify-center hover:scale-105 active:scale-95"
           style={{
-            right: '2px',
-            top: '2px',
+            right: 'calc((48px - 45px) / 2)',
+            top: 'calc((48px - 46px) / 2)',
             width: isExpanded ? 'min(72px, 20%)' : '44px',
             height: '44px',
             background: currentTheme === 'light'
