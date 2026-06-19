@@ -5,6 +5,7 @@ import Providers from './providers';
 import Sidebar from '@/components/Sidebar';
 import { SidebarProvider } from '@/components/SidebarContext';
 import PWAUpdater from '@/components/PWAUpdater';
+import PWAInstallButton from '@/components/PWAInstallButton';
 import { Hanalei_Fill } from "next/font/google";
 
 const hanaleiFill = Hanalei_Fill({
@@ -50,6 +51,7 @@ export default function RootLayout({
         className={`antialiased`}
       >
         <PWAUpdater />
+        <PWAInstallButton />
         <Providers>
           <StoreProvider>
             <SidebarProvider>

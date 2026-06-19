@@ -92,8 +92,9 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
         }}
       >
         {/* Main Toggle Button with arrow (positioned on right) */}
-        <div
-          className="absolute transition-all duration-500 rounded-full overflow-hidden"
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="absolute transition-all duration-500 rounded-full overflow-hidden flex items-center justify-center hover:scale-105 active:scale-95"
           style={{
             right: '2px',
             top: '2px',
@@ -104,31 +105,26 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
               : 'rgba(55, 65, 81, 0.8)',
           }}
         >
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="w-full h-full flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95"
+          {/* Arrow icon - points left when collapsed, animates when expanded */}
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            className="transition-all duration-500"
+            style={{
+              transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+            }}
           >
-            {/* Arrow icon - points left when collapsed, animates when expanded */}
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              className="transition-all duration-500"
-              style={{
-                transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-              }}
-            >
-              <path
-                d="M15 18l-6-6 6-6"
-                stroke={currentTheme === 'light' ? '#000000' : 'white'}
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-        </div>
+            <path
+              d="M15 18l-6-6 6-6"
+              stroke={currentTheme === 'light' ? '#000000' : 'white'}
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
 
         {/* Expanded Navigation Items (right to left: Progress, Water, Plans, Planner, AI) */}
         <div
