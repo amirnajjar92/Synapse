@@ -10,7 +10,7 @@ export default function BurgerMenuButton() {
   return (
     <button
       onClick={() => setIsOpen(true)}
-      className="group relative w-14 h-14 flex items-center justify-center hover:scale-105 transition-all duration-300 flex-shrink-0 rounded-full"
+      className="group relative w-12 h-12 flex items-center justify-center hover:scale-105 transition-all duration-300 flex-shrink-0 rounded-full"
       style={{
         background: 'rgba(55, 65, 81, 0.8)',
         backdropFilter: 'blur(20px)',
@@ -37,7 +37,7 @@ export default function BurgerMenuButton() {
       
       {/* Arrow icon */}
       <div className="relative z-10 flex items-center justify-center">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="group-hover:translate-x-0.5 transition-transform duration-300">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="group-hover:translate-x-0.5 transition-transform duration-300">
           <path 
             d="M9 5l7 7-7 7" 
             stroke="white" 

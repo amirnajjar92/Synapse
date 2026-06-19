@@ -68,7 +68,15 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
   };
 
   return (
-    <div className="fixed bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-40" style={{ maxWidth: 'calc(100vw - 16px)' }}>
+    <div 
+      className="fixed bottom-4 sm:bottom-8 z-40 transition-all duration-500" 
+      style={{ 
+        maxWidth: 'calc(100vw - 16px)',
+        right: isExpanded ? 'auto' : '8px',
+        left: isExpanded ? '50%' : 'auto',
+        transform: isExpanded ? 'translateX(-50%)' : 'none',
+      }}
+    >
       {/* Floating Nav Bar */}
       <div
         className="relative backdrop-blur-2xl rounded-full shadow-2xl transition-all duration-500 ease-out overflow-hidden ml-auto"
