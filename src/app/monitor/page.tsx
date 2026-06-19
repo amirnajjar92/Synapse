@@ -8,6 +8,8 @@ import BurgerMenuButton from '@/components/BurgerMenuButton';
 import PromptBox from '@/components/PromptBox';
 import CustomButton from '@/components/CustomButton';
 import ChatRow from '@/components/ChatRow';
+import AIIcon from '@/components/AIIcon';
+import { getTheme, loadTheme } from '@/lib/theme';
 import {
   parseWeightGoalFromPrompt,
   generateMockWeightKg,
@@ -95,7 +97,7 @@ function MonitorContent() {
 
   // Notes
   const [dailyNotes, setDailyNotes] = useState('');
-  const saveNotesTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [notesHistory, setNotesHistory] = useState<Array<{role: 'user' | 'assistant', content: string}>>([]);
 
   // Adaptive border radius
   const [borderRadius, setBorderRadius] = useState('40px');
@@ -104,18 +106,31 @@ function MonitorContent() {
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractionResult, setExtractionResult] = useState<string>('');
   const [chatMessages, setChatMessages] = useState<string[]>([]);
-  const [showChat, setShowChat] = useState(false);
+  const [showAIModal, setShowAIModal] = useState(false);
+  const [notesInput, setNotesInput] = useState('');
 
   // Weight chart data
   const [weightsKg, setWeightsKg] = useState<number[]>([]);
   const [activityBarData, setActivityBarData] = useState<number[]>([]);
 
+  // Theme
+  const [currentTheme, setCurrentTheme] = useState('dark');
+  const theme = getTheme(currentTheme);
+
   // ── bootstrap ────────────────────────────────────────────────────────────
   useEffect(() => {
     setMounted(true);
+    setCurrentTheme(loadTheme());
     const userStr = localStorage.getItem('synapse_user');
     if (!userStr) { router.push('/'); return; }
     setUser(JSON.parse(userStr));
+
+    // Listen for theme changes
+    const handleThemeChange = (e: CustomEvent) => {
+      setCurrentTheme(e.detail);
+    };
+    window.addEventListener('themeChange', handleThemeChange as EventListener);
+    return () => window.removeEventListener('themeChange', handleThemeChange as EventListener);
   }, [router]);
 
   // Live clock tick
@@ -213,7 +228,7 @@ function MonitorContent() {
             }
           }
         }
-        setActivityBarData(distanceByDay.length > 0 ? distanceByDay : Array(totalDays).fill(0));
+        setActivityBarData(distanceByDay);
       }
     } catch (e) { console.error(e); }
 
@@ -240,41 +255,29 @@ function MonitorContent() {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   // ── auto-save notes ──────────────────────────────────────────────────────
-  const handleNotesChange = (val: string) => {
-    setDailyNotes(val);
-    if (saveNotesTimer.current) clearTimeout(saveNotesTimer.current);
-    saveNotesTimer.current = setTimeout(async () => {
-      if (!user?.email || !selectedPlan) return;
-      try {
-        await fetch('/api/users/me/daily-entries', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: user.email,
-            planId: selectedPlan.id,
-            date: getTodayStr(),
-            notes: val,
-          }),
-        });
-      } catch (e) { console.error(e); }
-    }, 1000);
-  };
+  // Notes are now ephemeral - handled in AI modal
 
   // ── AI metric extraction ─────────────────────────────────────────────────
   const handleSendToAI = async () => {
-    if (!user?.email || !selectedPlan || !dailyNotes.trim()) return;
+    if (!user?.email || !selectedPlan || !notesInput.trim()) return;
+    
+    // Add user message to history
+    const userMessage = notesInput.trim();
+    setNotesHistory(prev => [...prev, { role: 'user', content: userMessage }]);
+    
+    // Clear input immediately (like chat UX)
+    setNotesInput('');
     
     setIsExtracting(true);
     setExtractionResult('');
     setChatMessages([]);
-    setShowChat(true);
     
     try {
       setChatMessages(['🤖 Analyzing your activity notes...']);
       
       const formData = new FormData();
       formData.append('email', user.email);
-      formData.append('prompt', dailyNotes);
+      formData.append('prompt', userMessage);
       formData.append('planId', selectedPlan.id);
 
       const res = await fetch(
@@ -289,16 +292,23 @@ function MonitorContent() {
           
           // Show what was extracted
           const changes = data.metricChanges || [];
+          let responseText = '';
           if (changes.length > 0) {
             setChatMessages(prev => [...prev, '✏️ Updated metrics:']);
             changes.forEach((c: { type: string; action: string; newValue: number; newUnit?: string }) => {
-              setChatMessages(prev => [...prev, `  • ${c.type}: ${c.newValue}${c.newUnit ? ' ' + c.newUnit : ''}`]);
+              const msg = `  • ${c.type}: ${c.newValue}${c.newUnit ? ' ' + c.newUnit : ''}`;
+              setChatMessages(prev => [...prev, msg]);
+              responseText += msg + '\n';
             });
           } else {
             setChatMessages(prev => [...prev, '❌ No metrics found in notes']);
+            responseText = 'No metrics found in your notes.';
           }
           
           setChatMessages(prev => [...prev, '📋 Saved to today\'s entry']);
+          
+          // Add assistant response to history
+          setNotesHistory(prev => [...prev, { role: 'assistant', content: responseText || 'Metrics updated successfully.' }]);
           
           // Refresh metrics display
           await fetchData();
@@ -306,23 +316,25 @@ function MonitorContent() {
           setChatMessages(prev => [...prev, '✅ All done! Metrics updated.']);
           setExtractionResult('success');
         } else {
-          setChatMessages(prev => [...prev, '❌ Failed to extract metrics']);
+          const errorMsg = 'Failed to extract metrics from your notes.';
+          setChatMessages(prev => [...prev, '❌ ' + errorMsg]);
+          setNotesHistory(prev => [...prev, { role: 'assistant', content: errorMsg }]);
           setExtractionResult('error');
         }
       } else {
-        setChatMessages(prev => [...prev, '❌ Error calling AI']);
+        const errorMsg = 'Network error occurred.';
+        setChatMessages(prev => [...prev, '❌ ' + errorMsg]);
+        setNotesHistory(prev => [...prev, { role: 'assistant', content: errorMsg }]);
         setExtractionResult('error');
       }
     } catch (e) {
       console.error(e);
-      setChatMessages(prev => [...prev, '❌ Network error']);
+      const errorMsg = 'Network error occurred.';
+      setChatMessages(prev => [...prev, '❌ ' + errorMsg]);
+      setNotesHistory(prev => [...prev, { role: 'assistant', content: errorMsg }]);
       setExtractionResult('error');
     } finally {
       setIsExtracting(false);
-      setTimeout(() => {
-        setShowChat(false);
-        setChatMessages([]);
-      }, 5000);
     }
   };
 
@@ -366,17 +378,18 @@ function MonitorContent() {
   if (!mounted) return null;
 
   return (
-    <div className="w-full h-screen bg-[#151515] flex items-center justify-center p-2 sm:p-4">
+    <div className="w-full h-screen flex items-center justify-center p-2 sm:p-4" style={{ backgroundColor: theme.colors.background }}>
       <div
-        className="bg-black overflow-hidden shadow-2xl relative flex-shrink-0"
+        className="overflow-hidden shadow-2xl relative flex-shrink-0"
         style={{ 
           width: `min(95vw, ${baseWidth}px)`, 
           aspectRatio: baseWidth / baseHeight, 
           maxHeight: '95vh',
-          borderRadius: borderRadius
+          borderRadius: borderRadius,
+          backgroundColor: theme.colors.card
         }}
       >
-        <div className="w-full h-full flex flex-col relative" style={{ backgroundColor: '#2C2C2C' }}>
+        <div className="w-full h-full flex flex-col relative">
           {/* Header — burger menu + plan selector + date */}
           <div className="flex w-full h-[12%] relative">
             {/* Burger menu */}
@@ -395,7 +408,8 @@ function MonitorContent() {
                     const p = plans.find(p => p.id === e.target.value);
                     setSelectedPlan(p ?? null);
                   }}
-                  className="bg-transparent text-white text-base sm:text-lg font-light border-none outline-none text-center w-full truncate cursor-pointer"
+                  className="bg-transparent text-base sm:text-lg font-light border-none outline-none text-center w-full truncate cursor-pointer"
+                  style={{ color: theme.colors.text }}
                 >
                   {plans.length === 0
                     ? <option value="">No Plans</option>
@@ -410,7 +424,7 @@ function MonitorContent() {
               {isLoading ? (
                 <Skeleton className="w-24 h-10" />
               ) : (
-                <span className="text-white text-2xl sm:text-3xl md:text-4xl font-light tabular-nums">
+                <span className="text-2xl sm:text-3xl md:text-4xl font-light tabular-nums" style={{ color: theme.colors.text }}>
                   {now.toLocaleDateString('en-US', { month: 'numeric', year: 'numeric' })}
                 </span>
               )}
@@ -419,15 +433,14 @@ function MonitorContent() {
 
           {/* Row 2 — ACTIVITY + day counter */}
           <div className="flex w-full h-[9.61%]">
-            <div className="w-1/2 h-full border border-[#3B3B3B] flex items-center px-3">
+            <div className="w-1/2 h-full border flex items-center px-3" style={{ borderColor: theme.colors.border }}>
               {isLoading ? <Skeleton className="w-24 h-6" /> : (
-                <span className="text-white text-xl sm:text-2xl font-light">ACTIVITY</span>
+                <span className="text-xl sm:text-2xl font-light" style={{ color: theme.colors.text }}>ACTIVITY</span>
               )}
             </div>
-            <div className="w-1/2 h-full border border-[#3B3B3B] flex items-center justify-center">
+            <div className="w-1/2 h-full border flex items-center justify-center" style={{ borderColor: theme.colors.border }}>
               {isLoading ? <Skeleton className="w-28 h-8" /> : (
-                <span className="text-white font-bold"
-                  style={{ fontFamily: 'var(--font-hanalei-fill)', fontSize: 'calc((100vh * 0.95 * 0.0961) * 0.806)', lineHeight: 1 }}>
+                <span className="font-bold" style={{ fontFamily: 'var(--font-hanalei-fill)', fontSize: 'calc((100vh * 0.95 * 0.0961) * 0.806)', lineHeight: 1, color: theme.colors.text }}>
                   DAY {planDay}
                 </span>
               )}
@@ -436,63 +449,63 @@ function MonitorContent() {
 
           {/* Row 3 — Distance */}
           <div className="flex w-full h-[5.72%]">
-            <div className="w-1/2 h-full border border-[#3B3B3B] flex items-center px-3">
+            <div className="w-1/2 h-full border flex items-center px-3" style={{ borderColor: theme.colors.border }}>
               {isLoading ? <Skeleton className="w-16 h-4" /> : (
-                <span className="text-white text-base font-light">Distance</span>
+                <span className="text-base font-light" style={{ color: theme.colors.text }}>Distance</span>
               )}
             </div>
-            <div className="w-1/2 h-full border border-[#3B3B3B] flex items-center justify-center px-3">
+            <div className="w-1/2 h-full border flex items-center justify-center px-3" style={{ borderColor: theme.colors.border }}>
               {isLoading ? <Skeleton className="w-20 h-5" /> : (
                 displayDistance
                   ? <div className="text-center w-full">
-                      <span className="text-white text-xl font-light">{displayDistance.value}</span>
-                      <span className="text-gray-400 text-xs ml-1">{displayDistance.unit ?? 'km'}</span>
-                      {!distance && <span className="text-gray-600 text-[8px] ml-1">last</span>}
+                      <span className="text-xl font-light" style={{ color: theme.colors.text }}>{displayDistance.value}</span>
+                      <span className="text-xs ml-1" style={{ color: theme.colors.textSecondary }}>{displayDistance.unit ?? 'km'}</span>
+                      {!distance && <span className="text-[8px] ml-1" style={{ color: theme.colors.textMuted }}>last</span>}
                     </div>
-                  : <span className="text-gray-600 text-sm">—</span>
+                  : <span className="text-sm" style={{ color: theme.colors.textMuted }}>—</span>
               )}
             </div>
           </div>
 
           {/* Row 4 — Pace */}
           <div className="flex w-full h-[5.72%]">
-            <div className="w-1/2 h-full border border-[#3B3B3B] flex items-center px-3">
+            <div className="w-1/2 h-full border flex items-center px-3" style={{ borderColor: theme.colors.border }}>
               {isLoading ? <Skeleton className="w-12 h-4" /> : (
-                <span className="text-white text-base font-light">Pace</span>
+                <span className="text-base font-light" style={{ color: theme.colors.text }}>Pace</span>
               )}
             </div>
-            <div className="w-1/2 h-full border border-[#3B3B3B] flex items-center justify-center px-3">
+            <div className="w-1/2 h-full border flex items-center justify-center px-3" style={{ borderColor: theme.colors.border }}>
               {isLoading ? <Skeleton className="w-20 h-5" /> : (
                 displayPace
                   ? <div className="text-center w-full">
-                      <span className="text-white text-xl font-light">
+                      <span className="text-xl font-light" style={{ color: theme.colors.text }}>
                         {displayPace.unit?.includes('second') ? formatPace(displayPace.value) : displayPace.value}
                       </span>
-                      <span className="text-gray-400 text-xs ml-1">/km</span>
-                      {!pace && <span className="text-gray-600 text-[8px] ml-1">last</span>}
+                      <span className="text-xs ml-1" style={{ color: theme.colors.textSecondary }}>/km</span>
+                      {!pace && <span className="text-[8px] ml-1" style={{ color: theme.colors.textMuted }}>last</span>}
                     </div>
-                  : <span className="text-gray-600 text-sm">—</span>
+                  : <span className="text-sm" style={{ color: theme.colors.textMuted }}>—</span>
               )}
             </div>
           </div>
 
           {/* Row 5 — Total Time */}
           <div className="flex w-full h-[5.72%]">
-            <div className="w-1/2 h-full border border-[#3B3B3B] flex items-center px-3">
+            <div className="w-1/2 h-full border flex items-center px-3" style={{ borderColor: theme.colors.border }}>
               {isLoading ? <Skeleton className="w-20 h-4" /> : (
-                <span className="text-white text-base font-light">Total Time</span>
+                <span className="text-base font-light" style={{ color: theme.colors.text }}>Total Time</span>
               )}
             </div>
-            <div className="w-1/2 h-full border border-[#3B3B3B] flex items-center justify-center px-3">
+            <div className="w-1/2 h-full border flex items-center justify-center px-3" style={{ borderColor: theme.colors.border }}>
               {isLoading ? <Skeleton className="w-20 h-5" /> : (
                 displayTime
                   ? <div className="text-center w-full">
-                      <span className="text-white text-xl font-light">
+                      <span className="text-xl font-light" style={{ color: theme.colors.text }}>
                         {displayTime.unit?.includes('second') ? formatSeconds(Math.round(displayTime.value)) : displayTime.value}
                       </span>
-                      {!totalTime && <span className="text-gray-600 text-[8px] ml-1">last</span>}
+                      {!totalTime && <span className="text-[8px] ml-1" style={{ color: theme.colors.textMuted }}>last</span>}
                     </div>
-                  : <span className="text-gray-600 text-sm">—</span>
+                  : <span className="text-sm" style={{ color: theme.colors.textMuted }}>—</span>
               )}
             </div>
           </div>
@@ -500,17 +513,17 @@ function MonitorContent() {
           {/* Row 6 — Charts */}
           <div className="flex w-full h-[12.93%]">
             {/* Activity bar chart (distance per day) */}
-            <div className="w-1/2 h-full border border-[#3B3B3B] flex flex-col p-2 overflow-hidden">
+            <div className="w-1/2 h-full border flex flex-col p-2 overflow-hidden" style={{ borderColor: theme.colors.border }}>
               {isLoading ? <Skeleton className="w-full h-full" /> : (
                 <>
-                  <div className="flex justify-between text-[9px] text-gray-400 mb-1">
+                  <div className="flex justify-between text-[9px] mb-1" style={{ color: theme.colors.textSecondary }}>
                     <span>Day 1</span>
                     <span className="text-[#E63416]">DIST</span>
                     <span>Day {totalDays}</span>
                   </div>
                   <div className="flex-1">
                     <BarChart
-                      data={activityBarData.length > 0 ? activityBarData : Array(totalDays).fill(20)}
+                      data={activityBarData}
                       color="#E63416"
                       activeBarCount={planDay}
                       inactiveColor="#444"
@@ -521,29 +534,29 @@ function MonitorContent() {
             </div>
 
             {/* Weight chart */}
-            <div className="w-1/2 h-full border border-[#3B3B3B] flex flex-col p-2 relative overflow-hidden">
+            <div className="w-1/2 h-full border flex flex-col p-2 relative overflow-hidden" style={{ borderColor: theme.colors.border }}>
               {isLoading ? <Skeleton className="w-full h-full" /> : (
                 <>
-                  <div className="flex justify-between text-[9px] text-gray-400 mb-1">
+                  <div className="flex justify-between text-[9px] mb-1" style={{ color: theme.colors.textSecondary }}>
                     <span>Day 1</span>
-                    <span className="text-[#3B63CF]">WEIGHT</span>
+                    <span style={{ color: theme.colors.primary }}>WEIGHT</span>
                     <span>Day {totalDays}</span>
                   </div>
                   <div className="flex-1 relative">
                     <BarChart
-                      data={weightBarHeights.length > 0 ? weightBarHeights : Array(totalDays).fill(50)}
-                      color="#3B63CF"
+                      data={weightBarHeights}
+                      color={theme.colors.primary}
                       showConnectingLine
-                      connectingLineColor="#ffffff"
+                      connectingLineColor={theme.colors.text}
                       connectingLineWidth={1}
                       connectingLineShadow="#EFE9E9"
                       activeBarCount={planDay}
                       inactiveColor="#666666"
                       showCurrentDayArrow
-                      currentDayArrowColor="#ffffff"
+                      currentDayArrowColor={theme.colors.text}
                     />
                     <div className="absolute bottom-0 left-1">
-                      <span className="text-white text-sm font-light">
+                      <span className="text-sm font-light" style={{ color: theme.colors.text }}>
                         {weight
                           ? `${weight.value}kg`
                           : weightsKg.length > 0
@@ -555,7 +568,7 @@ function MonitorContent() {
                       </span>
                     </div>
                     {weightGoal.goalWeight && (
-                      <div className="absolute bottom-0 right-1 text-[9px] text-gray-400">
+                      <div className="absolute bottom-0 right-1 text-[9px]" style={{ color: theme.colors.textSecondary }}>
                         →{weightGoal.goalWeight}kg
                       </div>
                     )}
@@ -567,104 +580,247 @@ function MonitorContent() {
 
           {/* Row 7 — Live clock */}
           <div className="flex w-full h-[17.85%]">
-            <div className="w-[28.36%] h-full border border-[#3B3B3B] flex items-center justify-center">
+            <div className="w-[28.36%] h-full border flex items-center justify-center" style={{ borderColor: theme.colors.border }}>
               {isLoading ? <Skeleton className="w-12 h-8" /> : (
-                <span className="text-white text-3xl sm:text-4xl font-light">{dayName}</span>
+                <span className="text-3xl sm:text-4xl font-light" style={{ color: theme.colors.text }}>{dayName}</span>
               )}
             </div>
-            <div className="w-[71.64%] h-full border border-[#3B3B3B] flex items-center justify-center gap-2">
+            <div className="w-[71.64%] h-full border flex items-center justify-center gap-2" style={{ borderColor: theme.colors.border }}>
               {isLoading ? <Skeleton className="w-32 h-16" /> : (
                 <>
-                  <span className="text-white text-5xl sm:text-6xl font-light tabular-nums">{clockTime}</span>
-                  <span className="text-gray-400 text-xl sm:text-2xl">{clockAmPm}</span>
+                  <span className="text-5xl sm:text-6xl font-light tabular-nums" style={{ color: theme.colors.text }}>{clockTime}</span>
+                  <span className="text-xl sm:text-2xl" style={{ color: theme.colors.textSecondary }}>{clockAmPm}</span>
                 </>
               )}
             </div>
           </div>
 
           {/* Row 8 — progress bar strip */}
-          <div className="w-full h-[5.26%] border border-[#3B3B3B] flex items-center px-3 gap-1">
+          <div className="w-full h-[5.26%] border flex items-center px-3 gap-1" style={{ borderColor: theme.colors.border }}>
             {isLoading ? <Skeleton className="w-full h-3 rounded-full" /> : (
               <>
-                <div className="flex-1 h-1.5 bg-[#3B3B3B] rounded-full overflow-hidden">
+                <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: theme.colors.borderAlt }}>
                   <div
-                    className="h-full bg-[#3B63CF] rounded-full transition-all"
-                    style={{ width: `${Math.min(100, (planDay / totalDays) * 100)}%` }}
+                    className="h-full rounded-full transition-all"
+                    style={{ width: `${Math.min(100, (planDay / totalDays) * 100)}%`, backgroundColor: theme.colors.primary }}
                   />
                 </div>
-                <span className="text-[9px] text-gray-400 whitespace-nowrap flex-shrink-0">
+                <span className="text-[9px] whitespace-nowrap flex-shrink-0" style={{ color: theme.colors.textSecondary }}>
                   {planDay}/{totalDays}d
                 </span>
               </>
             )}
           </div>
 
-          {/* Row 9 — notes with AI extraction */}
-          <div className="w-full h-[20.14%] border border-[#3B3B3B] flex flex-col overflow-hidden">
+          {/* Row 9 — Smart Insights & Recommendations */}
+          <div className="w-full flex-1 border flex flex-col p-3 overflow-y-auto" style={{ borderColor: theme.colors.border }}>
             {isLoading ? <Skeleton className="w-full h-full" /> : (
-              <div className="w-full h-full flex flex-col relative">
-                {/* Chat messages area - shows above input when active */}
-                <div 
-                  className="border-b border-[#3B3B3B] bg-[#1a1a1a]/95 overflow-hidden transition-all duration-300"
-                  style={{ 
-                    height: showChat ? '55%' : '0%',
-                  }}
-                >
-                  {showChat && (
-                    <div className="w-full h-full p-2 overflow-y-auto">
-                      {chatMessages.map((msg, idx) => (
-                        <div key={idx} className="text-white text-[10px] mb-1 font-light">
-                          {msg}
+              <>
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-xs font-bold tracking-wider" style={{ color: theme.colors.primary }}>
+                    INSIGHTS & TIPS
+                  </h4>
+                  <span className="text-[9px]" style={{ color: theme.colors.textMuted }}>
+                    AI Analysis
+                  </span>
+                </div>
+                
+                {/* Smart analysis based on actual data */}
+                {(() => {
+                  const last7Days = planEntries.slice(-7);
+                  const activeDays = last7Days.filter(entry => 
+                    entry.metrics.some(m => m.type === 'distance' && m.value > 0)
+                  ).length;
+                  const totalDistance = last7Days.reduce((sum, entry) => {
+                    const dist = entry.metrics.find(m => m.type === 'distance');
+                    return sum + (dist?.value || 0);
+                  }, 0);
+                  const progressPercent = Math.round((planDay / totalDays) * 100);
+                  
+                  // Smart insights
+                  let motivation = '';
+                  let analysis = '';
+                  let recommendation = '';
+                  
+                  if (activeDays === 0) {
+                    motivation = '🚀 Ready to start strong?';
+                    analysis = 'No activities logged this week yet. Every journey begins with a single step!';
+                    recommendation = 'Tip: Start with a light 3-5km run today to build momentum.';
+                  } else if (activeDays >= 5) {
+                    motivation = '🔥 Outstanding consistency!';
+                    analysis = `${activeDays} active days this week! You are building an incredible routine.`;
+                    recommendation = 'Keep this momentum while ensuring proper recovery days.';
+                  } else if (activeDays >= 3) {
+                    motivation = '💪 Strong effort this week!';
+                    analysis = `${activeDays} workouts completed. You are on the right track!`;
+                    recommendation = 'Try adding one more session this week for even better results.';
+                  } else {
+                    motivation = '🎯 Time to level up!';
+                    analysis = `${activeDays} ${activeDays === 1 ? 'session' : 'sessions'} so far. There is room to push harder!`;
+                    recommendation = 'Aim for 3-4 sessions next week for optimal progress.';
+                  }
+                  
+                  // Progress-based insights
+                  if (progressPercent >= 75) {
+                    motivation = '🏆 Final stretch ahead!';
+                    analysis = `You are ${progressPercent}% through your plan. The finish line is in sight!`;
+                    recommendation = 'Stay focused and maintain your routine to finish strong.';
+                  } else if (progressPercent >= 50) {
+                    motivation = '⚡ Halfway there!';
+                    analysis = `${progressPercent}% complete! You have built solid momentum.`;
+                    recommendation = 'This is where habits become permanent. Keep going!';
+                  }
+                  
+                  // Weight goal insights
+                  if (weightGoal.goalWeight && weight) {
+                    const diff = weight.value - weightGoal.goalWeight;
+                    if (Math.abs(diff) <= 2) {
+                      motivation = '🎉 Almost at goal weight!';
+                      analysis = `Just ${Math.abs(diff).toFixed(1)}kg away from your target!`;
+                      recommendation = 'Maintain consistency - you are so close!';
+                    }
+                  }
+                  
+                  return (
+                    <div className="flex-1 space-y-3 text-xs" style={{ color: theme.colors.text }}>
+                      <div className="leading-relaxed">
+                        <p className="font-bold mb-1" style={{ color: theme.colors.primary }}>
+                          {motivation}
+                        </p>
+                        <p style={{ color: theme.colors.textSecondary }}>
+                          {analysis}
+                        </p>
+                      </div>
+                      
+                      <div className="leading-relaxed pt-2 border-t" style={{ borderColor: theme.colors.border }}>
+                        <p className="font-medium mb-1" style={{ color: theme.colors.text }}>
+                          💡 Recommendation
+                        </p>
+                        <p style={{ color: theme.colors.textSecondary }}>
+                          {recommendation}
+                        </p>
+                      </div>
+                      
+                      {totalDistance > 0 && (
+                        <div className="leading-relaxed pt-2 border-t" style={{ borderColor: theme.colors.border }}>
+                          <p style={{ color: theme.colors.textMuted, fontSize: '10px' }}>
+                            Weekly total: {totalDistance.toFixed(1)}km across {activeDays} {activeDays === 1 ? 'day' : 'days'}
+                          </p>
                         </div>
-                      ))}
+                      )}
                     </div>
-                  )}
-                </div>
-
-                {/* PromptBox-style notes input */}
-                <div className="flex-1 p-2 relative">
-                  <div className="w-full h-full relative">
-                    {/* Mini frame effect */}
-                    <div className="absolute inset-0 bg-[#1a1a1a] rounded-lg border border-[#3B63CF]/30" />
-                    
-                    {/* Label */}
-                    <div className="absolute top-[-12px] left-2 px-2 bg-[#2C2C2C] z-10">
-                      <span className="text-[#3B63CF] text-[10px] font-bold tracking-wider">TODAY'S NOTES</span>
-                    </div>
-                    
-                    {/* Text area */}
-                    <textarea
-                      className="absolute inset-2 bg-transparent text-white text-xs font-light resize-none outline-none placeholder:text-gray-600 focus:ring-0"
-                      placeholder="Log your activity here... (e.g., Ran 8km in 40min, pace 5:00/km, weight 72.5kg)"
-                      value={dailyNotes}
-                      onChange={e => handleNotesChange(e.target.value)}
-                      style={{ paddingTop: '4px' }}
-                    />
-                  </div>
-                </div>
-
-                {/* Button row - right aligned */}
-                <div className="h-[32px] px-2 pb-1 flex items-center justify-end gap-2">
-                  {!showChat && extractionResult && (
-                    <span className={`text-[9px] font-medium ${extractionResult === 'success' ? 'text-green-400' : 'text-red-400'}`}>
-                      {extractionResult === 'success' ? '✓ Updated' : '✗ Failed'}
-                    </span>
-                  )}
-                  <div className="flex-shrink-0" style={{ width: '120px', height: '26px' }}>
-                    <CustomButton
-                      text={isExtracting ? "ANALYZING..." : "SEND TO AI"}
-                      onClick={handleSendToAI}
-                      fontSize="9px"
-                      width="120px"
-                      mirror={true}
-                    />
-                  </div>
-                </div>
-              </div>
+                  );
+                })()}
+              </>
             )}
           </div>
         </div>
+
+        {/* Floating AI Button - positioned relative to card */}
+        {!isLoading && !showAIModal && (
+          <button
+            onClick={() => setShowAIModal(true)}
+            className="absolute bottom-3 right-3 w-14 h-14 rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-transform z-10"
+            style={{ backgroundColor: theme.colors.card, border: `2px solid ${theme.colors.primary}` }}
+          >
+            <AIIcon />
+          </button>
+        )}
       </div>
+
+      {/* Glass Overlay Modal */}
+      {showAIModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 backdrop-blur-sm" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}>
+          <div className="rounded-t-3xl sm:rounded-3xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden shadow-2xl border" style={{ backgroundColor: theme.colors.card, borderColor: theme.colors.border }}>
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: theme.colors.border }}>
+              <h3 className="text-lg font-semibold" style={{ color: theme.colors.text }}>
+                Activity Logger
+              </h3>
+              <button
+                onClick={() => setShowAIModal(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+                style={{ backgroundColor: theme.colors.cardAlt, color: theme.colors.text }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Chat History */}
+            <div className="flex-1 overflow-y-auto p-4" style={{ backgroundColor: theme.colors.cardAlt }}>
+              {notesHistory.length === 0 ? (
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-sm text-center" style={{ color: theme.colors.textMuted }}>
+                    Log your activities and I'll extract the metrics for you
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {notesHistory.map((msg, idx) => (
+                    <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      <div 
+                        className={`max-w-[85%] px-3 py-2 rounded-lg text-sm ${
+                          msg.role === 'user' 
+                            ? 'rounded-br-none' 
+                            : 'rounded-bl-none'
+                        }`}
+                        style={{ 
+                          backgroundColor: msg.role === 'user' ? theme.colors.primary : theme.colors.card,
+                          color: theme.colors.text,
+                          border: `1px solid ${theme.colors.border}`
+                        }}
+                      >
+                        {msg.content}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Live ChatRow for processing */}
+            <ChatRow 
+              targetHeight={chatMessages.length > 0 ? '160px' : '0px'}
+              chatMessages={chatMessages}
+            />
+
+            {/* Input Area */}
+            <div className="border-t p-4" style={{ borderColor: theme.colors.border }}>
+              <textarea
+                className="w-full rounded-lg border p-3 text-sm resize-none outline-none mb-3"
+                style={{ 
+                  backgroundColor: theme.colors.cardAlt,
+                  color: theme.colors.text,
+                  borderColor: theme.colors.border,
+                  minHeight: '80px'
+                }}
+                placeholder="e.g., Ran 8km in 40min, pace 5:00/km, weight 72.5kg"
+                value={notesInput}
+                onChange={e => setNotesInput(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendToAI();
+                  }
+                }}
+              />
+              <div className="flex justify-between items-center">
+                <span className="text-xs" style={{ color: theme.colors.textMuted }}>
+                  Press Enter to send
+                </span>
+                <div style={{ width: '120px', height: '32px' }}>
+                  <CustomButton
+                    text={isExtracting ? "ANALYZING..." : "SEND"}
+                    onClick={handleSendToAI}
+                    fontSize="11px"
+                    width="120px"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

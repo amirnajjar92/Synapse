@@ -123,6 +123,10 @@ export const BarChart = ({
         {data.map((height, index) => {
           const activeCount = activeBarCount || data.length;
           const isActive = index < activeCount;
+          const hasData = height > 0;
+          // Show full height for inactive bars to fill the container
+          const displayHeight = hasData ? height : (isActive ? 0 : 100);
+          
           return (
             <div
               key={index}
@@ -131,9 +135,9 @@ export const BarChart = ({
               <div
                 className="w-[1.2px] max-w-full"
                 style={{
-                  height: `${height}%`,
+                  height: `${displayHeight}%`,
                   backgroundColor: isActive ? color : inactiveColor,
-                  opacity: isActive ? 1 : 0.45,
+                  opacity: hasData ? 1 : (isActive ? 0 : 0.2),
                 }}
               />
             </div>
