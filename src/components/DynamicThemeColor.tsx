@@ -8,6 +8,8 @@ const PAGE_THEME_COLORS: Record<string, string> = {
   '/monitor': '#0a0a0a',        // Dark background
   '/water-tracker': '#2C2C2C',  // Gray background
   '/plan-progress-tracker': '#0a0a0a',
+  '/events': '#0a0a0a',         // Dark background
+  '/entertain': '#0a0a0a',      // Dark background
   // Add more pages as needed
 };
 

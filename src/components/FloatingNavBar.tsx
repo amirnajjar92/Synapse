@@ -135,6 +135,50 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
             pointerEvents: isExpanded ? 'auto' : 'none',
           }}
         >
+          {/* Events */}
+          <button
+            onClick={() => handleNavClick('/events')}
+            className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 flex-shrink-0"
+            style={{
+              background: pathname === '/events' 
+                ? (currentTheme === 'light' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)') 
+                : 'transparent',
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="w-5 h-5">
+              <path
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                stroke={currentTheme === 'light' ? '#000000' : 'white'}
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              />
+              <circle cx="12" cy="15" r="1.5" fill={currentTheme === 'light' ? '#000000' : 'white'} />
+            </svg>
+          </button>
+
+          {/* Entertain */}
+          <button
+            onClick={() => handleNavClick('/entertain')}
+            className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 flex-shrink-0"
+            style={{
+              background: pathname === '/entertain' 
+                ? (currentTheme === 'light' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)') 
+                : 'transparent',
+            }}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="w-5 h-5">
+              <path
+                d="M7 4v16M17 4v16M3 8h18M3 12h18M3 16h18"
+                stroke={currentTheme === 'light' ? '#000000' : 'white'}
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+
           {/* Plan Progress (first from right - only show if there's an active plan) */}
           {activePlan && (
             <button
