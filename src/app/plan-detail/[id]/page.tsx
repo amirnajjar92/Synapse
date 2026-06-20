@@ -8,6 +8,7 @@ import PlanTable from '@/components/PlanTable';
 import BurgerMenuButton from '@/components/BurgerMenuButton';
 import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks';
 import { setCurrentTableIndex, setPromptText, setPlanTypes } from '@/lib/redux/slices/planSlice';
+import { exportPlanToPDF } from '@/lib/pdfExport';
 
 interface PlanTableData {
   id: number;
@@ -235,6 +236,19 @@ export default function PlanDetailPage() {
     }
   };
 
+  // Handle PDF export
+  const handleExportPDF = () => {
+    if (!plan) return;
+    
+    exportPlanToPDF({
+      title: plan.title,
+      prompt: plan.prompt,
+      tables: plan.tables,
+      startDate: plan.startDate,
+      endDate: plan.endDate,
+    });
+  };
+
   // Base dimensions (original design)
   const baseWidth = 402;
   const baseHeight = 874;
@@ -296,16 +310,28 @@ export default function PlanDetailPage() {
           >
             {/* No skeletons while generating, show the header directly */}
             <>
-              <h2 
-                className="text-white font-bold ml-12"
-                style={{ 
-                  fontFamily: 'var(--font-hanalei-fill)', 
-                  fontSize: 'calc((100vh * 0.95) * (36 / 874))',
-                  lineHeight: '1'
-                }}
-              >
-                {currentPlan.title}
-              </h2>
+              <div className="flex items-center gap-2 ml-12 flex-1 min-w-0">
+                <h2 
+                  className="text-white font-bold truncate"
+                  style={{ 
+                    fontFamily: 'var(--font-hanalei-fill)', 
+                    fontSize: 'calc((100vh * 0.95) * (36 / 874))',
+                    lineHeight: '1'
+                  }}
+                >
+                  {currentPlan.title}
+                </h2>
+                {/* Export PDF Button */}
+                <button
+                  onClick={handleExportPDF}
+                  className="flex-shrink-0 p-2 rounded-full hover:bg-gray-700/50 transition-colors"
+                  title="Export to PDF"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-white">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </button>
+              </div>
               <img 
                 src={currentPlan.icon} 
                 alt={`${currentPlan.title} Icon`} 
