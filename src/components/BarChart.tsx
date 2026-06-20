@@ -11,6 +11,10 @@ interface BarChartProps {
   inactiveColor?: string;
   showCurrentDayArrow?: boolean;
   currentDayArrowColor?: string;
+  showYAxis?: boolean;
+  yAxisValues?: number[]; // Actual values for Y-axis (e.g., weight in kg)
+  yAxisColor?: string;
+  yAxisLabelCount?: number; // Number of labels to show on Y-axis
 }
 
 export const BarChart = ({ 
@@ -25,9 +29,62 @@ export const BarChart = ({
   activeBarCount,
   inactiveColor = '#888888',
   showCurrentDayArrow = false,
-  currentDayArrowColor = '#ffffff'
+  currentDayArrowColor = '#ffffff',
+  showYAxis = false,
+  yAxisValues = [],
+  yAxisColor = '#888',
+  yAxisLabelCount = 5
 }: BarChartProps) => {
   const getBarCenterX = (index: number) => ((index + 0.5) / data.length) * 100;
+  
+  // Calculate Y-axis labels from the actual weight values
+  const getYAxisLabels = (): Array<{ value: number; position: number }> => {
+    if (!showYAxis || yAxisValues.length === 0) return [];
+    
+    // Filter out zeros to get actual logged values
+    const nonZeroValues = yAxisValues.filter(v => v > 0);
+    if (nonZeroValues.length === 0) {
+      // If no data, show a simple 0-15km scale for distance or 0-100 for weight
+      const maxVal = Math.max(...yAxisValues, 15);
+      const labels: Array<{ value: number; position: number }> = [];
+      for (let i = 0; i < yAxisLabelCount; i++) {
+        const value = maxVal - (i / (yAxisLabelCount - 1)) * maxVal;
+        const position = (i / (yAxisLabelCount - 1)) * 100;
+        labels.push({ value: Math.round(value * 10) / 10, position });
+      }
+      return labels;
+    }
+    
+    const min = Math.min(...nonZeroValues);
+    const max = Math.max(...nonZeroValues);
+    const range = max - min;
+    
+    // For distance: use 0 as min and max as ceiling, for weight: use a centered range
+    const useZeroBase = min < 50; // Heuristic: likely distance if values are small
+    
+    let lo, hi;
+    if (useZeroBase) {
+      lo = 0;
+      hi = Math.ceil(max * 1.1); // Add 10% headroom
+    } else {
+      // Weight-like data: use centered range with at least 5 unit spread
+      const displayRange = Math.max(range, 5);
+      const mid = (min + max) / 2;
+      lo = mid - displayRange / 2;
+      hi = mid + displayRange / 2;
+    }
+    
+    const labels: Array<{ value: number; position: number }> = [];
+    for (let i = 0; i < yAxisLabelCount; i++) {
+      const value = hi - (i / (yAxisLabelCount - 1)) * (hi - lo);
+      const position = (i / (yAxisLabelCount - 1)) * 100;
+      labels.push({ value: Math.round(value * 10) / 10, position });
+    }
+    
+    return labels;
+  };
+
+  const yAxisLabels = getYAxisLabels();
 
   // Calculate the SVG path for the connecting line - only up to active bars
   const calculatePath = () => {
@@ -79,6 +136,23 @@ export const BarChart = ({
             />
           </svg>
         )}
+        {/* Y-axis labels - positioned to align with chart */}
+        {showYAxis && yAxisLabels.length > 0 && (
+          <div className="absolute left-0 top-0 bottom-0 w-7 flex flex-col justify-between pointer-events-none pr-1" style={{ zIndex: 25 }}>
+            {yAxisLabels.map((label, idx) => (
+              <div
+                key={idx}
+                className="text-[7px] font-medium text-right leading-none"
+                style={{ 
+                  color: yAxisColor,
+                  textShadow: '0 0 3px rgba(0,0,0,0.5)'
+                }}
+              >
+                {label.value}
+              </div>
+            ))}
+          </div>
+        )}
         {/* Current day arrow (HTML element for perfect circle) */}
         {showCurrentDayArrow && activeBarCount && activeBarCount > 0 && activeBarCount <= data.length && (
           <>
@@ -123,9 +197,8 @@ export const BarChart = ({
         {data.map((height, index) => {
           const activeCount = activeBarCount || data.length;
           const isActive = index < activeCount;
-          const hasData = height > 0;
-          // Show full height for inactive bars to fill the container
-          const displayHeight = hasData ? height : (isActive ? 0 : 100);
+          // For inactive bars, always use reduced opacity regardless of data presence
+          const displayHeight = height > 0 ? height : (isActive ? 0 : 100);
           
           return (
             <div
@@ -137,7 +210,7 @@ export const BarChart = ({
                 style={{
                   height: `${displayHeight}%`,
                   backgroundColor: isActive ? color : inactiveColor,
-                  opacity: hasData ? 1 : (isActive ? 0 : 0.2),
+                  opacity: isActive ? 1 : 0.15,
                 }}
               />
             </div>

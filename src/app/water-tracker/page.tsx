@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import BurgerMenuButton from '@/components/BurgerMenuButton';
+import FloatingNavBar from '@/components/FloatingNavBar';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -479,6 +480,9 @@ export default function WaterTrackerPage() {
           </div>
         </div>
       </div>
+      
+      {/* Floating Navigation Bar */}
+      <FloatingNavBar />
     </div>
   );
 }

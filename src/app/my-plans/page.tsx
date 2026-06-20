@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import BurgerMenuButton from '@/components/BurgerMenuButton';
+import FloatingNavBar from '@/components/FloatingNavBar';
 
 interface Plan {
   id: string;
@@ -250,6 +251,9 @@ export default function MyPlansPage() {
           </div>
         </div>
       )}
+      
+      {/* Floating Navigation Bar */}
+      <FloatingNavBar />
     </div>
   );
 }

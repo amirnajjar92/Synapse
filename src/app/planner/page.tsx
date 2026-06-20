@@ -8,6 +8,7 @@ import GoalsSection from '@/components/GoalsSection';
 import ViewPlanButton from '@/components/ViewPlanButton';
 import ChatRow from '@/components/ChatRow';
 import BurgerMenuButton from '@/components/BurgerMenuButton';
+import FloatingNavBar from '@/components/FloatingNavBar';
 import useMakePlan from '@/lib/hooks/useMakePlan';
 import usePromptEnhancer from '@/lib/hooks/usePromptEnhancer';
 import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks';
@@ -454,6 +455,9 @@ export default function PlannerPage() {
           </div>
         </div>
       )}
+      
+      {/* Floating Navigation Bar */}
+      <FloatingNavBar />
     </div>
   );
 }

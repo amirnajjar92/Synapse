@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAnalysePlanProgress } from '@/lib/hooks/useAnalysePlanProgress';
 import BurgerMenuButton from '@/components/BurgerMenuButton';
+import FloatingNavBar from '@/components/FloatingNavBar';
 import { ProgressComparisonChart } from '@/components/ProgressComparisonChart';
 import { WeightChart } from '@/components/WeightChart';
 import {
@@ -1280,12 +1281,17 @@ Weight: 74.8kg"
 
 export default function PlanProgressTrackerPage() {
   return (
-    <Suspense fallback={
-      <div className="w-full h-screen bg-[#0a0a0a]">
-        <LogoAnimation onComplete={() => {}} />
-      </div>
-    }>
-      <PlanProgressContent />
-    </Suspense>
+    <>
+      <Suspense fallback={
+        <div className="w-full h-screen bg-[#0a0a0a]">
+          <LogoAnimation onComplete={() => {}} />
+        </div>
+      }>
+        <PlanProgressContent />
+      </Suspense>
+      
+      {/* Floating Navigation Bar */}
+      <FloatingNavBar />
+    </>
   );
 }

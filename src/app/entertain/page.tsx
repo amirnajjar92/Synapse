@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import BurgerMenuButton from '@/components/BurgerMenuButton';
+import FloatingNavBar from '@/components/FloatingNavBar';
 import WebViewModal from '@/components/WebViewModal';
 import VideoPlayerModal from '@/components/VideoPlayerModal';
 import { getTheme, loadTheme } from '@/lib/theme';
@@ -790,6 +791,9 @@ export default function EntertainPage() {
           onClose={() => setSelectedLink(null)}
         />
       )}
+      
+      {/* Floating Navigation Bar */}
+      <FloatingNavBar />
     </div>
   );
 }

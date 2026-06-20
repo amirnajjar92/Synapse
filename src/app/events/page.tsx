@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import BurgerMenuButton from '@/components/BurgerMenuButton';
+import FloatingNavBar from '@/components/FloatingNavBar';
 import WebViewModal from '@/components/WebViewModal';
 import { getTheme, loadTheme } from '@/lib/theme';
 import type { GoogleSearchResult } from '@/types/search';
@@ -300,6 +301,9 @@ export default function EventsPage() {
           onClose={() => setSelectedEvent(null)}
         />
       )}
+      
+      {/* Floating Navigation Bar */}
+      <FloatingNavBar />
     </div>
   );
 }

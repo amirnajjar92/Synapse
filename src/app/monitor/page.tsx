@@ -113,6 +113,7 @@ function MonitorContent() {
   // Weight chart data
   const [weightsKg, setWeightsKg] = useState<number[]>([]);
   const [activityBarData, setActivityBarData] = useState<number[]>([]);
+  const [distanceValuesKm, setDistanceValuesKm] = useState<number[]>([]);
 
   // Theme
   const [currentTheme, setCurrentTheme] = useState('dark');
@@ -216,6 +217,7 @@ function MonitorContent() {
 
         // Build activity bar (distance per logged day, or 0)
         const distanceByDay: number[] = Array(totalDays).fill(0);
+        const distanceKm: number[] = Array(totalDays).fill(0);
         if (selectedPlan.startDate) {
           const start = new Date(selectedPlan.startDate);
           start.setHours(0, 0, 0, 0);
@@ -225,10 +227,12 @@ function MonitorContent() {
             const idx = Math.round((d.getTime() - start.getTime()) / 86400000);
             const dist = entry.metrics.find(m => m.type === 'distance');
             if (dist && idx >= 0 && idx < totalDays) {
+              distanceKm[idx] = dist.value; // Store actual km value
               distanceByDay[idx] = Math.min(100, (dist.value / 15) * 100); // normalise to 0-100 (15km max)
             }
           }
         }
+        setDistanceValuesKm(distanceKm);
         setActivityBarData(distanceByDay);
       }
     } catch (e) { console.error(e); }
@@ -542,13 +546,40 @@ function MonitorContent() {
                     <span className="text-[#E63416]">DIST</span>
                     <span>Day {totalDays}</span>
                   </div>
-                  <div className="flex-1">
-                    <BarChart
-                      data={activityBarData}
-                      color="#E63416"
-                      activeBarCount={planDay}
-                      inactiveColor="#444"
-                    />
+                  <div className="flex-1 flex">
+                    {/* Y-axis labels column */}
+                    <div className="w-7 flex flex-col justify-between pr-1 flex-shrink-0">
+                      {distanceValuesKm.filter(v => v > 0).length > 0 ? (
+                        (() => {
+                          const nonZero = distanceValuesKm.filter(v => v > 0);
+                          const max = Math.max(...nonZero);
+                          const maxCeil = Math.ceil(max * 1.1);
+                          return [maxCeil, Math.round(maxCeil * 0.75), Math.round(maxCeil * 0.5), Math.round(maxCeil * 0.25), 0].map((val, idx) => (
+                            <div key={idx} className="text-[7px] font-medium text-right leading-none" style={{ color: theme.colors.textSecondary }}>
+                              {val}
+                            </div>
+                          ));
+                        })()
+                      ) : (
+                        [15, 11, 7, 4, 0].map((val, idx) => (
+                          <div key={idx} className="text-[7px] font-medium text-right leading-none" style={{ color: theme.colors.textSecondary }}>
+                            {val}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    {/* Chart area */}
+                    <div className="flex-1">
+                      <BarChart
+                        data={activityBarData}
+                        color="#E63416"
+                        activeBarCount={planDay}
+                        inactiveColor="#444"
+                        showConnectingLine
+                        connectingLineColor={theme.colors.text}
+                        connectingLineWidth={1}
+                      />
+                    </div>
                   </div>
                 </>
               )}
@@ -563,36 +594,64 @@ function MonitorContent() {
                     <span style={{ color: theme.colors.primary }}>WEIGHT</span>
                     <span>Day {totalDays}</span>
                   </div>
-                  <div className="flex-1 relative">
-                    <BarChart
-                      data={weightBarHeights}
-                      color={theme.colors.primary}
-                      showConnectingLine
-                      connectingLineColor={theme.colors.text}
-                      connectingLineWidth={1}
-                      connectingLineShadow="#EFE9E9"
-                      activeBarCount={planDay}
-                      inactiveColor="#666666"
-                      showCurrentDayArrow
-                      currentDayArrowColor={theme.colors.text}
-                    />
-                    <div className="absolute bottom-0 left-1">
-                      <span className="text-sm font-light" style={{ color: theme.colors.text }}>
-                        {weight
-                          ? `${weight.value}kg`
-                          : weightsKg.length > 0
-                            ? `${weightsKg[Math.min(planDay - 1, weightsKg.length - 1)]?.toFixed(1)}kg`
-                            : weightGoal.currentWeight
-                              ? `${weightGoal.currentWeight}kg`
-                              : '—'
-                        }
-                      </span>
+                  <div className="flex-1 flex relative">
+                    {/* Y-axis labels column */}
+                    <div className="w-7 flex flex-col justify-between pr-1 flex-shrink-0">
+                      {weightsKg.length > 0 ? (
+                        (() => {
+                          const min = Math.min(...weightsKg);
+                          const max = Math.max(...weightsKg);
+                          const range = max - min;
+                          const displayRange = Math.max(range, 5);
+                          const mid = (min + max) / 2;
+                          const hi = mid + displayRange / 2;
+                          const lo = mid - displayRange / 2;
+                          return [hi, hi - (hi - lo) * 0.25, mid, lo + (hi - lo) * 0.25, lo].map((val, idx) => (
+                            <div key={idx} className="text-[7px] font-medium text-right leading-none" style={{ color: theme.colors.textSecondary }}>
+                              {val.toFixed(1)}
+                            </div>
+                          ));
+                        })()
+                      ) : (
+                        [80, 75, 70, 65, 60].map((val, idx) => (
+                          <div key={idx} className="text-[7px] font-medium text-right leading-none" style={{ color: theme.colors.textSecondary }}>
+                            {val}
+                          </div>
+                        ))
+                      )}
                     </div>
-                    {weightGoal.goalWeight && (
-                      <div className="absolute bottom-0 right-1 text-[9px]" style={{ color: theme.colors.textSecondary }}>
-                        →{weightGoal.goalWeight}kg
+                    {/* Chart area */}
+                    <div className="flex-1 relative">
+                      <BarChart
+                        data={weightBarHeights}
+                        color={theme.colors.primary}
+                        showConnectingLine
+                        connectingLineColor={theme.colors.text}
+                        connectingLineWidth={1}
+                        connectingLineShadow="#EFE9E9"
+                        activeBarCount={planDay}
+                        inactiveColor="#444"
+                        showCurrentDayArrow
+                        currentDayArrowColor={theme.colors.text}
+                      />
+                      <div className="absolute bottom-0 left-1">
+                        <span className="text-sm font-light" style={{ color: theme.colors.text }}>
+                          {weight
+                            ? `${weight.value}kg`
+                            : weightsKg.length > 0
+                              ? `${weightsKg[Math.min(planDay - 1, weightsKg.length - 1)]?.toFixed(1)}kg`
+                              : weightGoal.currentWeight
+                                ? `${weightGoal.currentWeight}kg`
+                                : '—'
+                          }
+                        </span>
                       </div>
-                    )}
+                      {weightGoal.goalWeight && (
+                        <div className="absolute bottom-0 right-1 text-[9px]" style={{ color: theme.colors.textSecondary }}>
+                          →{weightGoal.goalWeight}kg
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </>
               )}
