@@ -9,7 +9,7 @@ interface LogoAnimationProps {
 export default function LogoAnimation({ onComplete }: LogoAnimationProps) {
   const path1Ref = useRef<SVGPathElement>(null);
   const path2Ref = useRef<SVGPathElement>(null);
-  const [phase, setPhase] = useState<"draw" | "hold" | "fade" | "done">("draw");
+  const [phase, setPhase] = useState<"draw" | "hold" | "glow">("draw");
 
   useEffect(() => {
     const p1 = path1Ref.current;
@@ -40,22 +40,22 @@ export default function LogoAnimation({ onComplete }: LogoAnimationProps) {
       }, 600);
     });
 
-    // After draw completes (2s), hold briefly then fade
+    // After draw completes (2s), hold briefly then start glowing
     const holdTimer = setTimeout(() => setPhase("hold"), 2200);
-    const fadeTimer = setTimeout(() => setPhase("fade"), 2800);
-    const doneTimer = setTimeout(() => {
-      setPhase("done");
+    const glowTimer = setTimeout(() => {
+      setPhase("glow");
       onComplete?.();
-    }, 3600);
+    }, 2800);
 
     return () => {
       clearTimeout(holdTimer);
-      clearTimeout(fadeTimer);
-      clearTimeout(doneTimer);
+      clearTimeout(glowTimer);
     };
   }, [onComplete]);
 
-  if (phase === "done") return null;
+  if (phase === "glow") {
+    // Stay visible with only glowing effect, no fade out
+  }
 
   return (
     <div
@@ -69,8 +69,8 @@ export default function LogoAnimation({ onComplete }: LogoAnimationProps) {
         justifyContent: "center",
         background: "#0a0a0a",
         zIndex: 9999,
-        opacity: phase === "fade" ? 0 : 1,
-        transition: phase === "fade" ? "opacity 0.8s ease-in-out" : "none",
+        opacity: 1,
+        transition: "none",
       }}
     >
       {/* Subtle ambient ring behind the logo */}
@@ -96,10 +96,11 @@ export default function LogoAnimation({ onComplete }: LogoAnimationProps) {
         style={{
           overflow: "visible",
           filter:
-            phase === "hold" || phase === "fade"
+            phase === "hold" || phase === "glow"
               ? "drop-shadow(0 0 18px rgba(255,255,255,0.12))"
               : "none",
           transition: "filter 0.5s ease",
+          animation: phase === "glow" ? "pulse 2s ease-in-out infinite" : "none",
         }}
       >
         {/* Path 1 — long synapse connection */}
@@ -135,16 +136,15 @@ export default function LogoAnimation({ onComplete }: LogoAnimationProps) {
         <p
           style={{
             color: "rgba(255,255,255,0.9)",
-            fontSize: 13,
-            fontWeight: 500,
-            letterSpacing: "0.22em",
+            fontSize: 40,
+            fontWeight: "bold",
+            letterSpacing: "0.1em",
             textTransform: "uppercase",
             margin: 0,
-            fontFamily:
-              "'Inter', 'SF Pro Display', -apple-system, sans-serif",
+            fontFamily: "var(--font-hanalei-fill)",
           }}
         >
-          Synapse
+          SYNAPSE
         </p>
       </div>
 
@@ -179,6 +179,14 @@ export default function LogoAnimation({ onComplete }: LogoAnimationProps) {
         @keyframes progressFill {
           from { transform: scaleX(0); }
           to   { transform: scaleX(1); }
+        }
+        @keyframes pulse {
+          0%, 100% {
+            filter: drop-shadow(0 0 18px rgba(255,255,255,0.12));
+          }
+          50% {
+            filter: drop-shadow(0 0 28px rgba(255,255,255,0.25));
+          }
         }
       `}</style>
     </div>

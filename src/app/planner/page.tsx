@@ -39,8 +39,8 @@ export default function PlannerPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { promptText, planGenerated, isGenerating } = useAppSelector((state) => state.plan);
-  const [localPromptText, setLocalPromptText] = useState('I want to lose 10kg in 30 days and I am 85kg now');
-  const [localEnhancedPromptText, setLocalEnhancedPromptText] = useState('I want to lose 10kg in 30 days and I am 85kg now');
+  const [localPromptText, setLocalPromptText] = useState('');
+  const [localEnhancedPromptText, setLocalEnhancedPromptText] = useState('');
   const [chatMessages, setChatMessages] = useState<string[]>([]);
   const [showChat, setShowChat] = useState(false);
 

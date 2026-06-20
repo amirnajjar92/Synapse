@@ -240,10 +240,35 @@ export default function PlanDetailPage() {
   const handleExportPDF = () => {
     if (!plan) return;
     
+    // Icon mapping
+    const iconMap: Record<string, string> = {
+      'MEALS': '/vectors/meals-icon.svg',
+      'CARDIO': '/vectors/cardio-icon.svg',
+      'NUTRIENTS': '/vectors/nutrients-icon.svg',
+      'RECOMMENDED': '/vectors/recomended-icon.svg',
+      'CHALLENGES': '/vectors/challenges-icon.svg',
+      'SUPPLEMENTS': '/vectors/suppliments-icon.svg'
+    };
+    
+    const defaultIcons = [
+      '/vectors/meals-icon.svg',
+      '/vectors/cardio-icon.svg',
+      '/vectors/nutrients-icon.svg',
+      '/vectors/recomended-icon.svg',
+      '/vectors/challenges-icon.svg',
+      '/vectors/suppliments-icon.svg'
+    ];
+    
+    // Add icons to tables
+    const tablesWithIcons = plan.tables.map((table: any, index: number) => ({
+      ...table,
+      icon: iconMap[table.title] || defaultIcons[index] || plan.icon
+    }));
+    
     exportPlanToPDF({
       title: plan.title,
       prompt: plan.prompt,
-      tables: plan.tables,
+      tables: tablesWithIcons,
       startDate: plan.startDate,
       endDate: plan.endDate,
     });

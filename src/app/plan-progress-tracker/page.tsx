@@ -20,6 +20,7 @@ import AIIcon from '@/components/AIIcon';
 import CustomButton from '@/components/CustomButton';
 import ChatRow from '@/components/ChatRow';
 import LogoAnimation from '@/components/LogoAnimation';
+import { exportPlanToPDF } from '@/lib/pdfExport';
 
 interface Plan {
   id: string;
@@ -151,6 +152,43 @@ function PlanProgressContent() {
   const [analysis, setAnalysis] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [openSections, setOpenSections] = useState<{ [key: string]: boolean }>({});
+
+  const handleExportPDF = () => {
+    if (!selectedPlan) return;
+    
+    // Icon mapping
+    const iconMap: Record<string, string> = {
+      'MEALS': '/vectors/meals-icon.svg',
+      'CARDIO': '/vectors/cardio-icon.svg',
+      'NUTRIENTS': '/vectors/nutrients-icon.svg',
+      'RECOMMENDED': '/vectors/recomended-icon.svg',
+      'CHALLENGES': '/vectors/challenges-icon.svg',
+      'SUPPLEMENTS': '/vectors/suppliments-icon.svg'
+    };
+    
+    const defaultIcons = [
+      '/vectors/meals-icon.svg',
+      '/vectors/cardio-icon.svg',
+      '/vectors/nutrients-icon.svg',
+      '/vectors/recomended-icon.svg',
+      '/vectors/challenges-icon.svg',
+      '/vectors/suppliments-icon.svg'
+    ];
+    
+    // Add icons to tables
+    const tablesWithIcons = selectedPlan.tables.map((table, index) => ({
+      ...table,
+      icon: iconMap[table.title] || defaultIcons[index] || selectedPlan.icon
+    }));
+    
+    exportPlanToPDF({
+      title: selectedPlan.title,
+      prompt: selectedPlan.prompt,
+      tables: tablesWithIcons,
+      startDate: selectedPlan.startDate,
+      endDate: selectedPlan.endDate,
+    });
+  };
 
   // Get today's day name (e.g., "Monday")
   const getTodayDayName = () => {
@@ -606,6 +644,29 @@ function PlanProgressContent() {
               >
                 Plan Progress
               </h1>
+              {/* PDF Export Button */}
+              {selectedPlan && (
+                <button
+                  onClick={handleExportPDF}
+                  className="p-2 text-white hover:bg-[#3B3B3B] rounded-lg transition-colors"
+                  title="Export plan to PDF"
+                >
+                  <svg 
+                    width="24" 
+                    height="24" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2"
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                </button>
+              )}
             </div>
           </div>
 
@@ -1137,11 +1198,13 @@ function PlanProgressContent() {
           )}
         </div>
 
-        {/* Floating AI Button */}
+        {/* Floating AI Button i hide it */}
         {selectedPlan && (
           <button
             onClick={() => setIsAIModalOpen(true)}
             className="fixed bottom-8 right-8 w-16 h-16 bg-black rounded-full flex items-center justify-center shadow-xl z-50 hover:scale-110 transition-transform"
+           
+            style={{'display':'none'}}
           >
             <AIIcon />
           </button>

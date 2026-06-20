@@ -59,7 +59,7 @@ const PromptBox: React.FC<PromptBoxProps> = ({ value, onChange, isLoading, usePl
             className="w-full h-full text-gray-800 text-sm sm:text-base md:text-xl font-light text-left bg-transparent border-none resize-none outline-none placeholder-gray-400 focus:ring-0"
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            placeholder="Enter your fitness goals..."
+            placeholder="Describe your fitness goal... (e.g., Lose 5kg in 30 days, Build muscle for marathon, Improve endurance)"
           />
         </div>
       </div>

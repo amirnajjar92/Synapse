@@ -366,9 +366,35 @@ RULES:
       return;
     }
 
+    // Generate a short, catchy title using AI
+    let shortTitle = 'Personalized Plan';
+    try {
+      const titleResponse = await fetch('/api/ai/analyse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question: `Generate a short, catchy title (maximum 5 words) for this fitness plan: "${promptText}". Only return the title, nothing else. No quotes.`
+        }),
+      });
+
+      if (titleResponse.ok) {
+        const titleData = await titleResponse.json();
+        const generatedTitle = titleData.answer?.trim();
+        
+        // Remove quotes if AI added them
+        if (generatedTitle) {
+          shortTitle = generatedTitle.replace(/^["']|["']$/g, '');
+        }
+      }
+    } catch (error) {
+      console.error('Error generating short title:', error);
+      // Fallback: use first 50 characters of prompt
+      shortTitle = promptText.length > 50 ? promptText.substring(0, 50) + '...' : promptText;
+    }
+
     const planData = {
-      title: promptText || 'Personalized Plan',
-      prompt: promptText,
+      title: shortTitle, // Use AI-generated short title
+      prompt: promptText, // Keep full prompt as description
       icon: '/vectors/plan-icon.svg',
       tables: planTypes.map((pt) => ({
         title: pt.title,
