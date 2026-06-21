@@ -166,10 +166,8 @@ export default function LogoTest() {
           {/* Logo Component */}
           <div style={{ position: "relative", zIndex: 1 }}>
             <SynapseFitLogo
-              variant={variant}
               size={size}
               loading={true}
-              ink={darkMode ? "rgba(255, 255, 255, 0.95)" : "#0a0a0a"}
               accentInk="#FFFFFF"
             />
           </div>
@@ -212,10 +210,8 @@ export default function LogoTest() {
             }}
           >
 {`<SynapseFitLogo
-  variant="${variant}"
   size={${size}}
   loading={true}
-  ink="${darkMode ? "rgba(255, 255, 255, 0.95)" : "#0a0a0a"}"
   accentInk="#FFFFFF"
 />`}
           </pre>
@@ -260,10 +256,8 @@ export default function LogoTest() {
                 {v}
               </h4>
               <SynapseFitLogo
-                variant={v as any}
                 size={200}
                 loading={true}
-                ink={darkMode ? "rgba(255, 255, 255, 0.95)" : "#0a0a0a"}
                 accentInk="#FFFFFF"
               />
             </div>

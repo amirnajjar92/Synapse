@@ -55,11 +55,9 @@ export default function Home() {
         }}
       >
         <SynapseFitLogo
-          variant="full"
           size={280}
-          ink="rgba(255, 255, 255, 0.95)"
-          accentInk="#FFFFFF"
           loading={true}
+          accentInk="#FFFFFF"
         />
       </div>
 

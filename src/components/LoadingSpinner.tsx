@@ -66,7 +66,6 @@ export default function LoadingSpinner({
         <SynapseFitLogo
           size={size}
           loading={true}
-          ink="rgba(255, 255, 255, 0.95)"
           accentInk="#FFFFFF"
         />
       </div>

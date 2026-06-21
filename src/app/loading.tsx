@@ -40,7 +40,6 @@ export default function Loading() {
         <SynapseFitLogo
           size={220}
           loading={true}
-          ink="rgba(255, 255, 255, 0.95)"
           accentInk="#FFFFFF"
         />
       </div>
