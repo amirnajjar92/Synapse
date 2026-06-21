@@ -32,6 +32,7 @@ export default function Sidebar() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [activePlans, setActivePlans] = useState<Plan[]>([]);
   const [currentTheme, setCurrentTheme] = useState('dark');
+  const [isAdmin, setIsAdmin] = useState(false);
   // Strava integration (disabled for now)
   // const [isStravaConnected, setIsStravaConnected] = useState(false);
   // const [isSyncing, setIsSyncing] = useState(false);
@@ -53,6 +54,26 @@ export default function Sidebar() {
       }
     } catch (error) {
       console.error('Error fetching plans:', error);
+    }
+  };
+
+  // Check if user is admin
+  const checkAdminStatus = async () => {
+    if (!user?.email) return;
+
+    try {
+      const url = new URL('/api/admin/users', window.location.origin);
+      url.searchParams.set('email', user.email);
+      const response = await fetch(url.toString());
+      
+      // If user can access admin endpoint, they are admin
+      if (response.ok) {
+        setIsAdmin(true);
+      } else {
+        setIsAdmin(false);
+      }
+    } catch (error) {
+      setIsAdmin(false);
     }
   };
 
@@ -91,6 +112,7 @@ export default function Sidebar() {
   // Fetch plans when user is available
   useEffect(() => {
     fetchPlans();
+    checkAdminStatus();
   }, [user]);
 
   // Filter active plans (IN_PROGRESS)
@@ -256,6 +278,24 @@ export default function Sidebar() {
               </div>
               <span className="font-medium">Monitor</span>
             </button>
+
+            {/* Admin Panel - Only show for admins */}
+            {isAdmin && (
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  router.push('/admin');
+                }}
+                className="group flex items-center gap-3 px-4 py-3.5 rounded-2xl text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 transition-all duration-200"
+              >
+                <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-all duration-200">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <span className="font-medium">Admin Panel</span>
+              </button>
+            )}
 
             {/* Active Plans Section */}
             {activePlans.length > 0 && (

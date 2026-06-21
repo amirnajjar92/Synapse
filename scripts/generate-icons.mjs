@@ -11,10 +11,10 @@ const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
 const maskableSizes = [192, 512];
 
 // Read the SVG file
-const svgPath = resolve(__dirname, '../public/vectors/simple-log.svg');
+const svgPath = resolve(__dirname, '../public/vectors/pwa-logo.svg');
 const svgBuffer = readFileSync(svgPath);
 
-console.log('🎨 Generating PWA icons from logo...\n');
+console.log('🎨 Generating PWA icons from pwa-logo.svg...\n');
 
 // Generate icons for each size
 for (const size of sizes) {

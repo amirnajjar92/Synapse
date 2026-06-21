@@ -181,6 +181,17 @@ Rules:
       });
     }
 
+    // Save prompt to UserPrompt table
+    if (prompt && prompt.trim()) {
+      await prisma.userPrompt.create({
+        data: {
+          userId: user.id,
+          planId: activePlan.id,
+          prompt: prompt.trim(),
+        },
+      });
+    }
+
     return NextResponse.json({
       success: true,
       dailyEntry: { ...dailyEntry, metrics },

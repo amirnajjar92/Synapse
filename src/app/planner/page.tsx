@@ -197,7 +197,8 @@ export default function PlannerPage() {
           picture: data.picture
         }));
 
-        const synapseUserResponse = await fetch('/api/users/me', {
+        // Save user to Synapse DB (non-blocking)
+        fetch('/api/users/info', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -205,11 +206,10 @@ export default function PlannerPage() {
             name: data.name,
             picture: data.picture
           })
+        }).catch(error => {
+          // Silent fail - user is already stored in localStorage
+          console.log('Note: Could not sync user to database, but you can still use the app');
         });
-
-        if (!synapseUserResponse.ok) {
-          console.error('Failed to save user to Synapse DB');
-        }
 
         setIsSignedIn(true);
       } else {
@@ -235,7 +235,8 @@ export default function PlannerPage() {
         picture: null
       }));
 
-      const synapseUserResponse = await fetch('/api/users/me', {
+      // Save test user to Synapse DB (non-blocking)
+      fetch('/api/users/info', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -243,11 +244,10 @@ export default function PlannerPage() {
           name: "Test User",
           picture: null
         })
+      }).catch(error => {
+        // Silent fail - user is already stored in localStorage
+        console.log('Note: Could not sync user to database, but you can still use the app');
       });
-
-      if (!synapseUserResponse.ok) {
-        console.error('Failed to save test user to Synapse DB');
-      }
 
       setIsSignedIn(true);
     } catch (error) {

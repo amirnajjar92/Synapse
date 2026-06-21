@@ -131,6 +131,34 @@ export default function PlanDetailPage() {
     dispatch(setCurrentTableIndex(prevIndex));
   };
 
+  // Handle GO button click - save updated prompt
+  const handleGoClick = async () => {
+    if (!promptText.trim() || !plan) return;
+
+    // Get user email from localStorage
+    const userStr = localStorage.getItem('synapse_user');
+    const user = userStr ? JSON.parse(userStr) : null;
+    
+    if (!user?.email) return;
+
+    try {
+      // Save the updated prompt to UserPrompt table
+      await fetch('/api/prompts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: user.email,
+          planId: plan.id,
+          prompt: promptText,
+        }),
+      });
+
+      console.log('✅ Prompt logged to database');
+    } catch (error) {
+      console.error('❌ Error logging prompt:', error);
+    }
+  };
+
   // Handle back button click
   const handleBackClick = () => {
     router.push('/my-plans');
@@ -449,6 +477,7 @@ export default function PlanDetailPage() {
                 <CustomButton
                   text="GO"
                   isLoading={isGenerating}
+                  onClick={handleGoClick}
                 />
               </div>
             </div>

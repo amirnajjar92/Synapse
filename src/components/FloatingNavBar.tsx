@@ -168,15 +168,14 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
                 : 'transparent',
             }}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="w-5 h-5">
-              <path
-                d="M7 4v16M17 4v16M3 8h18M3 12h18M3 16h18"
-                stroke={currentTheme === 'light' ? '#000000' : 'white'}
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <img 
+              src="/vectors/media-icon.svg" 
+              alt="Media"
+              className="w-5 h-5"
+              style={{
+                filter: currentTheme === 'light' ? 'invert(0)' : 'invert(1)',
+              }}
+            />
           </button>
 
           {/* Plan Progress (first from right - only show if there's an active plan) */}

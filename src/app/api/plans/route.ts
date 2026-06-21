@@ -42,6 +42,51 @@ export async function GET(request: Request) {
   }
 }
 
+// Helper to extract goal weight from prompt using AI
+const extractGoalWeight = async (prompt: string): Promise<{ weight: number | null, unit: string | null }> => {
+  try {
+    // First try simple regex for common patterns
+    const kgMatch = prompt.match(/(\d+(?:\.\d+)?)\s*kg/i);
+    if (kgMatch) {
+      return { weight: parseFloat(kgMatch[1]), unit: 'kg' };
+    }
+    
+    const lbsMatch = prompt.match(/(\d+(?:\.\d+)?)\s*(?:lbs?|pounds?)/i);
+    if (lbsMatch) {
+      return { weight: parseFloat(lbsMatch[1]), unit: 'lbs' };
+    }
+
+    // If regex fails, use AI to extract
+    const apiUrl = 'https://moole-back.vercel.app/ask-moole';
+    const systemPrompt = `Extract the goal weight from the user's fitness prompt. Respond ONLY with a JSON object in this exact format: {"weight": number, "unit": "kg" or "lbs"}. If no goal weight is mentioned, respond with: {"weight": null, "unit": null}. Do not include any other text.`;
+    
+    const res = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: `${systemPrompt}\n\nUser prompt: ${prompt}` }),
+    });
+    
+    if (!res.ok) {
+      return { weight: null, unit: null };
+    }
+    
+    const data = await res.json();
+    const answer = data.answer?.trim();
+    
+    // Try to parse the AI response as JSON
+    const cleaned = answer.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(cleaned);
+    
+    return {
+      weight: parsed.weight ? parseFloat(parsed.weight) : null,
+      unit: parsed.unit || null
+    };
+  } catch (err) {
+    console.error('Error extracting goal weight:', err);
+    return { weight: null, unit: null };
+  }
+};
+
 export async function POST(request: Request) {
   console.log('POST /api/plans request received');
   try {
@@ -55,12 +100,18 @@ export async function POST(request: Request) {
     const user = await getOrCreateUser(userEmail)
     console.log('User found:', user);
 
+    // Extract goal weight from prompt
+    const { weight: goalWeight, unit: goalWeightUnit } = await extractGoalWeight(prompt);
+    console.log('Extracted goal weight:', { goalWeight, goalWeightUnit });
+
     const plan = await prisma.plan.create({
       data: {
         userId: user.id,
         title,
         prompt,
         icon,
+        goalWeight,
+        goalWeightUnit,
         tables: {
           create: tables.map((table: any) => ({
             title: table.title,
@@ -75,7 +126,16 @@ export async function POST(request: Request) {
       include: { tables: { include: { rows: true } } },
     })
 
-    console.log('Plan created successfully');
+    // Save prompt to UserPrompt table
+    await prisma.userPrompt.create({
+      data: {
+        userId: user.id,
+        planId: plan.id,
+        prompt: prompt,
+      },
+    });
+
+    console.log('Plan created successfully with prompt saved');
     return NextResponse.json({ plan })
   } catch (error) {
     console.error('Error creating plan:', error);

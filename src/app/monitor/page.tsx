@@ -633,8 +633,9 @@ function MonitorContent() {
                         inactiveColor="#444"
                         showCurrentDayArrow
                         currentDayArrowColor={theme.colors.text}
+                        
                       />
-                      <div className="absolute bottom-0 left-1">
+                      <div className="absolute bottom-0 right-1">
                         <span className="text-sm font-light" style={{ color: theme.colors.text }}>
                           {weight
                             ? `${weight.value}kg`
@@ -647,7 +648,7 @@ function MonitorContent() {
                         </span>
                       </div>
                       {weightGoal.goalWeight && (
-                        <div className="absolute bottom-0 right-1 text-[9px]" style={{ color: theme.colors.textSecondary }}>
+                        <div className="absolute top-0 right-1 text-[9px]" style={{ color: theme.colors.textSecondary }}>
                           →{weightGoal.goalWeight}kg
                         </div>
                       )}

@@ -11,12 +11,18 @@ datasource db {
   directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
 model User {
   id            String        @id @default(cuid())
   name          String?
   email         String?       @unique
   emailVerified DateTime?
   image         String?
+  role          UserRole      @default(USER)
   accounts      Account[]
   sessions      Session[]
   plans         Plan[]
@@ -72,20 +78,22 @@ enum PlanStatus {
 }
 
 model Plan {
-  id        String       @id @default(cuid())
-  userId    String
-  title     String
-  prompt    String
-  icon      String
-  status    PlanStatus   @default(NOT_STARTED)
-  startDate DateTime?
-  endDate   DateTime?
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-  tables    PlanTable[]
-  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userPrompts UserPrompt[]
-  dailyEntries DailyEntry[]
+  id             String       @id @default(cuid())
+  userId         String
+  title          String
+  prompt         String
+  icon           String
+  status         PlanStatus   @default(NOT_STARTED)
+  startDate      DateTime?
+  endDate        DateTime?
+  goalWeight     Float?
+  goalWeightUnit String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  tables         PlanTable[]
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userPrompts    UserPrompt[]
+  dailyEntries   DailyEntry[]
 }
 
 model PlanTable {
