@@ -5,7 +5,6 @@ import SynapseFitLogo from "@/components/SynapseFitLogo";
 
 export default function LogoTest() {
   const [variant, setVariant] = useState<"full" | "mark" | "wordmark">("full");
-  const [animated, setAnimated] = useState(true);
   const [size, setSize] = useState(280);
   const [darkMode, setDarkMode] = useState(true);
 
@@ -104,68 +103,6 @@ export default function LogoTest() {
           <div>
             <label
               style={{
-                display: "block",
-                color: darkMode ? "rgba(255, 255, 255, 0.9)" : "#0a0a0a",
-                fontWeight: "600",
-                marginBottom: "0.5rem",
-                fontSize: "0.9rem",
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
-              }}
-            >
-              Size: {size}px
-            </label>
-            <input
-              type="range"
-              min="100"
-              max="500"
-              value={size}
-              onChange={(e) => setSize(Number(e.target.value))}
-              style={{
-                width: "100%",
-                height: "8px",
-                borderRadius: "4px",
-                background: darkMode
-                  ? "rgba(255, 255, 255, 0.2)"
-                  : "rgba(0, 0, 0, 0.2)",
-                cursor: "pointer",
-              }}
-            />
-          </div>
-
-          {/* Animation Toggle */}
-          <div>
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.75rem",
-                color: darkMode ? "rgba(255, 255, 255, 0.9)" : "#0a0a0a",
-                fontWeight: "600",
-                fontSize: "0.9rem",
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
-                cursor: "pointer",
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={animated}
-                onChange={(e) => setAnimated(e.target.checked)}
-                style={{
-                  width: "20px",
-                  height: "20px",
-                  cursor: "pointer",
-                }}
-              />
-              Animated
-            </label>
-          </div>
-
-          {/* Dark Mode Toggle */}
-          <div>
-            <label
-              style={{
                 display: "flex",
                 alignItems: "center",
                 gap: "0.75rem",
@@ -231,7 +168,7 @@ export default function LogoTest() {
             <SynapseFitLogo
               variant={variant}
               size={size}
-              animated={animated}
+              loading={true}
               ink={darkMode ? "rgba(255, 255, 255, 0.95)" : "#0a0a0a"}
               accentInk="#FFFFFF"
             />
@@ -277,7 +214,7 @@ export default function LogoTest() {
 {`<SynapseFitLogo
   variant="${variant}"
   size={${size}}
-  animated={${animated}}
+  loading={true}
   ink="${darkMode ? "rgba(255, 255, 255, 0.95)" : "#0a0a0a"}"
   accentInk="#FFFFFF"
 />`}
@@ -325,7 +262,7 @@ export default function LogoTest() {
               <SynapseFitLogo
                 variant={v as any}
                 size={200}
-                animated={true}
+                loading={true}
                 ink={darkMode ? "rgba(255, 255, 255, 0.95)" : "#0a0a0a"}
                 accentInk="#FFFFFF"
               />

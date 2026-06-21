@@ -77,7 +77,6 @@ export default function NavigationLoadingProvider({
           >
             <SynapseFitLogo
               size={180}
-              animated={false}
               loading={true}
               ink="rgba(255, 255, 255, 0.95)"
               accentInk="#FFFFFF"

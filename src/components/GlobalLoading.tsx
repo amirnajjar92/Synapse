@@ -62,7 +62,6 @@ export default function GlobalLoading() {
       >
         <SynapseFitLogo
           size={200}
-          animated={true}
           loading={true}
           ink="rgba(255, 255, 255, 0.95)"
           accentInk="#FFFFFF"
