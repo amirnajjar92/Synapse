@@ -127,3 +127,115 @@ body {
 .animate-swing {
   animation: swing 3s ease-in-out infinite;
 }
+
+
+/* SynapseFitLogo Animations */
+@keyframes sf-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes sf-stamp {
+  0% {
+    opacity: 0;
+    transform: scale(1.05) translateY(5px);
+  }
+  65% {
+    opacity: 1;
+    transform: scale(0.99) translateY(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes sf-tagline-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sf-logo {
+  color: var(--sf-ink, currentColor);
+  overflow: visible;
+  display: block;
+}
+
+.sf-line,
+.sf-horn {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+
+.sf-word,
+.sf-fit {
+  transform-origin: 50% 50%;
+}
+
+/* paused state before mount */
+.sf-anim-off .sf-line,
+.sf-anim-off .sf-horn {
+  stroke-dashoffset: 0;
+}
+.sf-anim-off .sf-word,
+.sf-anim-off .sf-fit {
+  opacity: 1;
+}
+
+.sf-anim-on .sf-line {
+  animation: sf-draw 0.95s cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+.sf-anim-on .sf-line-glow {
+  animation: sf-draw 0.95s cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+.sf-anim-on .sf-horn {
+  animation: sf-draw 0.85s cubic-bezier(0.65, 0, 0.35, 1) 0.25s both;
+}
+.sf-anim-on .sf-word {
+  animation: sf-stamp 0.5s cubic-bezier(0.2, 0.9, 0.25, 1) 0.7s both;
+}
+.sf-anim-on .sf-fit {
+  animation: sf-stamp 0.4s cubic-bezier(0.2, 0.9, 0.25, 1) 0.95s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-anim-on .sf-line,
+  .sf-anim-on .sf-line-glow,
+  .sf-anim-on .sf-horn,
+  .sf-anim-on .sf-word,
+  .sf-anim-on .sf-fit {
+    animation: none !important;
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+}
+
+.sf-tagline {
+  margin: 0;
+  font-size: 0.85rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  opacity: 0;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.sf-tagline-on {
+  animation: sf-tagline-in 0.5s ease-out 0.1s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sf-tagline-on {
+    animation: none;
+    opacity: 1;
+  }
+}

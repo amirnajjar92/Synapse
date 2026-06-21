@@ -9,6 +9,8 @@ import ViewPlanButton from '@/components/ViewPlanButton';
 import ChatRow from '@/components/ChatRow';
 import BurgerMenuButton from '@/components/BurgerMenuButton';
 import FloatingNavBar from '@/components/FloatingNavBar';
+import SynapseFitLogo from '@/components/SynapseFitLogo';
+import AnimatedLogo from '@/components/AnimatedLogo';
 import useMakePlan from '@/lib/hooks/useMakePlan';
 import usePromptEnhancer from '@/lib/hooks/usePromptEnhancer';
 import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks';
@@ -272,8 +274,8 @@ export default function PlannerPage() {
 
   if (!mounted || isCheckingAuth) {
     return (
-      <div className="w-full h-screen bg-[#151515] flex items-center justify-center">
-        <Skeleton className="w-20 h-20 rounded-full" />
+      <div className="w-full h-screen bg-[#0a0a0a] flex items-center justify-center">
+        <AnimatedLogo size={180} />
       </div>
     );
   }

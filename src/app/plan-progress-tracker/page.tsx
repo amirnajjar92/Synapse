@@ -20,6 +20,7 @@ import AIIcon from '@/components/AIIcon';
 import CustomButton from '@/components/CustomButton';
 import ChatRow from '@/components/ChatRow';
 import LogoAnimation from '@/components/LogoAnimation';
+import SynapseFitLogo from '@/components/SynapseFitLogo';
 import { exportPlanToPDF } from '@/lib/pdfExport';
 
 interface Plan {
@@ -608,7 +609,13 @@ function PlanProgressContent() {
         {!introDone && <LogoAnimation onComplete={() => setIntroDone(true)} />}
         {introDone && isLoading && (
           <div className="flex h-full items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+            <SynapseFitLogo
+              size={180}
+              animated={false}
+              loading={true}
+              ink="rgba(255, 255, 255, 0.95)"
+              accentInk="#FFFFFF"
+            />
           </div>
         )}
       </div>
