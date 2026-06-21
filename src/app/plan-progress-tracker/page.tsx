@@ -19,7 +19,6 @@ import {
 import AIIcon from '@/components/AIIcon';
 import CustomButton from '@/components/CustomButton';
 import ChatRow from '@/components/ChatRow';
-import LogoAnimation from '@/components/LogoAnimation';
 import SynapseFitLogo from '@/components/SynapseFitLogo';
 import { exportPlanToPDF } from '@/lib/pdfExport';
 
@@ -605,8 +604,17 @@ function PlanProgressContent() {
 
   if (!mounted || isLoading || !introDone) {
     return (
-      <div className="w-full h-screen bg-[#0a0a0a]">
-        {!introDone && <LogoAnimation onComplete={() => setIntroDone(true)} />}
+      <div className="w-full h-screen bg-[#0a0a0a] flex items-center justify-center">
+        {!introDone && (
+          <SynapseFitLogo
+            size={280}
+            loading={true}
+            accentInk="#FFFFFF"
+            onAnimationComplete={() => {
+              setTimeout(() => setIntroDone(true), 500);
+            }}
+          />
+        )}
         {introDone && isLoading && (
           <div className="flex h-full items-center justify-center">
             <SynapseFitLogo
@@ -1351,8 +1359,12 @@ export default function PlanProgressTrackerPage() {
   return (
     <>
       <Suspense fallback={
-        <div className="w-full h-screen bg-[#0a0a0a]">
-          <LogoAnimation onComplete={() => {}} />
+        <div className="w-full h-screen bg-[#0a0a0a] flex items-center justify-center">
+          <SynapseFitLogo
+            size={280}
+            loading={true}
+            accentInk="#FFFFFF"
+          />
         </div>
       }>
         <PlanProgressContent />
