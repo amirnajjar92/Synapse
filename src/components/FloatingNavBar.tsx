@@ -81,14 +81,10 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
     >
       {/* Floating Nav Bar */}
       <div
-        className="relative backdrop-blur-2xl rounded-full shadow-2xl transition-all duration-500 ease-out overflow-hidden ml-auto"
+        className="relative rounded-full shadow-lg transition-all duration-500 ease-out overflow-hidden ml-auto"
         style={{
-          background: currentTheme === 'light' 
-            ? 'rgba(240, 240, 245, 0.85)' 
-            : 'rgba(20, 30, 48, 0.85)',
-          border: currentTheme === 'light'
-            ? '1px solid rgba(0, 0, 0, 0.08)'
-            : '1px solid rgba(255, 255, 255, 0.08)',
+          background: '#000000',
+          border: '0.5px solid #ffffff35',
           width: isExpanded ? 'min(380px, calc(100vw - 24px))' : '48px',
           height: '48px',
         }}
@@ -96,15 +92,14 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
         {/* Main Toggle Button with arrow (positioned on right) */}
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="absolute transition-all duration-500 rounded-full overflow-hidden flex items-center justify-center hover:scale-105 active:scale-95"
+          className="absolute transition-all duration-500 rounded-full overflow-hidden flex items-center justify-center hover:bg-white/20 active:scale-95"
           style={{
             right: 'calc((48px - 45px) / 2)',
             top: 'calc((48px - 46px) / 2)',
             width: isExpanded ? 'min(72px, 20%)' : '44px',
             height: '44px',
-            background: currentTheme === 'light'
-              ? 'rgba(200, 200, 210, 0.8)'
-              : 'rgba(55, 65, 81, 0.8)',
+            background: '#ffffff',
+            border: '1px solid #000000',
           }}
         >
           {/* Arrow icon - points left when collapsed, animates when expanded */}
@@ -120,7 +115,7 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
           >
             <path
               d="M15 18l-6-6 6-6"
-              stroke={currentTheme === 'light' ? '#000000' : 'white'}
+              stroke="#000000"
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -140,34 +135,30 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
           {/* Events */}
           <button
             onClick={() => handleNavClick('/events')}
-            className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 flex-shrink-0"
+            className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 active:scale-95 flex-shrink-0"
             style={{
-              background: pathname === '/events' 
-                ? (currentTheme === 'light' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)') 
-                : 'transparent',
+              background: pathname === '/events' ? '#ffffff' : 'transparent',
             }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="w-5 h-5">
               <path
                 d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                stroke={currentTheme === 'light' ? '#000000' : 'white'}
+                stroke={pathname === '/events' ? '#000000' : '#ffffff'}
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 fill="none"
               />
-              <circle cx="12" cy="15" r="1.5" fill={currentTheme === 'light' ? '#000000' : 'white'} />
+              <circle cx="12" cy="15" r="1.5" fill={pathname === '/events' ? '#000000' : '#ffffff'} />
             </svg>
           </button>
 
           {/* Entertain */}
           <button
             onClick={() => handleNavClick('/entertain')}
-            className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 flex-shrink-0"
+            className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 active:scale-95 flex-shrink-0"
             style={{
-              background: pathname === '/entertain' 
-                ? (currentTheme === 'light' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)') 
-                : 'transparent',
+              background: pathname === '/entertain' ? '#ffffff' : 'transparent',
             }}
           >
             <img 
@@ -175,7 +166,7 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
               alt="Media"
               className="w-5 h-5"
               style={{
-                filter: currentTheme === 'light' ? 'invert(0)' : 'invert(1)',
+                filter: pathname === '/entertain' ? 'invert(0)' : 'invert(1)',
               }}
             />
           </button>
@@ -184,17 +175,15 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
           {activePlan && (
             <button
               onClick={() => handleNavClick(`/plan-progress-tracker?planId=${activePlan.id}`)}
-              className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 flex-shrink-0"
+              className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 active:scale-95 flex-shrink-0"
               style={{
-                background: pathname === '/plan-progress-tracker' 
-                  ? (currentTheme === 'light' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)') 
-                  : 'transparent',
+                background: pathname === '/plan-progress-tracker' ? '#ffffff' : 'transparent',
               }}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="w-5 h-5">
                 <path
                   d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                  stroke={currentTheme === 'light' ? '#000000' : 'white'}
+                  stroke={pathname === '/plan-progress-tracker' ? '#000000' : '#ffffff'}
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -207,17 +196,15 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
           {/* Water Tracker */}
           <button
             onClick={() => handleNavClick('/water-tracker')}
-            className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 flex-shrink-0"
+            className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 active:scale-95 flex-shrink-0"
             style={{
-              background: pathname === '/water-tracker' 
-                ? (currentTheme === 'light' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)') 
-                : 'transparent',
+              background: pathname === '/water-tracker' ? '#ffffff' : 'transparent',
             }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="w-5 h-5">
               <path
                 d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"
-                stroke={currentTheme === 'light' ? '#000000' : 'white'}
+                stroke={pathname === '/water-tracker' ? '#000000' : '#ffffff'}
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -229,42 +216,38 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
           {/* My Plans */}
           <button
             onClick={() => handleNavClick('/my-plans')}
-            className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 flex-shrink-0"
+            className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 active:scale-95 flex-shrink-0"
             style={{
-              background: pathname === '/my-plans' 
-                ? (currentTheme === 'light' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)') 
-                : 'transparent',
+              background: pathname === '/my-plans' ? '#ffffff' : 'transparent',
             }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="w-5 h-5">
               <path
                 d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                stroke={currentTheme === 'light' ? '#000000' : 'white'}
+                stroke={pathname === '/my-plans' ? '#000000' : '#ffffff'}
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 fill="none"
               />
-              <path d="M9 12h6M9 16h6" stroke={currentTheme === 'light' ? '#000000' : 'white'} strokeWidth="2" strokeLinecap="round" />
+              <path d="M9 12h6M9 16h6" stroke={pathname === '/my-plans' ? '#000000' : '#ffffff'} strokeWidth="2" strokeLinecap="round" />
             </svg>
           </button>
 
           {/* Planner */}
           <button
             onClick={() => handleNavClick('/planner')}
-            className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 flex-shrink-0"
+            className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 active:scale-95 flex-shrink-0"
             style={{
-              background: pathname === '/planner' 
-                ? (currentTheme === 'light' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)') 
-                : 'transparent',
+              background: pathname === '/planner' ? '#ffffff' : 'transparent',
             }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="w-5 h-5">
-              <rect x="3" y="4" width="18" height="18" rx="2" stroke={currentTheme === 'light' ? '#000000' : 'white'} strokeWidth="2" fill="none" />
-              <path d="M3 10h18M8 2v4M16 2v4" stroke={currentTheme === 'light' ? '#000000' : 'white'} strokeWidth="2" strokeLinecap="round" />
-              <circle cx="8" cy="14" r="1" fill={currentTheme === 'light' ? '#000000' : 'white'} />
-              <circle cx="12" cy="14" r="1" fill={currentTheme === 'light' ? '#000000' : 'white'} />
-              <circle cx="16" cy="14" r="1" fill={currentTheme === 'light' ? '#000000' : 'white'} />
+              <rect x="3" y="4" width="18" height="18" rx="2" stroke={pathname === '/planner' ? '#000000' : '#ffffff'} strokeWidth="2" fill="none" />
+              <path d="M3 10h18M8 2v4M16 2v4" stroke={pathname === '/planner' ? '#000000' : '#ffffff'} strokeWidth="2" strokeLinecap="round" />
+              <circle cx="8" cy="14" r="1" fill={pathname === '/planner' ? '#000000' : '#ffffff'} />
+              <circle cx="12" cy="14" r="1" fill={pathname === '/planner' ? '#000000' : '#ffffff'} />
+              <circle cx="16" cy="14" r="1" fill={pathname === '/planner' ? '#000000' : '#ffffff'} />
             </svg>
           </button>
 
@@ -278,25 +261,16 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
               }
               setIsExpanded(false);
             }}
-            className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 hover:bg-purple-500/20 flex-shrink-0"
+            className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 active:scale-95 flex-shrink-0"
             style={{
-              background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.2))',
+              background: 'transparent',
             }}
           >
-            <div className="w-5 h-5 sm:w-6 sm:h-6 group-hover:scale-110 transition-transform duration-300">
+            <div className="w-5 h-5 sm:w-6 sm:h-6">
               <AIIcon />
             </div>
           </button>
         </div>
-
-        {/* Ambient Glow */}
-        <div
-          className="absolute inset-0 rounded-full transition-opacity duration-500 -z-10 blur-2xl"
-          style={{
-            background: `radial-gradient(circle, ${theme.colors.primary}40, transparent 70%)`,
-            opacity: isExpanded ? 0.8 : 0.4,
-          }}
-        />
       </div>
 
       {/* AI Assistant Modal */}

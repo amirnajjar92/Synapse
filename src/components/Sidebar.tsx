@@ -181,26 +181,26 @@ export default function Sidebar() {
 
       {/* Sidebar */}
       <div
-        className={`fixed left-0 top-0 h-full w-72 bg-gradient-to-b from-[#0f0f0f] to-[#0a0a0a] z-[50] shadow-2xl transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`fixed left-0 top-0 h-full w-72 bg-black z-[50] shadow-2xl transition-transform duration-300 ease-in-out border-r-2 border-white ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <div className="p-6 flex flex-col h-full">
           {/* Close Button + Profile Section at Top */}
-          <div className="mb-6 pb-6 border-b border-white/5">
+          <div className="mb-6 pb-6 border-b border-white/20">
             <button
               onClick={() => setIsOpen(false)}
-              className="mb-6 w-10 h-10 rounded-full bg-white/5 backdrop-blur-sm flex items-center justify-center hover:bg-white/10 transition-all duration-200 hover:rotate-90"
+              className="mb-6 w-10 h-10 rounded-full bg-white flex items-center justify-center hover:bg-white/80 transition-all duration-200"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M18 6L6 18M6 6l12 12" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
+                <path d="M18 6L6 18M6 6l12 12" stroke="black" strokeWidth="2.5" strokeLinecap="round" />
               </svg>
             </button>
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 via-purple-600 to-blue-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-purple-500/20">
+              <div className="w-14 h-14 rounded-lg bg-white border-2 border-black flex items-center justify-center text-black font-bold text-xl">
                 {user?.picture ? (
                   <img
                     src={user.picture}
                     alt={user.name || 'User'}
-                    className="w-full h-full rounded-2xl object-cover"
+                    className="w-full h-full rounded-lg object-cover"
                   />
                 ) : (
                   (user?.name?.charAt(0) || user?.email?.charAt(0).toUpperCase() || 'U')
@@ -210,7 +210,7 @@ export default function Sidebar() {
                 <p className="text-white font-semibold truncate text-base">
                   {user?.name || user?.email || 'User'}
                 </p>
-                <p className="text-white/40 text-xs truncate mt-0.5">
+                <p className="text-white/60 text-xs truncate mt-0.5">
                   {user?.email}
                 </p>
               </div>
@@ -218,19 +218,17 @@ export default function Sidebar() {
           </div>
 
           {/* Navigation Links */}
-          <div className="flex-1 flex flex-col gap-1 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+          <div className="flex-1 flex flex-col gap-2 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
             <button
               onClick={() => {
                 setIsOpen(false);
                 router.push('/planner');
               }}
-              className="group flex items-center gap-3 px-4 py-3.5 rounded-2xl text-white/60 hover:text-white hover:bg-white/5 transition-all duration-200"
+              className="group flex items-center gap-3 px-4 py-3 rounded-lg text-white/80 hover:text-black hover:bg-white transition-all duration-200"
             >
-              <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-all duration-200">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
               <span className="font-medium">Planner</span>
             </button>
 
@@ -239,13 +237,11 @@ export default function Sidebar() {
                 setIsOpen(false);
                 router.push('/my-plans');
               }}
-              className="group flex items-center gap-3 px-4 py-3.5 rounded-2xl text-white/60 hover:text-white hover:bg-white/5 transition-all duration-200"
+              className="group flex items-center gap-3 px-4 py-3 rounded-lg text-white/80 hover:text-black hover:bg-white transition-all duration-200"
             >
-              <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-all duration-200">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
               <span className="font-medium">My Plans</span>
             </button>
 
@@ -254,13 +250,11 @@ export default function Sidebar() {
                 setIsOpen(false);
                 router.push('/water-tracker');
               }}
-              className="group flex items-center gap-3 px-4 py-3.5 rounded-2xl text-white/60 hover:text-white hover:bg-white/5 transition-all duration-200"
+              className="group flex items-center gap-3 px-4 py-3 rounded-lg text-white/80 hover:text-black hover:bg-white transition-all duration-200"
             >
-              <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-all duration-200">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 2C12 2 5 10 5 14a7 7 0 0014 0c0-4-7-12-7-12z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2C12 2 5 10 5 14a7 7 0 0014 0c0-4-7-12-7-12z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
               <span className="font-medium">Water Tracker</span>
             </button>
 
@@ -270,13 +264,11 @@ export default function Sidebar() {
                 const active = activePlans[0];
                 router.push(active ? `/monitor?planId=${active.id}` : '/monitor');
               }}
-              className="group flex items-center gap-3 px-4 py-3.5 rounded-2xl text-white/60 hover:text-white hover:bg-white/5 transition-all duration-200"
+              className="group flex items-center gap-3 px-4 py-3 rounded-lg text-white/80 hover:text-black hover:bg-white transition-all duration-200"
             >
-              <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-all duration-200">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
               <span className="font-medium">Monitor</span>
             </button>
 
@@ -287,22 +279,20 @@ export default function Sidebar() {
                   setIsOpen(false);
                   router.push('/admin');
                 }}
-                className="group flex items-center gap-3 px-4 py-3.5 rounded-2xl text-purple-400 hover:text-purple-300 hover:bg-purple-500/10 transition-all duration-200"
+                className="group flex items-center gap-3 px-4 py-3 rounded-lg text-white/80 hover:text-black hover:bg-white transition-all duration-200"
               >
-                <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-all duration-200">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                    <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
                 <span className="font-medium">Admin Panel</span>
               </button>
             )}
 
             {/* Active Plans Section */}
             {activePlans.length > 0 && (
-              <div className="mt-6 space-y-1">
-                <div className="px-4 mb-3">
-                  <p className="text-xs text-white/30 uppercase tracking-widest font-semibold">
+              <div className="mt-6 space-y-2">
+                <div className="px-4 mb-2">
+                  <p className="text-xs text-white/50 uppercase tracking-widest font-semibold">
                     Active Plans
                   </p>
                 </div>
@@ -313,9 +303,9 @@ export default function Sidebar() {
                       setIsOpen(false);
                       router.push(`/plan-progress-tracker?planId=${plan.id}`);
                     }}
-                    className="group flex items-center gap-3 px-4 py-3 rounded-2xl text-left text-white/60 hover:text-white hover:bg-white/5 transition-all duration-200 w-full"
+                    className="group flex items-center gap-3 px-4 py-2.5 rounded-lg text-left text-white/80 hover:text-black hover:bg-white transition-all duration-200 w-full"
                   >
-                    <div className="w-2 h-2 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex-shrink-0 shadow-lg shadow-green-500/50" />
+                    <div className="w-2 h-2 rounded-full bg-white flex-shrink-0" />
                     <span className="truncate text-sm font-medium">{plan.title}</span>
                   </button>
                 ))}
@@ -323,7 +313,7 @@ export default function Sidebar() {
             )}
 
             {/* Theme Switcher */}
-            <div className="mt-6 pt-6 border-t border-white/5">
+            <div className="mt-6 pt-6 border-t border-white/20">
               {/* Notification Toggle */}
               <NotificationToggle />
 
@@ -333,17 +323,17 @@ export default function Sidebar() {
                   const nextIndex = (currentIndex + 1) % themes.length;
                   handleThemeChange(themes[nextIndex].id);
                 }}
-                className="group flex items-center gap-3 px-4 py-3.5 rounded-2xl text-white/60 hover:text-white hover:bg-white/5 transition-all duration-200 w-full"
+                className="group flex items-center gap-3 px-4 py-3 rounded-lg text-white/80 hover:text-black hover:bg-white transition-all duration-200 w-full"
               >
                 <div
-                  className="w-10 h-10 rounded-xl flex-shrink-0 border-2 border-white/10 group-hover:border-white/20 transition-all duration-200 shadow-inner"
+                  className="w-8 h-8 rounded-lg flex-shrink-0 border-2 border-white transition-all duration-200"
                   style={{ backgroundColor: themes.find(t => t.id === currentTheme)?.colors.primary }}
                 />
                 <div className="flex-1 text-left">
-                  <p className="text-xs text-white/30 uppercase tracking-wider font-medium">Theme</p>
+                  <p className="text-xs text-white/50 uppercase tracking-wider font-medium">Theme</p>
                   <p className="text-sm font-semibold mt-0.5">{themes.find(t => t.id === currentTheme)?.name}</p>
                 </div>
-                <svg className="w-5 h-5 text-white/20 group-hover:text-white/40 transition-all duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-white/50 group-hover:text-black transition-all duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
@@ -351,16 +341,14 @@ export default function Sidebar() {
           </div>
 
           {/* Logout at Bottom */}
-          <div className="pt-4 border-t border-white/5 mt-4">
+          <div className="pt-4 border-t border-white/20 mt-4">
             <button
               onClick={handleLogout}
-              className="group flex items-center gap-3 px-4 py-3.5 rounded-2xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-200 w-full"
+              className="group flex items-center gap-3 px-4 py-3 rounded-lg text-white/80 hover:text-black hover:bg-white transition-all duration-200 w-full"
             >
-              <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center group-hover:bg-red-500/20 transition-all duration-200">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
               <span className="font-medium">Logout</span>
             </button>
           </div>
