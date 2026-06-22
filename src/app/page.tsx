@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import SynapseFitLogo from "@/components/SynapseFitLogo";
+import DailyPlanNotifier from "@/components/DailyPlanNotifier";
 
 export default function Home() {
   const router = useRouter();
@@ -19,20 +20,22 @@ export default function Home() {
   }, [router]);
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)",
-        zIndex: 9999,
-        opacity: phase === "complete" ? 0 : 1,
-        transition: "opacity 0.5s ease-out",
-      }}
-    >
+    <>
+      <DailyPlanNotifier />
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)",
+          zIndex: 9999,
+          opacity: phase === "complete" ? 0 : 1,
+          transition: "opacity 0.5s ease-out",
+        }}
+      >
       {/* Ambient glow effect */}
       <div
         style={{
@@ -147,5 +150,6 @@ export default function Home() {
         }
       `}</style>
     </div>
+    </>
   );
 }
