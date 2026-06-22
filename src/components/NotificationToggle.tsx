@@ -18,38 +18,96 @@ export default function NotificationToggle() {
   }, []);
 
   const sendTestNotification = async () => {
-    if (!session?.user?.email) return;
+    console.log('📨 sendTestNotification called');
+    console.log('👤 Session:', session);
+    console.log('📧 User email:', session?.user?.email);
+    
+    // Try to get email from session or localStorage
+    let userEmail = session?.user?.email;
+    
+    if (!userEmail) {
+      console.log('⚠️ No session email, checking localStorage...');
+      const userStr = localStorage.getItem('synapse_user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        userEmail = user.email;
+        console.log('✅ Found email in localStorage:', userEmail);
+      }
+    }
+    
+    if (!userEmail) {
+      console.log('❌ No email found anywhere, aborting');
+      
+      // Send a simple test notification anyway
+      console.log('📨 Sending simple test notification instead');
+      const notification = new Notification('🎯 Synapse Fit - Notifications Active!', {
+        body: 'Your notifications are working! Log in to see your daily focus tasks.',
+        icon: '/icons/icon-192x192.png',
+        badge: '/icons/icon-72x72.png',
+      });
+      
+      notification.onclick = () => {
+        console.log('🖱️ Notification clicked');
+        window.focus();
+        notification.close();
+      };
+      
+      return;
+    }
 
     try {
+      console.log('🔍 Fetching user plans for:', userEmail);
+      
       // Fetch user's active plan
       const response = await fetch('/api/users/me/plans', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: session.user.email }),
+        body: JSON.stringify({ email: userEmail }),
       });
+
+      console.log('📡 API Response status:', response.status);
 
       if (response.ok) {
         const data = await response.json();
+        console.log('📊 Plans data:', data);
+        
         const activePlan = data.plans?.find((p: any) => p.status === 'IN_PROGRESS');
+        console.log('🎯 Active plan:', activePlan);
 
         if (activePlan) {
+          console.log('📅 Found active plan:', activePlan.title);
+          
           // Get today's tasks
           const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+          console.log('📆 Today is:', today);
+          
           let todayTasks: string[] = [];
 
           activePlan.tables?.forEach((table: any) => {
+            console.log('📋 Checking table:', table.title);
+            
             table.rows?.forEach((row: any) => {
               const firstCol = row.columns[0];
+              console.log('  - Row first column:', firstCol);
+              
               if (firstCol && firstCol.toLowerCase().includes(today.toLowerCase())) {
                 const task = row.columns.slice(1).join(' - ');
-                if (task) todayTasks.push(`${table.title}: ${task}`);
+                if (task) {
+                  console.log('  ✅ Found task for today:', task);
+                  todayTasks.push(`${table.title}: ${task}`);
+                }
               }
             });
           });
 
+          console.log('📝 Total tasks found for today:', todayTasks.length);
+          console.log('📝 Tasks:', todayTasks);
+
           const taskText = todayTasks.length > 0
             ? todayTasks.slice(0, 3).join('\n')
             : 'Check your plan for today!';
+
+          console.log('📨 Creating notification with text:', taskText);
 
           const notification = new Notification('📋 Today\'s Focus with Synapse', {
             body: taskText,
@@ -58,11 +116,16 @@ export default function NotificationToggle() {
             tag: 'daily-focus',
           });
 
+          console.log('✅ Notification created successfully!');
+
           notification.onclick = () => {
+            console.log('🖱️ Notification clicked');
             window.focus();
             notification.close();
           };
         } else {
+          console.log('⚠️ No active plan found, sending welcome notification');
+          
           // No active plan - send welcome notification
           const notification = new Notification('🎯 Synapse Fit', {
             body: 'Notifications are now active! Create a plan to get daily focus reminders.',
@@ -70,34 +133,54 @@ export default function NotificationToggle() {
             badge: '/icons/icon-72x72.png',
           });
 
+          console.log('✅ Welcome notification sent!');
+
           notification.onclick = () => {
+            console.log('🖱️ Notification clicked');
             window.focus();
             notification.close();
           };
         }
+      } else {
+        console.log('❌ API request failed with status:', response.status);
       }
     } catch (error) {
-      console.error('Error sending notification:', error);
+      console.error('❌ Error sending notification:', error);
     }
   };
 
   const handleToggle = async () => {
+    console.log('🔔 Toggle clicked, current state:', enabled);
+    
     if (!enabled) {
+      console.log('🔔 Requesting notification permission...');
+      
       // Request permission
       const result = await Notification.requestPermission();
+      console.log('🔔 Permission result:', result);
       setPermission(result);
 
       if (result === 'granted') {
+        console.log('✅ Permission granted! Enabling notifications...');
         setEnabled(true);
         localStorage.setItem('notificationsEnabled', 'true');
+        console.log('💾 Saved to localStorage');
         
         // Send immediate test notification
-        setTimeout(() => sendTestNotification(), 500);
+        console.log('📨 Sending test notification in 500ms...');
+        setTimeout(() => {
+          console.log('📨 Calling sendTestNotification()');
+          sendTestNotification();
+        }, 500);
+      } else {
+        console.log('❌ Permission denied or dismissed');
       }
     } else {
       // Disable
+      console.log('🔕 Disabling notifications');
       setEnabled(false);
       localStorage.setItem('notificationsEnabled', 'false');
+      console.log('💾 Disabled state saved to localStorage');
     }
   };
 
