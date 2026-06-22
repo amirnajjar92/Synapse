@@ -56,8 +56,8 @@ export default function RootLayout({
         <PWAUpdater />
         <PWAInstallButton />
         <DynamicThemeColor />
-        <ClientNotificationBell />
         <Providers>
+          <ClientNotificationBell />
           <StoreProvider>
             <SidebarProvider>
               <Sidebar />
