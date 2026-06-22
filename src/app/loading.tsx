@@ -61,7 +61,7 @@ export default function Loading() {
             animation: "fadeInOut 2s ease-in-out infinite",
           }}
         >
-          Loading...
+          {/* Loading... */}
         </p>
       </div>
 
