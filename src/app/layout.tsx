@@ -7,6 +7,7 @@ import { SidebarProvider } from '@/components/SidebarContext';
 import PWAUpdater from '@/components/PWAUpdater';
 import PWAInstallButton from '@/components/PWAInstallButton';
 import DynamicThemeColor from '@/components/DynamicThemeColor';
+import ClientNotificationBell from '@/components/ClientNotificationBell';
 import { Hanalei_Fill } from "next/font/google";
 
 const hanaleiFill = Hanalei_Fill({
@@ -55,6 +56,7 @@ export default function RootLayout({
         <PWAUpdater />
         <PWAInstallButton />
         <DynamicThemeColor />
+        <ClientNotificationBell />
         <Providers>
           <StoreProvider>
             <SidebarProvider>
