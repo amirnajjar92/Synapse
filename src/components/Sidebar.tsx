@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useSidebar } from './SidebarContext';
 import { useSession, signIn } from 'next-auth/react';
 import { themes, loadTheme, saveTheme } from '@/lib/theme';
+import NotificationToggle from './NotificationToggle';
 
 interface UserData {
   email: string;
@@ -323,6 +324,9 @@ export default function Sidebar() {
 
             {/* Theme Switcher */}
             <div className="mt-6 pt-6 border-t border-white/5">
+              {/* Notification Toggle */}
+              <NotificationToggle />
+
               <button
                 onClick={() => {
                   const currentIndex = themes.findIndex(t => t.id === currentTheme);
