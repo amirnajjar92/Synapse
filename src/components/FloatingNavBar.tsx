@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import AIIcon from './AIIcon';
+import AIAssistantModal from './AIAssistantModal';
 import { getTheme, loadTheme } from '@/lib/theme';
 
 interface FloatingNavBarProps {
@@ -19,6 +20,7 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [activePlan, setActivePlan] = useState<Plan | null>(null);
   const [currentTheme, setCurrentTheme] = useState('dark');
+  const [showAIAssistant, setShowAIAssistant] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -269,7 +271,11 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
           {/* AI Icon (last from right) */}
           <button
             onClick={() => {
-              onAIClick?.();
+              if (onAIClick) {
+                onAIClick();
+              } else {
+                setShowAIAssistant(true);
+              }
               setIsExpanded(false);
             }}
             className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 hover:bg-purple-500/20 flex-shrink-0"
@@ -292,6 +298,12 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
           }}
         />
       </div>
+
+      {/* AI Assistant Modal */}
+      <AIAssistantModal
+        isOpen={showAIAssistant}
+        onClose={() => setShowAIAssistant(false)}
+      />
     </div>
   );
 }
