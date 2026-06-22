@@ -124,6 +124,7 @@ Rules:
         date: entryDate,
         notes: prompt || '',
         todos: [],
+        updatedAt: new Date(),
       },
       include: { metrics: true },
     });
@@ -160,6 +161,7 @@ Rules:
             type,
             value: data.value,
             unit: data.unit,
+            updatedAt: new Date(),
           };
         }),
       });

@@ -84,6 +84,7 @@ export async function POST(req: NextRequest) {
         notes,
         aiAnalysis,
         todos: todos || [],
+        updatedAt: new Date(),
         metrics: metrics ? { create: metrics } : undefined,
         media: media ? { create: media } : undefined,
       },

@@ -55,6 +55,7 @@ export async function POST(request: Request) {
         name: name || 'User',
         image: picture || null,
         role: 'USER', // Default role
+        updatedAt: new Date(),
       },
       select: {
         id: true,

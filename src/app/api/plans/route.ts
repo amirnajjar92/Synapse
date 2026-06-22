@@ -13,7 +13,8 @@ const getOrCreateUser = async (email: string) => {
     user = await prisma.user.create({
       data: {
         email,
-        name: 'User'
+        name: 'User',
+        updatedAt: new Date(),
       }
     })
   }
@@ -112,6 +113,7 @@ export async function POST(request: Request) {
         icon,
         goalWeight,
         goalWeightUnit,
+        updatedAt: new Date(),
         tables: {
           create: tables.map((table: any) => ({
             title: table.title,

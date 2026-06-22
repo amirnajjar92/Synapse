@@ -19,6 +19,7 @@ async function testDB() {
       data: {
         email: testEmail,
         name: 'Test User',
+        updatedAt: new Date(),
       },
     });
     console.log('✅ Test user created:', { id: testUser.id, email: testUser.email, name: testUser.name });
@@ -31,6 +32,7 @@ async function testDB() {
         title: 'Test Plan',
         prompt: 'Test prompt for DB verification',
         icon: '/vectors/plan-icon.svg',
+        updatedAt: new Date(),
         tables: {
           create: [
             {
@@ -76,11 +78,12 @@ async function testDB() {
         planId: testPlan.id,
         date: today,
         notes: 'Great first day of training!',
+        updatedAt: new Date(),
         metrics: {
           create: [
-            { type: 'weight', value: 80.5, unit: 'kg' },
-            { type: 'distance', value: 5.0, unit: 'km' },
-            { type: 'calories', value: 450, unit: 'kcal' },
+            { type: 'weight', value: 80.5, unit: 'kg', updatedAt: new Date() },
+            { type: 'distance', value: 5.0, unit: 'km', updatedAt: new Date() },
+            { type: 'calories', value: 450, unit: 'kcal', updatedAt: new Date() },
           ],
         },
         media: {

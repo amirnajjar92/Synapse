@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     const log = await prisma.waterLog.upsert({
       where: { userId_date: { userId: user.id, date } },
       update: { cups, goalCups },
-      create: { userId: user.id, date, cups, goalCups },
+      create: { userId: user.id, date, cups, goalCups, updatedAt: new Date() },
     });
 
     return NextResponse.json({ success: true, log });

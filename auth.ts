@@ -37,6 +37,7 @@ export const authOptions: AuthOptions = {
             data: {
               email: credentials.email,
               name: 'Test User',
+              updatedAt: new Date(),
             },
           })
         }
