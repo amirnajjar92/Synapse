@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import AIIcon from './AIIcon';
-import AIAssistantModal from './AIAssistantModal';
+import AIAssistantSheet from './AIAssistantSheet';
 import { getTheme, loadTheme } from '@/lib/theme';
 
 interface FloatingNavBarProps {
@@ -273,8 +273,8 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
         </div>
       </div>
 
-      {/* AI Assistant Modal */}
-      <AIAssistantModal
+      {/* AI Assistant Sheet */}
+      <AIAssistantSheet
         isOpen={showAIAssistant}
         onClose={() => setShowAIAssistant(false)}
       />

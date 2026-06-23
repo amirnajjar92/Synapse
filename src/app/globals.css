@@ -26,8 +26,6 @@ body {
   }
 }
 
-/* colors of blocks dom */
-
 /* AI Assistant Modal Animations */
 @keyframes fadeIn {
   from {
@@ -193,7 +191,6 @@ body {
   animation: swing 3s ease-in-out infinite;
 }
 
-
 /* SynapseFitLogo Animations */
 @keyframes sf-draw {
   from {
@@ -304,3 +301,45 @@ body {
     opacity: 1;
   }
 }
+
+/* AI Assistant Modal Slide Animations */
+@keyframes ai-modal-slide-in {
+  from {
+    transform: translateX(100vw);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes ai-modal-slide-out {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100vw);
+    opacity: 0;
+  }
+}
+
+@keyframes ai-modal-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ai-modal-backdrop-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+

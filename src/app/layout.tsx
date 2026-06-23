@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { StoreProvider } from '@/lib/redux/StoreProvider';
 import Providers from './providers';
@@ -19,18 +19,19 @@ export const metadata: Metadata = {
   title: 'Synapse - Fitness & Health Tracker',
   description: 'Your personal fitness and health tracking companion',
   manifest: '/manifest.json',
-  themeColor: '#0a0a0a',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
     title: 'Synapse',
   },
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#0a0a0a',
 };
 
 export default function RootLayout({

@@ -146,7 +146,6 @@ function PlanProgressContent() {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [introDone, setIntroDone] = useState(false);
   const [user, setUser] = useState<{ email: string } | null>(null);
   const [mounted, setMounted] = useState(false);
   const [analysis, setAnalysis] = useState<string>('');
@@ -602,28 +601,14 @@ function PlanProgressContent() {
   const baseWidth = 402;
   const baseHeight = 874;
 
-  if (!mounted || isLoading || !introDone) {
+  if (!mounted || isLoading) {
     return (
       <div className="w-full h-screen bg-[#0a0a0a] flex items-center justify-center">
-        {!introDone && (
-          <SynapseFitLogo
-            size={280}
-            loading={true}
-            accentInk="#FFFFFF"
-            onAnimationComplete={() => {
-              setTimeout(() => setIntroDone(true), 500);
-            }}
-          />
-        )}
-        {introDone && isLoading && (
-          <div className="flex h-full items-center justify-center">
-            <SynapseFitLogo
-              size={180}
-              loading={true}
-              accentInk="#FFFFFF"
-            />
-          </div>
-        )}
+        <SynapseFitLogo
+          size={180}
+          loading={true}
+          accentInk="#FFFFFF"
+        />
       </div>
     );
   }

@@ -3,8 +3,10 @@ import withPWA from '@ducanh2912/next-pwa';
 
 const nextConfig: NextConfig = {
   /* config options here */
-  // Empty turbopack config to silence warning
-  turbopack: {},
+  // Specify turbopack root to silence warning
+  turbopack: {
+    root: '/Users/amirnajjar/Synapse',
+  },
 };
 
 export default withPWA({

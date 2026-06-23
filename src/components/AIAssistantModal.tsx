@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import CustomButton from './CustomButton';
 import ChatRow from './ChatRow';
 import { getTheme, loadTheme } from '@/lib/theme';
 
@@ -28,6 +27,8 @@ export default function AIAssistantModal({ isOpen, onClose }: AIAssistantModalPr
   const [chatMessages, setChatMessages] = useState<string[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [shouldRender, setShouldRender] = useState(false);
+  const [hasAnimatedIn, setHasAnimatedIn] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const theme = getTheme(currentTheme);
@@ -114,8 +115,25 @@ export default function AIAssistantModal({ isOpen, onClose }: AIAssistantModalPr
 
   // Load history when modal opens
   useEffect(() => {
-    if (isOpen && messages.length === 0) {
-      loadConversationHistory();
+    if (isOpen) {
+      setShouldRender(true);
+      // Delay animation start to ensure DOM is ready
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setHasAnimatedIn(true);
+        });
+      });
+      
+      if (messages.length === 0) {
+        loadConversationHistory();
+      }
+    } else {
+      setHasAnimatedIn(false);
+      // Keep rendered during exit animation
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+      }, 500);
+      return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
@@ -321,12 +339,6 @@ export default function AIAssistantModal({ isOpen, onClose }: AIAssistantModalPr
   // Parse response text for navigation links
   const renderMessageContent = (content: string) => {
     // Check for navigation patterns like "Go to /planner" or "Visit Monitor page"
-    const linkPatterns = [
-      { pattern: /\[([^\]]+)\]\(([^)]+)\)/g, type: 'markdown' }, // [text](url)
-      { pattern: /(?:go to|visit|check|see|navigate to)\s+(\/[\w-]+)/gi, type: 'path' }, // "go to /planner"
-      { pattern: /(?:planner|monitor|progress|water|events|entertain)\s+page/gi, type: 'page' }, // "planner page"
-    ];
-
     let processedContent = content;
     const links: Array<{ text: string; path: string }> = [];
 
@@ -393,19 +405,25 @@ export default function AIAssistantModal({ isOpen, onClose }: AIAssistantModalPr
     );
   };
 
-  if (!isOpen) return null;
-
   const baseWidth = 402;
   const baseHeight = 874;
 
+  // Don't render at all if never opened
+  if (!shouldRender) return null;
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm"
-      style={{ backgroundColor: 'rgba(0, 0, 0, 0.8)' }}
+      className="fixed inset-0 z-50"
+      style={{ 
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        backdropFilter: 'blur(8px)',
+        opacity: hasAnimatedIn ? 1 : 0,
+        transition: 'opacity 300ms ease-out',
+      }}
       onClick={onClose}
     >
       <div
-        className="overflow-hidden shadow-2xl relative flex-shrink-0"
+        className="overflow-hidden shadow-2xl absolute top-1/2 flex-shrink-0"
         style={{
           width: `min(95vw, ${baseWidth}px)`,
           height: `min(95vh, ${baseHeight}px)`,
@@ -413,6 +431,10 @@ export default function AIAssistantModal({ isOpen, onClose }: AIAssistantModalPr
           borderRadius: borderRadius,
           backgroundColor: '#000000',
           border: '0.75px solid #ffffff',
+          right: hasAnimatedIn ? '50%' : '-100%',
+          transform: hasAnimatedIn ? 'translate(50%, -50%)' : 'translate(50%, -50%)',
+          opacity: hasAnimatedIn ? 1 : 0,
+          transition: 'right 500ms ease-out, opacity 500ms ease-out',
         }}
         onClick={(e) => e.stopPropagation()}
       >
