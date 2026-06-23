@@ -400,33 +400,34 @@ export default function AIAssistantModal({ isOpen, onClose }: AIAssistantModalPr
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm animate-fadeIn"
-      style={{ backgroundColor: 'rgba(0, 0, 0, 0.7)' }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm"
+      style={{ backgroundColor: 'rgba(0, 0, 0, 0.8)' }}
       onClick={onClose}
     >
       <div
-        className="overflow-hidden shadow-2xl relative flex-shrink-0 animate-scaleIn"
+        className="overflow-hidden shadow-2xl relative flex-shrink-0"
         style={{
           width: `min(95vw, ${baseWidth}px)`,
-          aspectRatio: baseWidth / baseHeight,
+          height: `min(95vh, ${baseHeight}px)`,
           maxHeight: '95vh',
           borderRadius: borderRadius,
-          backgroundColor: theme.colors.card,
+          backgroundColor: '#000000',
+          border: '0.75px solid #ffffff',
         }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="w-full h-full flex flex-col relative">
           {/* Header */}
           <div
-            className="flex items-center justify-between p-4 border-b"
-            style={{ borderColor: theme.colors.border }}
+            className="flex items-center justify-between p-4"
+            style={{ borderBottom: '0.75px solid #ffffff' }}
           >
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center" style={{ border: '0.75px solid #000000' }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                   <path
                     d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
-                    stroke="white"
+                    stroke="black"
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -435,15 +436,14 @@ export default function AIAssistantModal({ isOpen, onClose }: AIAssistantModalPr
               </div>
               <div>
                 <h3
-                  className="text-lg font-semibold"
+                  className="text-lg font-semibold text-white"
                   style={{
-                    color: currentTheme === 'light' ? '#000000' : theme.colors.text,
                     fontFamily: 'var(--font-hanalei-fill)',
                   }}
                 >
                   AI Assistant
                 </h3>
-                <p className="text-xs" style={{ color: theme.colors.textMuted }}>
+                <p className="text-xs text-white/60">
                   Your fitness companion
                 </p>
               </div>
@@ -453,10 +453,9 @@ export default function AIAssistantModal({ isOpen, onClose }: AIAssistantModalPr
               {messages.length > 0 && (
                 <button
                   onClick={startNewConversation}
-                  className="p-2 rounded-full transition-colors hover:opacity-80 text-xs"
+                  className="p-2 rounded-full transition-colors hover:bg-white/20 text-xs bg-white/10"
                   style={{
-                    backgroundColor: theme.colors.cardAlt,
-                    color: currentTheme === 'light' ? '#000000' : theme.colors.text,
+                    color: '#ffffff',
                   }}
                   title="Start new conversation"
                 >
@@ -473,11 +472,7 @@ export default function AIAssistantModal({ isOpen, onClose }: AIAssistantModalPr
               {/* Close Button */}
               <button
                 onClick={onClose}
-                className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:opacity-80"
-                style={{
-                  backgroundColor: theme.colors.cardAlt,
-                  color: currentTheme === 'light' ? '#000000' : theme.colors.text,
-                }}
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:bg-white/20 bg-white/10 text-white"
               >
                 ✕
               </button>
@@ -486,10 +481,9 @@ export default function AIAssistantModal({ isOpen, onClose }: AIAssistantModalPr
 
           {/* Suggestions Section - Show when no messages */}
           {messages.length === 0 && (
-            <div className="p-4 border-b" style={{ borderColor: theme.colors.border }}>
+            <div className="p-4" style={{ borderBottom: '0.75px solid #ffffff' }}>
               <p
-                className="text-sm font-medium mb-3"
-                style={{ color: currentTheme === 'light' ? '#000000' : theme.colors.text }}
+                className="text-sm font-medium mb-3 text-white"
               >
                 💡 I can help you:
               </p>
@@ -498,22 +492,20 @@ export default function AIAssistantModal({ isOpen, onClose }: AIAssistantModalPr
                   <button
                     key={index}
                     onClick={() => handleSuggestionClick(suggestion.example)}
-                    className="w-full text-left p-3 rounded-lg transition-all hover:opacity-80 border"
+                    className="w-full text-left p-3 rounded-lg transition-all hover:bg-white/20 bg-white/5"
                     style={{
-                      backgroundColor: theme.colors.cardAlt,
-                      borderColor: theme.colors.border,
+                      border: '0.75px solid #ffffff',
                     }}
                   >
                     <div className="flex items-start gap-2">
                       <span className="text-lg">{suggestion.icon}</span>
                       <div className="flex-1 min-w-0">
                         <p
-                          className="text-sm font-medium"
-                          style={{ color: currentTheme === 'light' ? '#000000' : theme.colors.text }}
+                          className="text-sm font-medium text-white"
                         >
                           {suggestion.text}
                         </p>
-                        <p className="text-xs mt-1" style={{ color: theme.colors.textMuted }}>
+                        <p className="text-xs mt-1 text-white/60">
                           "{suggestion.example}"
                         </p>
                       </div>
@@ -535,26 +527,24 @@ export default function AIAssistantModal({ isOpen, onClose }: AIAssistantModalPr
           {/* Messages History */}
           {isLoadingHistory ? (
             <div
-              className="flex-1 flex items-center justify-center"
-              style={{ backgroundColor: theme.colors.background }}
+              className="flex-1 flex items-center justify-center bg-black"
             >
               <div className="flex flex-col items-center gap-3">
                 <div className="relative w-10 h-10">
                   <div
                     className="absolute inset-0 rounded-full border-2 border-t-transparent animate-spin"
-                    style={{ borderColor: `${theme.colors.primary} transparent transparent transparent` }}
+                    style={{ borderColor: '#ffffff transparent transparent transparent' }}
                   />
                 </div>
-                <p className="text-sm" style={{ color: theme.colors.textMuted }}>
+                <p className="text-sm text-white/60">
                   Loading conversation...
                 </p>
               </div>
             </div>
           ) : messages.length > 0 ? (
             <div
-              className="flex-1 overflow-y-auto p-4 space-y-3 ai-messages-scrollbar"
+              className="flex-1 overflow-y-auto p-4 space-y-3 ai-messages-scrollbar bg-black"
               style={{ 
-                backgroundColor: theme.colors.background,
                 maxHeight: 'calc(100vh - 400px)',
                 overflowY: 'auto',
                 scrollBehavior: 'smooth'
@@ -568,11 +558,9 @@ export default function AIAssistantModal({ isOpen, onClose }: AIAssistantModalPr
                   <div
                     className="max-w-[85%] rounded-lg p-3"
                     style={{
-                      backgroundColor:
-                        message.role === 'user'
-                          ? 'linear-gradient(135deg, rgba(168, 85, 247, 0.8), rgba(236, 72, 153, 0.8))'
-                          : theme.colors.cardAlt,
-                      color: currentTheme === 'light' ? '#000000' : theme.colors.text,
+                      backgroundColor: message.role === 'user' ? '#ffffff' : '#000000',
+                      border: '0.75px solid #ffffff',
+                      color: message.role === 'user' ? '#000000' : '#ffffff',
                     }}
                   >
                     {message.role === 'assistant' ? renderMessageContent(message.content) : (
@@ -580,7 +568,10 @@ export default function AIAssistantModal({ isOpen, onClose }: AIAssistantModalPr
                     )}
                     <p
                       className="text-xs mt-1"
-                      style={{ color: theme.colors.textMuted, opacity: 0.7 }}
+                      style={{ 
+                        color: message.role === 'user' ? '#000000' : '#ffffff',
+                        opacity: 0.6 
+                      }}
                     >
                       {message.timestamp.toLocaleTimeString([], {
                         hour: '2-digit',
@@ -595,13 +586,11 @@ export default function AIAssistantModal({ isOpen, onClose }: AIAssistantModalPr
           ) : null}
 
           {/* Input Area */}
-          <div className="p-4 border-t" style={{ borderColor: theme.colors.border }}>
+          <div className="px-3 pt-2 pb-0" style={{ borderTop: '0.75px solid #ffffff' }}>
             <textarea
-              className="w-full rounded-lg border p-3 text-sm resize-none outline-none mb-3 transition-colors"
+              className="w-full rounded-lg p-3 text-sm resize-none outline-none mb-2 transition-colors bg-black text-white"
               style={{
-                backgroundColor: theme.colors.cardAlt,
-                color: currentTheme === 'light' ? '#000000' : theme.colors.text,
-                borderColor: theme.colors.border,
+                border: '0.75px solid #ffffff',
                 minHeight: '100px',
               }}
               placeholder="Tell me anything... (e.g., Create a plan, Log activity, Ask questions)"
@@ -614,21 +603,18 @@ export default function AIAssistantModal({ isOpen, onClose }: AIAssistantModalPr
                 }
               }}
             />
-            <div className="flex justify-between items-center">
-              <span className="text-xs" style={{ color: theme.colors.textMuted }}>
+            <div className="flex justify-between items-center pb-3">
+              <span className="text-xs text-white/60">
                 Press Enter to send • Shift+Enter for new line
               </span>
-              <div style={{ width: '120px', height: '32px' }}>
-                <CustomButton
-                  text={isProcessing ? 'THINKING...' : 'SEND'}
-                  onClick={handleSendMessage}
-                  fontSize="11px"
-                  width="120px"
-                  mirror={true}
-                  color={currentTheme === 'light' ? '#000000' : undefined}
-                  lightMode={currentTheme === 'light'}
-                />
-              </div>
+              <button
+                onClick={handleSendMessage}
+                disabled={isProcessing}
+                className="px-6 py-2 rounded-lg font-semibold text-sm transition-all hover:bg-white/90 disabled:opacity-50 bg-white text-black"
+                style={{ border: '0.75px solid #000000' }}
+              >
+                {isProcessing ? 'THINKING...' : 'SEND'}
+              </button>
             </div>
           </div>
         </div>
