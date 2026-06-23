@@ -447,9 +447,9 @@ function MonitorContent() {
                   className="bg-transparent text-sm sm:text-base font-light border-none outline-none text-center w-full truncate cursor-pointer"
                   style={{ color: theme.colors.text }}
                 >
-                  {plans.length === 0
-                    ? <option value="">No Plans</option>
-                    : plans.map(p => <option key={p.id} value={p.id}>{p.title}</option>)
+                  {plans.filter(p => p.status === 'IN_PROGRESS').length === 0
+                    ? <option value="">No Active Plans</option>
+                    : plans.filter(p => p.status === 'IN_PROGRESS').map(p => <option key={p.id} value={p.id}>{p.title}</option>)
                   }
                 </select>
               )}

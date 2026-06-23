@@ -13,6 +13,7 @@ interface Plan {
   tables: any[];
   createdAt: string;
   updatedAt: string;
+  status: string;
 }
 
 const Skeleton = ({ className = '' }: { className?: string }) => (
@@ -69,6 +70,25 @@ export default function MyPlansPage() {
   const handlePlanClick = (plan: Plan) => {
     // Navigate to plan-detail with plan id
     router.push(`/plan-detail/${plan.id}`);
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'IN_PROGRESS':
+        return 'bg-green-500/20 text-green-400 border-green-500/50';
+      case 'COMPLETED':
+        return 'bg-blue-500/20 text-blue-400 border-blue-500/50';
+      case 'PAUSED':
+        return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50';
+      case 'NOT_STARTED':
+        return 'bg-gray-500/20 text-gray-400 border-gray-500/50';
+      default:
+        return 'bg-gray-500/20 text-gray-400 border-gray-500/50';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    return status.replace(/_/g, ' ');
   };
 
   const handleDeleteClick = (e: React.MouseEvent, plan: Plan) => {
@@ -179,9 +199,14 @@ export default function MyPlansPage() {
                   >
                     <div className="flex justify-between h-full">
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-white font-semibold truncate">
-                          {plan.title}
-                        </h3>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-white font-semibold truncate">
+                            {plan.title}
+                          </h3>
+                          <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-full border whitespace-nowrap ${getStatusColor(plan.status)}`}>
+                            {getStatusLabel(plan.status)}
+                          </span>
+                        </div>
                         <p className="text-gray-400 text-sm mt-1 line-clamp-2">
                           {plan.prompt}
                         </p>
