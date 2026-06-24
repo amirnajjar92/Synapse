@@ -9,6 +9,7 @@ export interface MuscleHighlight {
   strokeColor?: string;
   strokeWidth?: number;
   strokeOpacity?: number;
+  blurInactive?: number; // blur amount for non-highlighted muscles (in pixels)
 }
 
 interface MenAnatomyProps {
@@ -57,25 +58,50 @@ export default function MenAnatomy({
       fillOpacity = 0.6,
       strokeColor = '#ff0000',
       strokeWidth = 2,
-      strokeOpacity = 0.9
+      strokeOpacity = 0.9,
+      blurInactive = 0
     } = highlights;
 
-    // Reset all muscle groups first
-    const allGroups = svgElement.querySelectorAll('g[class]');
-    allGroups.forEach((group) => {
-      const gElement = group as SVGGElement;
-      const paths = gElement.querySelectorAll('path');
-      paths.forEach((path) => {
-        path.style.fill = '';
-        path.style.fillOpacity = '';
-        path.style.stroke = '';
-        path.style.strokeWidth = '';
-        path.style.strokeOpacity = '';
-      });
+    // Create or update blur filter if needed
+    let defs = svgElement.querySelector('defs');
+    if (!defs) {
+      defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+      svgElement.insertBefore(defs, svgElement.firstChild);
+    }
+
+    let filter = defs.querySelector('#inactive-blur');
+    if (blurInactive > 0) {
+      if (!filter) {
+        filter = document.createElementNS('http://www.w3.org/2000/svg', 'filter');
+        filter.setAttribute('id', 'inactive-blur');
+        const feGaussianBlur = document.createElementNS('http://www.w3.org/2000/svg', 'feGaussianBlur');
+        feGaussianBlur.setAttribute('in', 'SourceGraphic');
+        feGaussianBlur.setAttribute('stdDeviation', blurInactive.toString());
+        filter.appendChild(feGaussianBlur);
+        defs.appendChild(filter);
+      } else {
+        const feGaussianBlur = filter.querySelector('feGaussianBlur');
+        if (feGaussianBlur) {
+          feGaussianBlur.setAttribute('stdDeviation', blurInactive.toString());
+        }
+      }
+    }
+
+    // First, apply blur to ALL paths in the SVG (default state)
+    const allPaths = svgElement.querySelectorAll('path');
+    allPaths.forEach((path) => {
+      path.style.fill = '';
+      path.style.fillOpacity = '';
+      path.style.stroke = '';
+      path.style.strokeWidth = '';
+      path.style.strokeOpacity = '';
+      // Apply blur to everything by default
+      path.style.filter = blurInactive > 0 ? 'url(#inactive-blur)' : '';
     });
 
-    // Apply highlights to selected muscles
+    // Now, remove blur and apply highlights to selected muscles only
     if (muscles.length > 0) {
+      const allGroups = svgElement.querySelectorAll('g[class]');
       allGroups.forEach((group) => {
         const gElement = group as SVGGElement;
         const classList = gElement.getAttribute('class') || '';
@@ -86,6 +112,7 @@ export default function MenAnatomy({
         );
 
         if (shouldHighlight) {
+          // Highlighted muscles - clear and sharp, no blur
           const paths = gElement.querySelectorAll('path');
           paths.forEach((path) => {
             path.style.fill = fillColor;
@@ -93,6 +120,7 @@ export default function MenAnatomy({
             path.style.stroke = strokeColor;
             path.style.strokeWidth = `${strokeWidth}px`;
             path.style.strokeOpacity = strokeOpacity.toString();
+            path.style.filter = 'none'; // Remove blur from active muscles
           });
         }
       });
