@@ -22,6 +22,18 @@ export default function MuscleMapPage() {
   return (
     <div className="h-screen w-screen bg-black flex items-center justify-center relative overflow-hidden">
       
+      {/* Global style for SVG scaling */}
+      <style jsx global>{`
+        [class*="anatomy"] svg {
+          max-width: 100%;
+          max-height: 100%;
+          width: auto;
+          height: 100%;
+          display: block;
+          margin: auto;
+        }
+      `}</style>
+      
       {/* Toggle Switch - Responsive positioning */}
       <div className="absolute top-3 right-3 sm:top-4 sm:right-4 md:top-6 md:right-6 lg:top-8 lg:right-8 z-10">
         <div className="flex items-center gap-2 sm:gap-3">
@@ -45,38 +57,46 @@ export default function MuscleMapPage() {
         </div>
       </div>
 
-      {/* Anatomy Component - Fully responsive */}
-      <div className="flex items-center justify-center w-full h-full p-2 sm:p-4 md:p-6 lg:p-8 xl:p-12">
-        <div className="relative w-full h-full max-w-[95vw] max-h-[90vh] sm:max-w-[90vw] sm:max-h-[85vh] flex items-center justify-center">
-          <div 
-            className="w-full h-full flex items-center justify-center transition-transform duration-300"
-            style={{ 
-              transform: gender === 'female' 
-                ? 'scale(0.65)' // Smaller for women's anatomy on all devices
-                : 'scale(0.75)' // Adjusted for men's anatomy on all devices
-            }}
-          >
+      {/* Anatomy Component - Fully responsive and contained */}
+      <div className="flex items-center justify-center w-full h-full">
+        <div 
+          className="flex items-center justify-center"
+          style={{ 
+            width: '100%', 
+            height: '100%',
+            padding: '3rem 1rem 1rem 1rem', // Top padding for toggle, minimal sides and bottom
+            boxSizing: 'border-box'
+          }}
+        >
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            width: '100%',
+            height: '100%',
+            maxWidth: '600px', // Max width for large screens
+            maxHeight: '100%',
+            transform: gender === 'female' ? 'scale(0.85)' : 'scale(1)'
+          }}>
             {gender === 'male' ? (
               <MenAnatomy
                 view="front"
                 highlights={highlights}
-                width="auto"
+                width="100%"
                 height="100%"
                 defaultStrokeColor="#000000ff"
                 defaultStrokeWidth={0.25}
                 inactiveFillColor="#1a1a1a"
-                className="max-h-full max-w-full object-contain"
               />
             ) : (
               <WomenAnatomy
                 view="front"
                 highlights={highlights}
-                width="auto"
+                width="100%"
                 height="100%"
                 defaultStrokeColor="#000000ff"
                 defaultStrokeWidth={0.25}
                 inactiveFillColor="#1a1a1a"
-                className="max-h-full max-w-full object-contain"
               />
             )}
           </div>

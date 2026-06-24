@@ -251,7 +251,13 @@ export default function WomenAnatomy({
     <div 
       ref={containerRef}
       className={className}
-      style={{ width, height }}
+      style={{ 
+        width, 
+        height,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}
       dangerouslySetInnerHTML={{ __html: svgContent }}
     />
   );
