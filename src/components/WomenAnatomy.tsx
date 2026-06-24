@@ -149,7 +149,7 @@ export default function WomenAnatomy({
             return;
           }
         }
-        currentElement = currentElement.parentElement as SVGElement;
+        currentElement = currentElement.parentElement as SVGElement | null;
       }
     };
 

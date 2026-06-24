@@ -145,18 +145,18 @@ export function getMuscleDisplayName(muscleKey: string): string {
 
 // Helper function to check if muscle is in front view
 export function isFrontMuscle(muscle: string): boolean {
-  return FRONT_MUSCLE_LIST.includes(muscle as any);
+  return (FRONT_MUSCLE_LIST as readonly string[]).includes(muscle);
 }
 
 // Helper function to check if muscle is in back view
 export function isBackMuscle(muscle: string): boolean {
-  return BACK_MUSCLE_LIST.includes(muscle as any);
+  return (BACK_MUSCLE_LIST as readonly string[]).includes(muscle);
 }
 
 // Helper function to get muscle category
 export function getMuscleCategory(muscle: string): string | null {
   for (const [category, muscles] of Object.entries(MUSCLE_CATEGORIES)) {
-    if (muscles.includes(muscle as any)) {
+    if ((muscles as readonly string[]).includes(muscle)) {
       return category;
     }
   }
