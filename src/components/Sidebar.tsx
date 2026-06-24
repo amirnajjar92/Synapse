@@ -272,6 +272,19 @@ export default function Sidebar() {
               <span className="font-medium">Monitor</span>
             </button>
 
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                router.push('/musclemap');
+              }}
+              className="group flex items-center gap-3 px-4 py-3 rounded-lg text-white/80 hover:text-black hover:bg-white transition-all duration-200"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <span className="font-medium">Muscle Map</span>
+            </button>
+
             {/* Admin Panel - Only show for admins */}
             {isAdmin && (
               <button

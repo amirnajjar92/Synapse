@@ -578,6 +578,8 @@ function MonitorContent() {
                         showConnectingLine
                         connectingLineColor={theme.colors.text}
                         connectingLineWidth={1}
+                        showCurrentDayArrow
+                        currentDayArrowColor="#E63416"
                       />
                     </div>
                   </div>
