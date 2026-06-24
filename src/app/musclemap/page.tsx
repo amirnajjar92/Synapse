@@ -15,66 +15,71 @@ export default function MuscleMapPage() {
     fillOpacity: 1,
     strokeColor: '#540404ff',
     strokeWidth: 1,
-    blurInactive: 0.5,
+    blurInactive: 1,
     
   };
 
   return (
-    <div className="h-screen w-screen bg-black flex items-center justify-center p-4 sm:p-6 md:p-8 lg:p-12 relative overflow-hidden">
+    <div className="h-screen w-screen bg-black flex items-center justify-center relative overflow-hidden">
       
-      {/* Toggle Switch - Top Right */}
-      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 md:top-8 md:right-8 z-10">
-        <div className="flex items-center gap-3">
-          <span className={`text-sm font-medium ${gender === 'male' ? 'text-white' : 'text-zinc-600'}`}>
+      {/* Toggle Switch - Responsive positioning */}
+      <div className="absolute top-3 right-3 sm:top-4 sm:right-4 md:top-6 md:right-6 lg:top-8 lg:right-8 z-10">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <span className={`text-xs sm:text-sm font-medium ${gender === 'male' ? 'text-white' : 'text-zinc-600'}`}>
             Men
           </span>
           <button
             onClick={() => setGender(gender === 'male' ? 'female' : 'male')}
-            className="relative w-14 h-7 bg-zinc-800 rounded-full transition-colors hover:bg-zinc-700"
+            className="relative w-12 h-6 sm:w-14 sm:h-7 bg-zinc-800 rounded-full transition-colors hover:bg-zinc-700 active:bg-zinc-600"
+            aria-label={`Switch to ${gender === 'male' ? 'female' : 'male'} anatomy`}
           >
             <div
-              className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform ${
-                gender === 'female' ? 'translate-x-7' : 'translate-x-0'
+              className={`absolute top-1 left-1 w-4 h-4 sm:w-5 sm:h-5 bg-white rounded-full transition-transform ${
+                gender === 'female' ? 'translate-x-6 sm:translate-x-7' : 'translate-x-0'
               }`}
             />
           </button>
-          <span className={`text-sm font-medium ${gender === 'female' ? 'text-white' : 'text-zinc-600'}`}>
+          <span className={`text-xs sm:text-sm font-medium ${gender === 'female' ? 'text-white' : 'text-zinc-600'}`}>
             Women
           </span>
         </div>
       </div>
 
-      {/* Anatomy Component */}
-      <div className="flex items-center justify-center w-full h-full">
-        <div style={{ 
-          maxWidth: '90%', 
-          maxHeight: '85%', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          transform: gender === 'female' ? 'scale(0.75)' : 'scale(0.85)'
-        }}>
-          {gender === 'male' ? (
-            <MenAnatomy
-              view="front"
-              highlights={highlights}
-              width="auto"
-              height="100%"
-              defaultStrokeColor="#000000ff"
-              defaultStrokeWidth={0.25}
-              inactiveFillColor="#1a1a1a"
-            />
-          ) : (
-            <WomenAnatomy
-              view="front"
-              highlights={highlights}
-              width="auto"
-              height="100%"
-              defaultStrokeColor="#000000ff"
-              defaultStrokeWidth={0.25}
-              inactiveFillColor="#1a1a1a"
-            />
-          )}
+      {/* Anatomy Component - Fully responsive */}
+      <div className="flex items-center justify-center w-full h-full p-2 sm:p-4 md:p-6 lg:p-8 xl:p-12">
+        <div className="relative w-full h-full max-w-[95vw] max-h-[90vh] sm:max-w-[90vw] sm:max-h-[85vh] flex items-center justify-center">
+          <div 
+            className="w-full h-full flex items-center justify-center transition-transform duration-300"
+            style={{ 
+              transform: gender === 'female' 
+                ? 'scale(0.65)' // Smaller for women's anatomy on all devices
+                : 'scale(0.75)' // Adjusted for men's anatomy on all devices
+            }}
+          >
+            {gender === 'male' ? (
+              <MenAnatomy
+                view="front"
+                highlights={highlights}
+                width="auto"
+                height="100%"
+                defaultStrokeColor="#000000ff"
+                defaultStrokeWidth={0.25}
+                inactiveFillColor="#1a1a1a"
+                className="max-h-full max-w-full object-contain"
+              />
+            ) : (
+              <WomenAnatomy
+                view="front"
+                highlights={highlights}
+                width="auto"
+                height="100%"
+                defaultStrokeColor="#000000ff"
+                defaultStrokeWidth={0.25}
+                inactiveFillColor="#1a1a1a"
+                className="max-h-full max-w-full object-contain"
+              />
+            )}
+          </div>
         </div>
       </div>
 
