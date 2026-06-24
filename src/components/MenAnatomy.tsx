@@ -21,6 +21,7 @@ interface MenAnatomyProps {
   height?: number | string;
   defaultStrokeColor?: string;
   defaultStrokeWidth?: number;
+  inactiveFillColor?: string;
 }
 
 export default function MenAnatomy({
@@ -31,7 +32,8 @@ export default function MenAnatomy({
   width = '100%',
   height = 'auto',
   defaultStrokeColor = '#000000',
-  defaultStrokeWidth = 1
+  defaultStrokeWidth = 1,
+  inactiveFillColor = 'transparent'
 }: MenAnatomyProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [svgContent, setSvgContent] = useState<string>('');
@@ -135,9 +137,9 @@ export default function MenAnatomy({
     }
 
     // Add CSS animation for pulse effect
-    let style = svgElement.querySelector('style');
+    let style = svgElement.querySelector('style') as SVGStyleElement | null;
     if (!style) {
-      style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+      style = document.createElementNS('http://www.w3.org/2000/svg', 'style') as SVGStyleElement;
       style.textContent = `
         @keyframes muscle-pulse {
           0%, 100% {
@@ -172,7 +174,7 @@ export default function MenAnatomy({
     // First, apply blur to ALL paths in the SVG (default state)
     const allPaths = svgElement.querySelectorAll('path');
     allPaths.forEach((path) => {
-      path.style.fill = '';
+      path.style.fill = inactiveFillColor;
       path.style.fillOpacity = '';
       path.style.stroke = defaultStrokeColor;
       path.style.strokeWidth = `${defaultStrokeWidth}px`;
@@ -210,7 +212,7 @@ export default function MenAnatomy({
         }
       });
     }
-  }, [svgContent, highlights, defaultStrokeColor, defaultStrokeWidth]);
+  }, [svgContent, highlights, defaultStrokeColor, defaultStrokeWidth, inactiveFillColor]);
 
   // Handle clicks
   useEffect(() => {

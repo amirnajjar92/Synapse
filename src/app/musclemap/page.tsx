@@ -62,6 +62,7 @@ export default function MuscleMapPage() {
               height="100%"
               defaultStrokeColor="#000000ff"
               defaultStrokeWidth={0.25}
+              inactiveFillColor="#1a1a1a"
             />
           ) : (
             <WomenAnatomy
@@ -71,6 +72,7 @@ export default function MuscleMapPage() {
               height="100%"
               defaultStrokeColor="#000000ff"
               defaultStrokeWidth={0.25}
+              inactiveFillColor="#1a1a1a"
             />
           )}
         </div>
