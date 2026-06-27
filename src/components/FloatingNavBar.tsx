@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import AIIcon from './AIIcon';
 import AIAssistantSheet from './AIAssistantSheet';
-import { getTheme, loadTheme } from '@/lib/theme';
 
 interface FloatingNavBarProps {
   onAIClick?: () => void;
@@ -19,19 +18,14 @@ interface Plan {
 export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [activePlan, setActivePlan] = useState<Plan | null>(null);
-  const [currentTheme, setCurrentTheme] = useState('dark');
   const [showAIAssistant, setShowAIAssistant] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
-  const theme = getTheme(currentTheme);
-
-  // Fetch active plan on mount
   useEffect(() => {
     const fetchActivePlan = async () => {
       const userStr = localStorage.getItem('synapse_user');
       if (!userStr) return;
-      
       const user = JSON.parse(userStr);
       try {
         const response = await fetch('/api/users/me/plans', {
@@ -39,7 +33,6 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: user.email })
         });
-
         if (response.ok) {
           const data = await response.json();
           const plans: Plan[] = data.plans || [];
@@ -50,24 +43,17 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
         console.error('Error fetching plans:', error);
       }
     };
-
     fetchActivePlan();
-  }, []);
-
-  // Listen for theme changes
-  useEffect(() => {
-    setCurrentTheme(loadTheme());
-    const handleThemeChange = (e: CustomEvent) => {
-      setCurrentTheme(e.detail);
-    };
-    window.addEventListener('themeChange', handleThemeChange as EventListener);
-    return () => window.removeEventListener('themeChange', handleThemeChange as EventListener);
   }, []);
 
   const handleNavClick = (path: string) => {
     router.push(path);
     setIsExpanded(false);
   };
+
+  const isActive = (path: string) => pathname === path;
+
+  const iconBase = { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
 
   return (
     <div 
@@ -79,7 +65,6 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
         transform: isExpanded ? 'translateX(-50%)' : 'none',
       }}
     >
-      {/* Floating Nav Bar */}
       <div
         className="relative rounded-full shadow-lg transition-all duration-500 ease-out overflow-hidden ml-auto"
         style={{
@@ -89,7 +74,6 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
           height: '48px',
         }}
       >
-        {/* Main Toggle Button with arrow (positioned on right) */}
         <button
           onClick={() => setIsExpanded(!isExpanded)}
           className="absolute transition-all duration-500 rounded-full overflow-hidden flex items-center justify-center hover:bg-white/20 active:scale-95"
@@ -102,28 +86,18 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
             border: '1px solid #000000',
           }}
         >
-          {/* Arrow icon - points left when collapsed, animates when expanded */}
           <svg
             width="18"
             height="18"
             viewBox="0 0 24 24"
             fill="none"
             className="transition-all duration-500"
-            style={{
-              transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-            }}
+            style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
           >
-            <path
-              d="M15 18l-6-6 6-6"
-              stroke="#000000"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+            <path d="M15 18l-6-6 6-6" stroke="#000000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
 
-        {/* Expanded Navigation Items (right to left: Progress, Water, Plans, Planner, AI) */}
         <div
           className="absolute h-full flex items-center gap-2 sm:gap-2.5 px-2 sm:px-3 transition-all duration-500"
           style={{
@@ -132,126 +106,92 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
             pointerEvents: isExpanded ? 'auto' : 'none',
           }}
         >
-          {/* Events */}
+          {/* Events - Calendar sparkle */}
           <button
             onClick={() => handleNavClick('/events')}
             className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 active:scale-95 flex-shrink-0"
-            style={{
-              background: pathname === '/events' ? '#ffffff' : 'transparent',
-            }}
+            style={{ background: isActive('/events') ? '#ffffff' : 'transparent' }}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="w-5 h-5">
-              <path
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                stroke={pathname === '/events' ? '#000000' : '#ffffff'}
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-              />
-              <circle cx="12" cy="15" r="1.5" fill={pathname === '/events' ? '#000000' : '#ffffff'} />
+            <svg {...iconBase} stroke={isActive('/events') ? '#000000' : '#ffffff'}>
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <path d="M14 14l-1 1 1 1" />
+              <path d="M10 16l1-1-1-1" />
             </svg>
           </button>
 
-          {/* Entertain */}
+          {/* Entertain - Play square */}
           <button
             onClick={() => handleNavClick('/entertain')}
             className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 active:scale-95 flex-shrink-0"
-            style={{
-              background: pathname === '/entertain' ? '#ffffff' : 'transparent',
-            }}
+            style={{ background: isActive('/entertain') ? '#ffffff' : 'transparent' }}
           >
-            <img 
-              src="/vectors/media-icon.svg" 
-              alt="Media"
-              className="w-5 h-5"
-              style={{
-                filter: pathname === '/entertain' ? 'invert(0)' : 'invert(1)',
-              }}
-            />
+            <svg {...iconBase} stroke={isActive('/entertain') ? '#000000' : '#ffffff'}>
+              <rect x="3" y="3" width="18" height="18" rx="3" ry="3" />
+              <polygon points="10,8 16,12 10,16" fill={isActive('/entertain') ? '#000000' : '#ffffff'} />
+            </svg>
           </button>
 
-          {/* Plan Progress (first from right - only show if there's an active plan) */}
+          {/* Plan Progress - Trending up */}
           {activePlan && (
             <button
               onClick={() => handleNavClick(`/plan-progress-tracker?planId=${activePlan.id}`)}
               className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 active:scale-95 flex-shrink-0"
-              style={{
-                background: pathname === '/plan-progress-tracker' ? '#ffffff' : 'transparent',
-              }}
+              style={{ background: isActive('/plan-progress-tracker') ? '#ffffff' : 'transparent' }}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="w-5 h-5">
-                <path
-                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                  stroke={pathname === '/plan-progress-tracker' ? '#000000' : '#ffffff'}
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="none"
-                />
+              <svg {...iconBase} stroke={isActive('/plan-progress-tracker') ? '#000000' : '#ffffff'}>
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                <polyline points="17 6 23 6 23 12" />
               </svg>
             </button>
           )}
 
-          {/* Water Tracker */}
+          {/* Water Tracker - Droplet */}
           <button
             onClick={() => handleNavClick('/water-tracker')}
             className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 active:scale-95 flex-shrink-0"
-            style={{
-              background: pathname === '/water-tracker' ? '#ffffff' : 'transparent',
-            }}
+            style={{ background: isActive('/water-tracker') ? '#ffffff' : 'transparent' }}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="w-5 h-5">
-              <path
-                d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"
-                stroke={pathname === '/water-tracker' ? '#000000' : '#ffffff'}
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-              />
+            <svg {...iconBase} stroke={isActive('/water-tracker') ? '#000000' : '#ffffff'}>
+              <path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z" />
             </svg>
           </button>
 
-          {/* My Plans */}
+          {/* My Plans - Clipboard list */}
           <button
             onClick={() => handleNavClick('/my-plans')}
             className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 active:scale-95 flex-shrink-0"
-            style={{
-              background: pathname === '/my-plans' ? '#ffffff' : 'transparent',
-            }}
+            style={{ background: isActive('/my-plans') ? '#ffffff' : 'transparent' }}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="w-5 h-5">
-              <path
-                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                stroke={pathname === '/my-plans' ? '#000000' : '#ffffff'}
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-              />
-              <path d="M9 12h6M9 16h6" stroke={pathname === '/my-plans' ? '#000000' : '#ffffff'} strokeWidth="2" strokeLinecap="round" />
+            <svg {...iconBase} stroke={isActive('/my-plans') ? '#000000' : '#ffffff'}>
+              <rect x="3" y="3" width="18" height="18" rx="3" ry="3" />
+              <line x1="9" y1="9" x2="15" y2="9" />
+              <line x1="9" y1="13" x2="15" y2="13" />
+              <line x1="9" y1="17" x2="13" y2="17" />
+              <path d="M9 3v3h6V3" />
             </svg>
           </button>
 
-          {/* Planner */}
+          {/* Planner - Calendar days */}
           <button
             onClick={() => handleNavClick('/planner')}
             className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 active:scale-95 flex-shrink-0"
-            style={{
-              background: pathname === '/planner' ? '#ffffff' : 'transparent',
-            }}
+            style={{ background: isActive('/planner') ? '#ffffff' : 'transparent' }}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="w-5 h-5">
-              <rect x="3" y="4" width="18" height="18" rx="2" stroke={pathname === '/planner' ? '#000000' : '#ffffff'} strokeWidth="2" fill="none" />
-              <path d="M3 10h18M8 2v4M16 2v4" stroke={pathname === '/planner' ? '#000000' : '#ffffff'} strokeWidth="2" strokeLinecap="round" />
-              <circle cx="8" cy="14" r="1" fill={pathname === '/planner' ? '#000000' : '#ffffff'} />
-              <circle cx="12" cy="14" r="1" fill={pathname === '/planner' ? '#000000' : '#ffffff'} />
-              <circle cx="16" cy="14" r="1" fill={pathname === '/planner' ? '#000000' : '#ffffff'} />
+            <svg {...iconBase} stroke={isActive('/planner') ? '#000000' : '#ffffff'}>
+              <rect x="3" y="4" width="18" height="18" rx="3" ry="3" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <circle cx="8" cy="14" r="1" fill={isActive('/planner') ? '#000000' : '#ffffff'} />
+              <circle cx="12" cy="14" r="1" fill={isActive('/planner') ? '#000000' : '#ffffff'} />
+              <circle cx="16" cy="14" r="1" fill={isActive('/planner') ? '#000000' : '#ffffff'} />
             </svg>
           </button>
 
-          {/* AI Icon (last from right) */}
+          {/* AI Icon */}
           <button
             onClick={() => {
               if (onAIClick) {
@@ -262,9 +202,7 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
               setIsExpanded(false);
             }}
             className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 active:scale-95 flex-shrink-0"
-            style={{
-              background: 'transparent',
-            }}
+            style={{ background: 'transparent' }}
           >
             <div className="w-5 h-5 sm:w-6 sm:h-6">
               <AIIcon />
@@ -273,7 +211,6 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
         </div>
       </div>
 
-      {/* AI Assistant Sheet */}
       <AIAssistantSheet
         isOpen={showAIAssistant}
         onClose={() => setShowAIAssistant(false)}

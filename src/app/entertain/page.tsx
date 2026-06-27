@@ -6,7 +6,6 @@ import BurgerMenuButton from '@/components/BurgerMenuButton';
 import FloatingNavBar from '@/components/FloatingNavBar';
 import WebViewModal from '@/components/WebViewModal';
 import VideoPlayerModal from '@/components/VideoPlayerModal';
-import { getTheme, loadTheme } from '@/lib/theme';
 import type { GoogleSearchResult, YouTubeVideo } from '@/types/search';
 
 type Category = 'news' | 'events' | 'videos' | 'playlists';
@@ -26,8 +25,13 @@ interface GridCell {
   color: string;
 }
 
-const Skeleton = ({ className = '' }: { className?: string }) => (
-  <div className={`animate-pulse bg-gradient-to-r from-gray-700 via-gray-600 to-gray-700 bg-[length:200%_100%] ${className}`} />
+const Spinner = ({ size = 32 }: { size?: number }) => (
+  <div className="flex items-center justify-center">
+    <div
+      className="rounded-full border border-white/20 animate-spin"
+      style={{ width: size, height: size, borderTopColor: 'white', borderWidth: '2px' }}
+    />
+  </div>
 );
 
 export default function EntertainPage() {
@@ -53,47 +57,21 @@ export default function EntertainPage() {
   
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
-  const [currentTheme, setCurrentTheme] = useState('dark');
-  const [borderRadius, setBorderRadius] = useState('40px');
   const [selectedLink, setSelectedLink] = useState<{ url: string; title: string } | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<{ url: string; title: string } | null>(null);
 
-  const theme = getTheme(currentTheme);
+  const theme = { colors: { background: '#151515', card: '#000', text: '#fff', textSecondary: '#9ca3af', textMuted: '#6b7280', border: '#374151', primary: '#fff' } };
 
   // Bootstrap
   useEffect(() => {
     setMounted(true);
-    setCurrentTheme(loadTheme());
     const userStr = localStorage.getItem('synapse_user');
     if (!userStr) {
       router.push('/');
       return;
     }
     setUser(JSON.parse(userStr));
-
-    const handleThemeChange = (e: CustomEvent) => {
-      setCurrentTheme(e.detail);
-    };
-    window.addEventListener('themeChange', handleThemeChange as EventListener);
-    return () => window.removeEventListener('themeChange', handleThemeChange as EventListener);
   }, [router]);
-
-  // Adaptive border radius
-  useEffect(() => {
-    const updateBorderRadius = () => {
-      const vh = window.innerHeight;
-      const vw = window.innerWidth;
-      const minDimension = Math.min(vh, vw);
-      
-      if (minDimension < 400) setBorderRadius('20px');
-      else if (minDimension < 600) setBorderRadius('30px');
-      else setBorderRadius('40px');
-    };
-
-    updateBorderRadius();
-    window.addEventListener('resize', updateBorderRadius);
-    return () => window.removeEventListener('resize', updateBorderRadius);
-  }, []);
 
   // Calculate perfect grid layout
   const calculateGridLayout = useCallback((
@@ -103,7 +81,7 @@ export default function EntertainPage() {
     playlists: YouTubeVideo[]
   ): GridCell[] => {
     const cells: GridCell[] = [];
-    const COLS = 3;
+    const COLS = 2;
     const grid: boolean[][] = Array(100).fill(null).map(() => Array(COLS).fill(false));
     
     // Helper to find next available position
@@ -137,29 +115,25 @@ export default function EntertainPage() {
     
     // Define content distribution pattern (Instagram Explore style)
     const pattern = [
-      // Row 1
-      { type: 'videos' as const, colSpan: 2, rowSpan: 2 }, // Large video
-      { type: 'videos' as const, colSpan: 1, rowSpan: 1 }, // Small video
-      // Row 2
-      { type: 'news' as const, colSpan: 1, rowSpan: 1 }, // News
-      // Row 3
-      { type: 'videos' as const, colSpan: 1, rowSpan: 1 }, // Video
-      { type: 'playlists' as const, colSpan: 1, rowSpan: 1 }, // Playlist
-      { type: 'events' as const, colSpan: 1, rowSpan: 1 }, // Event
-      // Row 4
-      { type: 'playlists' as const, colSpan: 2, rowSpan: 1 }, // Wide playlist
-      { type: 'videos' as const, colSpan: 1, rowSpan: 2 }, // Tall video
-      // Row 5
-      { type: 'videos' as const, colSpan: 1, rowSpan: 1 }, // Video
-      { type: 'news' as const, colSpan: 1, rowSpan: 1 }, // News
-      // Row 6
-      { type: 'playlists' as const, colSpan: 1, rowSpan: 1 }, // Playlist
-      { type: 'videos' as const, colSpan: 1, rowSpan: 1 }, // Video
-      { type: 'playlists' as const, colSpan: 1, rowSpan: 1 }, // Playlist
-      // Continue with regular pattern
+      // Pinterest-style varied layout (2 columns)
+      { type: 'videos' as const, colSpan: 1, rowSpan: 2 },
+      { type: 'news' as const, colSpan: 1, rowSpan: 1 },
+      { type: 'playlists' as const, colSpan: 1, rowSpan: 1 },
       { type: 'videos' as const, colSpan: 1, rowSpan: 1 },
+      { type: 'videos' as const, colSpan: 2, rowSpan: 1 },
+      { type: 'events' as const, colSpan: 1, rowSpan: 1 },
+      { type: 'playlists' as const, colSpan: 1, rowSpan: 1 },
+      { type: 'videos' as const, colSpan: 1, rowSpan: 1 },
+      { type: 'news' as const, colSpan: 1, rowSpan: 2 },
+      { type: 'playlists' as const, colSpan: 1, rowSpan: 1 },
+      { type: 'videos' as const, colSpan: 2, rowSpan: 1 },
       { type: 'events' as const, colSpan: 1, rowSpan: 1 },
       { type: 'videos' as const, colSpan: 1, rowSpan: 1 },
+      { type: 'playlists' as const, colSpan: 1, rowSpan: 2 },
+      { type: 'news' as const, colSpan: 1, rowSpan: 1 },
+      { type: 'videos' as const, colSpan: 1, rowSpan: 1 },
+      { type: 'events' as const, colSpan: 1, rowSpan: 1 },
+      { type: 'playlists' as const, colSpan: 1, rowSpan: 1 },
     ];
     
     // Create content pools
@@ -171,10 +145,10 @@ export default function EntertainPage() {
     };
     
     const colors = {
-      news: 'rgba(239, 68, 68, 0.1)',
-      events: 'rgba(59, 130, 246, 0.1)',
-      videos: 'rgba(168, 85, 247, 0.1)',
-      playlists: 'rgba(236, 72, 153, 0.1)',
+      news: 'linear-gradient(135deg, rgba(239,68,68,0.25), rgba(239,68,68,0.08))',
+      events: 'linear-gradient(135deg, rgba(59,130,246,0.25), rgba(59,130,246,0.08))',
+      videos: 'linear-gradient(135deg, rgba(168,85,247,0.25), rgba(168,85,247,0.08))',
+      playlists: 'linear-gradient(135deg, rgba(236,72,153,0.25), rgba(236,72,153,0.08))',
     };
     
     // Fill grid according to pattern
@@ -310,10 +284,10 @@ export default function EntertainPage() {
       
       // Generate AI search query based on category
       const aiPrompts = {
-        news: `Based on this fitness plan: "${activePlan.prompt}", generate a concise Google search query (5-7 words) to find latest fitness news, health articles, and sport news. Only return the search query.`,
-        events: `Based on this fitness plan: "${activePlan.prompt}", generate a concise Google search query (5-7 words) to find cardio events, CrossFit competitions, running races, and Bodonado Run Club events. Only return the search query.`,
-        videos: `Based on this fitness plan: "${activePlan.prompt}", generate a concise YouTube search query (5-7 words) to find workout videos, training tutorials, and fitness guides. Only return the search query.`,
-        playlists: `Based on this fitness plan: "${activePlan.prompt}", generate a concise YouTube search query (5-7 words) to find workout playlists, fitness music, and training playlists. Only return the search query.`,
+        news: `Based on this fitness plan: "${activePlan.prompt}", generate a concise Google search query (4-6 words) to find the most popular and trending fitness news, health articles, and sport news. Prioritize well-known sources and recent viral content. Only return the search query.`,
+        events: `Based on this fitness plan: "${activePlan.prompt}", generate a concise Google search query (4-6 words) to find top upcoming fitness events, running races, CrossFit competitions, and marathons. Prioritize major events and popular competitions. Only return the search query.`,
+        videos: `Based on this fitness plan: "${activePlan.prompt}", generate a concise YouTube search query (4-6 words) to find the most viewed and highest quality workout videos, training tutorials, and fitness guides. Prioritize popular creators with millions of views. Only return the search query.`,
+        playlists: `Based on this fitness plan: "${activePlan.prompt}", generate a concise YouTube search query (4-6 words) to find the most popular workout playlists, fitness music mixes, and training compilations. Prioritize high-view-count playlists. Only return the search query.`,
       };
 
       const aiRes = await fetch('/api/ai/analyse', {
@@ -327,6 +301,13 @@ export default function EntertainPage() {
         searchQuery = aiData.answer?.trim() || `${activePlan.title} ${category}`;
       } else {
         searchQuery = `${activePlan.title} ${category}`;
+      }
+
+      // Append quality modifiers based on category
+      if (category === 'news' || category === 'events') {
+        searchQuery += ' popular trending';
+      } else {
+        searchQuery += ' most viewed popular';
       }
 
       // Fetch data based on category
@@ -465,18 +446,16 @@ export default function EntertainPage() {
   if (!mounted) return null;
 
   return (
-    <div className="w-full h-screen flex items-center justify-center p-2 sm:p-4" style={{ backgroundColor: theme.colors.background }}>
+    <div className="w-full h-screen bg-[#151515] flex items-center justify-center p-2 sm:p-4">
       <div
-        className="overflow-hidden shadow-2xl relative flex-shrink-0"
+        className="bg-black rounded-[40px] overflow-hidden shadow-2xl relative flex-shrink-0"
         style={{
           width: `min(95vw, ${baseWidth}px)`,
           aspectRatio: baseWidth / baseHeight,
           maxHeight: '95vh',
-          borderRadius: borderRadius,
-          backgroundColor: theme.colors.card,
         }}
       >
-        <div className="w-full h-full flex flex-col relative">
+        <div className="w-full h-full flex flex-col relative" style={{ backgroundColor: '#0b0b0b4D' }}>
           {/* Header */}
           <div className="flex w-full h-[6%] relative items-center">
             <div className="absolute top-3 left-3 z-20">
@@ -489,21 +468,18 @@ export default function EntertainPage() {
                 className="absolute top-3 left-14 z-20 p-2 rounded-full hover:bg-gray-700/50 transition-colors"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path d="M15 18l-6-6 6-6" stroke={theme.colors.text} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M15 18l-6-6 6-6" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </button>
             )}
             
             <div className="w-full h-full flex items-center justify-center">
               {isLoading ? (
-                <Skeleton className="w-32 h-8" />
+                <Spinner size={24} />
               ) : (
                 <span
-                  className="text-xl sm:text-2xl font-bold tracking-wider"
-                  style={{
-                    color: theme.colors.text,
-                    fontFamily: 'var(--font-hanalei-fill)',
-                  }}
+                  className="text-white font-bold tracking-wider"
+                  style={{ fontFamily: 'var(--font-hanalei-fill)', fontSize: '19px' }}
                 >
                   {selectedCategory ? selectedCategory.toUpperCase() : 'ENTERTAIN'}
                 </span>
@@ -514,9 +490,9 @@ export default function EntertainPage() {
           {/* Content Area */}
           <div className="w-full flex-1 overflow-hidden">
             {!selectedCategory ? (
-              // Instagram Explore Style - Mixed Content Grid with Perfect Layout
-              <div ref={scrollContainerRef} className="w-full h-full overflow-y-auto">
-                <div className="p-2 grid grid-cols-3 gap-0.5" style={{ gridAutoRows: '1fr' }}>
+              // Pinterest-style Masonry Grid
+              <div ref={scrollContainerRef} className="w-full h-full overflow-y-auto scrollbar-thin scroll-fade-edges">
+                <div className="p-2 grid grid-cols-2 gap-1.5" style={{ gridAutoRows: '1fr' }}>
                   {gridCells.map((cell, idx) => {
                     const spanClass = `col-span-${cell.colSpan} row-span-${cell.rowSpan}`;
                     
@@ -529,31 +505,14 @@ export default function EntertainPage() {
                             setSelectedCategory('news');
                             setSelectedLink({ url: newsData.link, title: newsData.title });
                           }}
-                          className={`${spanClass} w-full h-full min-h-[120px] relative overflow-hidden group transition-all hover:opacity-80`}
-                          style={{ backgroundColor: cell.color }}
+                          className={`${spanClass} w-full h-full min-h-[140px] relative overflow-hidden group rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98]`}
+                          style={{ background: cell.color }}
                         >
-                          {/* News Content */}
                           <div className="absolute inset-0 flex flex-col items-center justify-center p-3">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="opacity-50 mb-2">
-                              <path d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" stroke={theme.colors.text} strokeWidth="1.5"/>
-                            </svg>
-                            <h3 
-                              className="text-sm font-semibold text-center line-clamp-2 mb-1"
-                              style={{ 
-                                color: theme.colors.text,
-                                fontFamily: 'var(--font-hanalei-fill)',
-                                fontSize: '0.9rem',
-                              }}
-                            >
+                            <h3 className="text-sm font-semibold text-center line-clamp-2 mb-1 text-white drop-shadow-lg">
                               {newsData.title}
                             </h3>
-                            <p 
-                              className="text-[9px] text-center line-clamp-2"
-                              style={{ 
-                                color: theme.colors.textSecondary,
-                                fontFamily: 'var(--font-hanalei-fill)',
-                              }}
-                            >
+                            <p className="text-[9px] text-center line-clamp-2 text-white/60">
                               {newsData.snippet}
                             </p>
                           </div>
@@ -569,17 +528,20 @@ export default function EntertainPage() {
                           onClick={() => {
                             setSelectedVideo({ url: videoData.url.link, title: videoData.title });
                           }}
-                          className={`${spanClass} w-full h-full min-h-[120px] relative overflow-hidden group transition-all hover:opacity-80`}
+                          className={`${spanClass} w-full h-full min-h-[140px] relative overflow-hidden group rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98]`}
                           style={{
                             backgroundImage: `url(${videoData.thumbnail})`,
                             backgroundSize: 'cover',
                             backgroundPosition: 'center',
                           }}
                         >
-                          {/* Video Play Icon */}
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-all">
-                            <div className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                          <div className="absolute bottom-2 left-2 right-2">
+                            <p className="text-[10px] text-white font-medium line-clamp-1 drop-shadow-lg">{videoData.title}</p>
+                          </div>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
                                 <path d="M5 3l14 9-14 9V3z" fill="#000" />
                               </svg>
                             </div>
@@ -597,31 +559,17 @@ export default function EntertainPage() {
                             setSelectedCategory('events');
                             setSelectedLink({ url: eventData.link, title: eventData.title });
                           }}
-                          className={`${spanClass} w-full h-full min-h-[120px] relative overflow-hidden group transition-all hover:opacity-80`}
-                          style={{ backgroundColor: cell.color }}
+                          className={`${spanClass} w-full h-full min-h-[140px] relative overflow-hidden group rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98]`}
+                          style={{ background: cell.color }}
                         >
-                          {/* Event Content */}
                           <div className="absolute inset-0 flex flex-col items-center justify-center p-3">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="opacity-50 mb-2">
-                              <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke={theme.colors.text} strokeWidth="1.5"/>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="mb-2 opacity-70">
+                              <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="white" strokeWidth="1.5"/>
                             </svg>
-                            <h3 
-                              className="text-sm font-semibold text-center line-clamp-2 mb-1"
-                              style={{ 
-                                color: theme.colors.text,
-                                fontFamily: 'var(--font-hanalei-fill)',
-                                fontSize: '0.9rem',
-                              }}
-                            >
+                            <h3 className="text-sm font-semibold text-center line-clamp-2 mb-1 text-white drop-shadow-lg">
                               {eventData.title}
                             </h3>
-                            <p 
-                              className="text-[9px] text-center line-clamp-2"
-                              style={{ 
-                                color: theme.colors.textSecondary,
-                                fontFamily: 'var(--font-hanalei-fill)',
-                              }}
-                            >
+                            <p className="text-[9px] text-center line-clamp-2 text-white/60">
                               {eventData.snippet}
                             </p>
                           </div>
@@ -637,18 +585,26 @@ export default function EntertainPage() {
                           onClick={() => {
                             setSelectedVideo({ url: playlistData.url.link, title: playlistData.title });
                           }}
-                          className={`${spanClass} w-full h-full min-h-[120px] relative overflow-hidden group transition-all hover:opacity-80`}
+                          className={`${spanClass} w-full h-full min-h-[140px] relative overflow-hidden group rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98]`}
                           style={{
                             backgroundImage: `url(${playlistData.thumbnail})`,
                             backgroundSize: 'cover',
                             backgroundPosition: 'center',
                           }}
                         >
-                          {/* Playlist Icon */}
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/20 transition-all">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                          <div className="absolute bottom-2 left-2 right-2 flex items-center gap-1">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
                               <path d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2z" stroke="white" strokeWidth="2" fill="white" fillOpacity="0.3"/>
                             </svg>
+                            <p className="text-[10px] text-white font-medium line-clamp-1 drop-shadow-lg">{playlistData.title}</p>
+                          </div>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                                <path d="M5 3l14 9-14 9V3z" fill="white" />
+                              </svg>
+                            </div>
                           </div>
                         </button>
                       );
@@ -660,15 +616,15 @@ export default function EntertainPage() {
 
                 {/* Infinite Scroll Loading Indicator */}
                 {isLoadingMore && (
-                  <div className="flex items-center justify-center p-4">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2" style={{ borderColor: theme.colors.primary }}></div>
+                    <div className="flex items-center justify-center p-4">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white/20"></div>
                   </div>
                 )}
 
                 {/* Initial Loading State */}
                 {isSearching && gridCells.length === 0 && (
-                  <div className="flex items-center justify-center p-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: theme.colors.primary }}></div>
+                    <div className="flex items-center justify-center p-8">
+                      <Spinner size={28} />
                   </div>
                 )}
 
@@ -685,7 +641,7 @@ export default function EntertainPage() {
                 {isSearching ? (
                   <div className="p-4 grid grid-cols-1 gap-3">
                     {[1, 2, 3, 4].map((i) => (
-                      <Skeleton key={i} className="w-full h-24 rounded-lg" />
+                      <div key={i} className="w-full h-24 rounded-lg bg-gray-800/50 animate-pulse" />
                     ))}
                   </div>
                 ) : searchError ? (

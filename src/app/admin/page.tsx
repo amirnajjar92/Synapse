@@ -30,6 +30,15 @@ const Skeleton = ({ className = '' }: { className?: string }) => (
   <div className={`animate-pulse bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 bg-[length:200%_100%] opacity-50 ${className}`} />
 );
 
+const Spinner = ({ size = 24 }: { size?: number }) => (
+  <div className="flex items-center justify-center">
+    <div
+      className="rounded-full border border-white/10 animate-spin"
+      style={{ width: size, height: size, borderTopColor: 'white', borderWidth: '2px' }}
+    />
+  </div>
+);
+
 export default function AdminPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
@@ -38,7 +47,7 @@ export default function AdminPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [userPrompts, setUserPrompts] = useState<UserPrompt[]>([]);
   const [loadingPrompts, setLoadingPrompts] = useState(false);
-  const [changingRole, setChangingRole] = useState(false);
+  const [changingRole, setChangingRole] = useState<string | null>(null);
 
   useEffect(() => {
     checkAuthorization();
@@ -54,7 +63,6 @@ export default function AdminPage() {
         return;
       }
 
-      // Fetch users (this will also check if current user is admin)
       const url = new URL('/api/admin/users', window.location.origin);
       url.searchParams.set('email', user.email);
 
@@ -98,7 +106,6 @@ export default function AdminPage() {
       }
 
       const data = await response.json();
-      console.log('[Admin] Received prompts:', data.prompts?.length, 'prompts for userId:', userId);
       setUserPrompts(data.prompts);
     } catch (error) {
       console.error('Error fetching prompts:', error);
@@ -108,13 +115,12 @@ export default function AdminPage() {
   };
 
   const handleUserSelect = (user: User) => {
-    console.log('[Admin] Selected user:', user.email, 'userId:', user.id);
     setSelectedUser(user);
     fetchUserPrompts(user.id);
   };
 
   const handleRoleChange = async (userId: string, newRole: 'USER' | 'ADMIN') => {
-    setChangingRole(true);
+    setChangingRole(userId);
     try {
       const userStr = localStorage.getItem('synapse_user');
       const user = userStr ? JSON.parse(userStr) : null;
@@ -134,23 +140,21 @@ export default function AdminPage() {
         throw new Error('Failed to update role');
       }
 
-      // Update local state
       setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
       if (selectedUser?.id === userId) {
         setSelectedUser({ ...selectedUser, role: newRole });
       }
     } catch (error) {
       console.error('Error updating role:', error);
-      alert('Failed to update user role');
     } finally {
-      setChangingRole(false);
+      setChangingRole(null);
     }
   };
 
   if (isLoading) {
     return (
-      <div className="w-full h-screen bg-[#151515] flex items-center justify-center">
-        <Skeleton className="w-40 h-10 rounded" />
+      <div className="w-full h-screen bg-[#0b0b0b] flex items-center justify-center">
+        <Spinner size={32} />
       </div>
     );
   }
@@ -161,56 +165,59 @@ export default function AdminPage() {
 
   return (
     <div className="w-full min-h-screen bg-[#0b0b0b] text-white p-4 sm:p-8">
-      {/* Header */}
       <div className="max-w-7xl mx-auto">
+        {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <BurgerMenuButton />
-            <h1 className="text-3xl sm:text-4xl font-bold" style={{ fontFamily: 'var(--font-hanalei-fill)' }}>
+            <h1 className="text-xl sm:text-2xl tracking-wider" style={{ fontFamily: 'var(--font-hanalei-fill)' }}>
               ADMIN PANEL
             </h1>
           </div>
           <button
             onClick={() => router.push('/planner')}
-            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+            className="px-3 py-1.5 rounded-full text-xs font-medium transition-all hover:bg-white/10"
+            style={{ color: '#a3a3a3' }}
           >
             Back to App
           </button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Users List */}
-          <div className="bg-[#1a1a1a] rounded-xl p-6 border border-[#3B3B3B]">
-            <h2 className="text-2xl font-bold mb-4">Users ({users.length})</h2>
-            <div className="space-y-3 max-h-[600px] overflow-y-auto">
+          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div className="px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+              <h2 className="text-sm font-medium" style={{ color: '#a3a3a3' }}>USERS</h2>
+            </div>
+            <div className="p-3 space-y-1 max-h-[600px] overflow-y-auto scrollbar-thin">
               {users.map((user) => (
                 <div
                   key={user.id}
                   onClick={() => handleUserSelect(user)}
-                  className={`p-4 rounded-lg border cursor-pointer transition-all ${
+                  className={`p-3 rounded-lg cursor-pointer transition-all ${
                     selectedUser?.id === user.id
-                      ? 'bg-[#3B63CF] border-[#3B63CF]'
-                      : 'bg-[#2a2a2a] border-[#3B3B3B] hover:border-[#3B63CF]'
+                      ? 'bg-white/10'
+                      : 'hover:bg-white/[0.03]'
                   }`}
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold">{user.name || 'Unknown'}</h3>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-sm font-medium truncate">{user.name || 'Unknown'}</span>
                         <span
-                          className={`px-2 py-0.5 text-xs rounded-full ${
+                          className={`px-1.5 py-0.5 text-[10px] font-medium rounded-full flex-shrink-0 ${
                             user.role === 'ADMIN'
-                              ? 'bg-purple-600 text-white'
-                              : 'bg-gray-600 text-gray-300'
+                              ? 'bg-white/10 text-white/70'
+                              : 'bg-white/[0.04] text-white/40'
                           }`}
                         >
                           {user.role}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-400">{user.email}</p>
-                      <div className="flex gap-4 mt-2 text-xs text-gray-500">
-                        <span>{user._count.plans} plans</span>
-                        <span>{user._count.userPrompts} prompts</span>
+                      <p className="text-xs truncate" style={{ color: 'rgba(255,255,255,0.4)' }}>{user.email}</p>
+                      <div className="flex gap-3 mt-1.5">
+                        <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.25)' }}>{user._count.plans} plans</span>
+                        <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.25)' }}>{user._count.userPrompts} prompts</span>
                       </div>
                     </div>
                     <select
@@ -219,8 +226,13 @@ export default function AdminPage() {
                         e.stopPropagation();
                         handleRoleChange(user.id, e.target.value as 'USER' | 'ADMIN');
                       }}
-                      disabled={changingRole}
-                      className="ml-2 px-3 py-1 bg-[#0b0b0b] border border-[#3B3B3B] rounded text-sm hover:border-[#3B63CF] focus:outline-none focus:border-[#3B63CF] disabled:opacity-50"
+                      disabled={changingRole === user.id}
+                      className="flex-shrink-0 px-2 py-1 text-xs rounded-md transition-colors focus:outline-none disabled:opacity-40"
+                      style={{
+                        backgroundColor: 'rgba(255,255,255,0.05)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        color: '#a3a3a3',
+                      }}
                       onClick={(e) => e.stopPropagation()}
                     >
                       <option value="USER">User</option>
@@ -233,43 +245,49 @@ export default function AdminPage() {
           </div>
 
           {/* User Prompts */}
-          <div className="bg-[#1a1a1a] rounded-xl p-6 border border-[#3B3B3B]">
-            <h2 className="text-2xl font-bold mb-4">
-              {selectedUser ? `${selectedUser.name || 'User'}'s Prompts` : 'Select a User'}
-            </h2>
+          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div className="px-5 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+              <h2 className="text-sm font-medium" style={{ color: '#a3a3a3' }}>
+                {selectedUser ? `${selectedUser.name || 'User'}'s Prompts` : 'PROMPTS'}
+              </h2>
+            </div>
             
             {!selectedUser ? (
-              <div className="flex items-center justify-center h-[400px] text-gray-500">
-                Select a user to view their prompts
+              <div className="flex items-center justify-center h-[400px]">
+                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.2)' }}>Select a user to view their prompts</span>
               </div>
             ) : loadingPrompts ? (
-              <div className="space-y-3">
+              <div className="p-4 space-y-3">
                 {[...Array(5)].map((_, i) => (
-                  <Skeleton key={i} className="h-24 rounded-lg" />
+                  <Skeleton key={i} className="h-20 rounded-lg" />
                 ))}
               </div>
             ) : userPrompts.length === 0 ? (
-              <div className="flex items-center justify-center h-[400px] text-gray-500">
-                No prompts found for this user
+              <div className="flex items-center justify-center h-[400px]">
+                <span className="text-xs" style={{ color: 'rgba(255,255,255,0.2)' }}>No prompts found</span>
               </div>
             ) : (
-              <div className="space-y-3 max-h-[600px] overflow-y-auto">
+              <div className="p-3 space-y-2 max-h-[600px] overflow-y-auto scrollbar-thin">
                 {userPrompts.map((prompt) => (
                   <div
                     key={prompt.id}
-                    className="p-4 bg-[#2a2a2a] rounded-lg border border-[#3B3B3B]"
+                    className="p-3 rounded-lg"
+                    style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
                   >
-                    <div className="flex items-start justify-between mb-2">
-                      <span className="text-xs text-gray-500">
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>
                         {new Date(prompt.createdAt).toLocaleString()}
                       </span>
                       {prompt.plan && (
-                        <span className="text-xs bg-blue-600 px-2 py-0.5 rounded">
+                        <span
+                          className="text-[10px] px-1.5 py-0.5 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)' }}
+                        >
                           {prompt.plan.title}
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-gray-300 whitespace-pre-wrap break-words">
+                    <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.65)' }}>
                       {prompt.prompt}
                     </p>
                   </div>
