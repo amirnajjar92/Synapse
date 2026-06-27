@@ -57,8 +57,8 @@ const extractGoalWeight = async (prompt: string): Promise<{ weight: number | nul
       return { weight: parseFloat(lbsMatch[1]), unit: 'lbs' };
     }
 
-    // If regex fails, use AI to extract
-    const apiUrl = 'https://moole-back.vercel.app/ask-moole';
+    // If regex fails, use AI to extract (with OpenRouter fallback)
+    const apiUrl = '/api/ai/analyse';
     const systemPrompt = `Extract the goal weight from the user's fitness prompt. Respond ONLY with a JSON object in this exact format: {"weight": number, "unit": "kg" or "lbs"}. If no goal weight is mentioned, respond with: {"weight": null, "unit": null}. Do not include any other text.`;
     
     const res = await fetch(apiUrl, {

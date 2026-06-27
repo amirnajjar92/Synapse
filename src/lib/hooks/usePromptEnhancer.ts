@@ -3,7 +3,8 @@ const usePromptEnhancer = () => {
     if (!userInput.trim()) return userInput;
 
     try {
-      const apiUrl = 'https://moole-back.vercel.app/ask-moole';
+      // Use analyse route which has OpenRouter fallback
+      const apiUrl = '/api/ai/analyse';
 
       const systemPrompt = `SYSTEM: You are a prompt enhancer for a fitness AI app. Your job is to take the user's natural language input and convert it into a concise, structured prompt that follows these EXACT examples:
 

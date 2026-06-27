@@ -181,9 +181,9 @@ export default function PlanDetailPage() {
     if (dayMatch) {
       return parseInt(dayMatch[1]);
     }
-    // If regex fails, use ask-moole API
+    // If regex fails, use analyse route (with OpenRouter fallback)
     try {
-      const apiUrl = 'https://moole-back.vercel.app/ask-moole';
+      const apiUrl = '/api/ai/analyse';
       const systemPrompt = `You are a helpful assistant that extracts only responds with a single number: the total number of days for the fitness plan described in the user's prompt. If you only respond with a number, no extra text.`;
       const userPrompt = `What is the total number of days for this fitness plan? ${prompt}`;
       

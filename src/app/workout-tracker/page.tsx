@@ -290,7 +290,8 @@ export default function WorkoutTrackerPage() {
       setCoachAdviceLoading(true);
       try {
         const context = `${currentRow.columns[0] || ''}: ${currentRow.columns[1] || ''}\n${(currentRow.columns[2] || '').split('\n').filter(Boolean).join('\n')}`;
-        const res = await fetch(`${SYNAPSE_BACKEND_URL}/ask-moole`, {
+        // Use analyse route which has OpenRouter fallback
+        const res = await fetch('/api/ai/analyse', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

@@ -59,7 +59,8 @@ export const useTodayTable = (
 
   const processTablesWithAI = async (tables: PlanTable[], dayNumber: number) => {
     try {
-      const apiUrl = 'https://moole-back.vercel.app/ask-moole';
+      // Use analyse route which has OpenRouter fallback
+      const apiUrl = '/api/ai/analyse';
       const systemPrompt = `You are a fitness planner assistant. Given plan tables and the current day number, extract ONLY today's relevant tasks and format them as JSON array with "category" (table title) and "task" (relevant cell content) properties. Return ONLY the JSON array, no extra text.`;
       
       const tablesData = tables.map(table => ({

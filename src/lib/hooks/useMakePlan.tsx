@@ -92,7 +92,6 @@ const useMakePlan = (userPrompt: string, autoRun = false) => {
     tablePrompt: string
   ): Promise<void> => {
     try {
-      const apiUrl = 'https://moole-back.vercel.app/ask-moole';
       const useMockData = false; // Set to true for testing without API
 
       if (useMockData) {
@@ -109,7 +108,8 @@ const useMakePlan = (userPrompt: string, autoRun = false) => {
       }
 
       console.log(`Calling API for ${tableTitle}`);
-      const res = await fetch(apiUrl, {
+      // Use analyse route which has OpenRouter fallback
+      const res = await fetch('/api/ai/analyse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: tablePrompt }),

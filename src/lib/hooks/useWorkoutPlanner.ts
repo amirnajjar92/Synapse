@@ -125,7 +125,8 @@ const useWorkoutPlanner = (): UseWorkoutPlannerReturn => {
     setError(null);
 
     try {
-      const apiUrl = 'https://moole-back.vercel.app/ask-moole';
+      // Use analyse route which has OpenRouter fallback
+      const apiUrl = '/api/ai/analyse';
       
       const muscleContext = selectedMuscles.length > 0 
         ? `\nTarget Muscles: ${selectedMuscles.join(', ')}` 
