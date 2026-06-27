@@ -29,8 +29,13 @@ declare global {
 const SYNAPSE_BACKEND_URL = "https://moole-back.vercel.app";
 
 // Skeleton Component
-const Skeleton = ({ className = '' }: { className?: string }) => (
-  <div className={`animate-pulse bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 bg-[length:200%_100%] opacity-50 ${className}`} />
+const Spinner = ({ size = 32 }: { size?: number }) => (
+  <div className="flex items-center justify-center">
+    <div
+      className="rounded-full border border-white/20 animate-spin"
+      style={{ width: size, height: size, borderTopColor: 'white', borderWidth: '2px' }}
+    />
+  </div>
 );
 
 // Workout-specific goals display component (similar to GoalsSection)
@@ -50,7 +55,7 @@ const WorkoutGoalsSection = ({
   const [selectedDay, setSelectedDay] = useState(0);
 
   if (isLoading) {
-    return <Skeleton className="w-full h-full" />;
+    return <Spinner size={36} />;
   }
 
   const currentRow = planData[selectedDay];
@@ -321,28 +326,31 @@ export default function WorkoutPlannerPage() {
     }, 1800);
   };
 
-  const handleViewPlanClick = () => {
-    const planId = localStorage.getItem('current_plan_id');
-    if (planId) {
-      router.push(`/workout-detail/${planId}`);
-    } else {
-      router.push('/my-plans');
-    }
-  };
-
   const handleOpenChat = () => setShowChat(true);
   const handleCloseChat = () => setShowChat(false);
 
-  const handleMuscleUpdate = (muscles: string[]) => {
-    setSelectedMuscles(muscles);
-  };
-
-  const handleSaveClick = async () => {
-    if (!localPromptText.trim()) return;
+  const handleGetStartedClick = async () => {
     const saved = await saveWorkoutPlan(localPromptText);
     if (saved?.id) {
-      router.push(`/workout-detail/${saved.id}`);
+      try {
+        const userStr = localStorage.getItem('synapse_user');
+        const user = userStr ? JSON.parse(userStr) : null;
+        const url = new URL(`/api/plans/${saved.id}`, window.location.origin);
+        if (user?.email) url.searchParams.set('email', user.email);
+        await fetch(url.toString(), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'IN_PROGRESS', startDate: new Date().toISOString() }),
+        });
+      } catch (e) {
+        console.error('Error updating plan status:', e);
+      }
+      router.push('/workout-tracker');
     }
+  };
+
+  const handleMuscleUpdate = (muscles: string[]) => {
+    setSelectedMuscles(muscles);
   };
 
   // Google Sign In handlers
@@ -476,7 +484,7 @@ export default function WorkoutPlannerPage() {
   const row1Height = planGenerated ? 370 : 340;
   const chatMessagesHeight = showChat ? (isGenerating ? 220 : 160) : 0;
   const row2Height = planGenerated ? 140 : (showChat ? chatMessagesHeight + 144 : 180);
-  const row3Height = planGenerated ? 106 : 52;
+  const row3Height = planGenerated ? 72 : 52;
   const row4Height = planGenerated ? (showChat ? chatMessagesHeight + 144 : 180) : 0;
   const row6Height = 40;
 
@@ -546,72 +554,41 @@ export default function WorkoutPlannerPage() {
             ) : null}
           </div>
 
-          {/* Row 3: 400 X (106 or 52) - SAVE + VIEW PLAN BUTTONS */}
+          {/* Row 3: GET STARTED button */}
           {planGenerated && (
             <div 
               className="w-full border border-[#3B3B3B00] flex items-center justify-center transition-all duration-500 ease-out overflow-hidden"
-              style={{ height: `${(row3Height / 874) * 100}%` }}
+              style={{ height: `${(row3Height / 874) * 100}%` ,
+            
+            
+            }}
             >
-              <div className="w-full h-full flex items-center justify-center gap-2 px-4">
-                {/* Save Button */}
+              <div className="w-full h-full flex items-center justify-center px-4">
                 <div 
-                  className="flex-1 h-full flex items-center justify-center relative overflow-hidden cursor-pointer"
-                  onClick={handleSaveClick}
+                  className="flex items-center justify-center relative overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-105 active:scale-95"
+                  onClick={handleGetStartedClick}
+                  style={{
+                    width: '60%',
+                    height: `${(50 / 72) * 100}%`,
+                    maxHeight: '50px',
+                  }}
                 >
-                  <div 
-                    className="relative flex items-center justify-center transition-transform duration-200 hover:scale-105 active:scale-95"
-                    style={{
-                      width: '80%',
-                      height: `${(50 / 106) * 100}%`,
+                  <img
+                    src="/vectors/button-frame.svg"
+                    alt="Button Frame"
+                    className="w-full h-full object-contain absolute inset-0"
+                    style={{transform:'rotateY(180deg)'}}
+                  />
+                  <span 
+                    className="text-white font-bold z-10" 
+                    style={{ 
+                      fontFamily: 'var(--font-hanalei-fill)', 
+                      fontSize: 'calc((100vh * 0.80) * (24 / 874))',
+                      lineHeight: '1'
                     }}
                   >
-                    <img
-                      src="/vectors/button-frame.svg"
-                      alt="Button Frame"
-                      className="w-full h-full object-contain absolute inset-0"
-                      style={{ transform: 'scaleX(-1)' }}
-                    />
-                    <span 
-                      className="text-white font-bold z-10" 
-                      style={{ 
-                        fontFamily: 'var(--font-hanalei-fill)', 
-                        fontSize: 'calc((100vh * 0.80) * (30 / 874))',
-                        lineHeight: '1'
-                      }}
-                    >
-                      SAVE
-                    </span>
-                  </div>
-                </div>
-                {/* View Plan Button */}
-                <div 
-                  className="flex-1 h-full flex items-center justify-center relative overflow-hidden cursor-pointer"
-                  onClick={handleViewPlanClick}
-                >
-                  <div 
-                    className="relative flex items-center justify-center transition-transform duration-200 hover:scale-105 active:scale-95"
-                    style={{
-                      width: '80%',
-                      height: `${(50 / 106) * 100}%`,
-                    }}
-                  >
-                    <img
-                      src="/vectors/button-frame.svg"
-                      alt="Button Frame"
-                      className="w-full h-full object-contain absolute inset-0"
-                      style={{ transform: 'scaleX(-1)' }}
-                    />
-                    <span 
-                      className="text-white font-bold z-10" 
-                      style={{ 
-                        fontFamily: 'var(--font-hanalei-fill)', 
-                        fontSize: 'calc((100vh * 0.80) * (26 / 874))',
-                        lineHeight: '1'
-                      }}
-                    >
-                      VIEW PLAN
-                    </span>
-                  </div>
+                    GET STARTED
+                  </span>
                 </div>
               </div>
             </div>
@@ -640,7 +617,9 @@ export default function WorkoutPlannerPage() {
           {planGenerated && (
             <div 
               className="w-full border border-[#3B3B3B00] flex items-center justify-center relative transition-all duration-500 ease-out overflow-hidden"
-              style={{ height: `${(row4Height / 874) * 100}%` }}
+              style={{ height: `${(row4Height / 874) * 100}%`,
+            marginTop:'20%'
+            }}
             >
               <PromptBoxOpenAI
                 value={localPromptText}

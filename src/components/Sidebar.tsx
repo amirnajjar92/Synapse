@@ -21,6 +21,7 @@ interface Plan {
   status: 'NOT_STARTED' | 'IN_PROGRESS' | 'PAUSED' | 'COMPLETED';
   startDate?: string;
   endDate?: string;
+  tables?: { title: string; rows: { columns: string[] }[] }[];
 }
 
 export default function Sidebar() {
@@ -335,19 +336,25 @@ export default function Sidebar() {
                     Active Plans
                   </p>
                 </div>
-                {activePlans.map((plan) => (
+                {activePlans.map((plan) => {
+                  const isWorkoutPlan = plan.tables?.some(t => t.title === 'WORKOUT PLAN');
+                  return (
                   <button
                     key={plan.id}
                     onClick={() => {
                       setIsOpen(false);
-                      router.push(`/plan-progress-tracker?planId=${plan.id}`);
+                      if (isWorkoutPlan) {
+                        router.push(`/workout-tracker?planId=${plan.id}`);
+                      } else {
+                        router.push(`/plan-progress-tracker?planId=${plan.id}`);
+                      }
                     }}
                     className="group flex items-center gap-3 px-4 py-2.5 rounded-lg text-left text-white/80 hover:text-black hover:bg-white transition-all duration-200 w-full"
                   >
                     <div className="w-2 h-2 rounded-full bg-white flex-shrink-0" />
                     <span className="truncate text-sm font-medium">{plan.title}</span>
                   </button>
-                ))}
+                );})}
               </div>
             )}
 

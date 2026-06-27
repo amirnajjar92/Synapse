@@ -41,22 +41,14 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const user = await getUserFromRequest(request)
-  if (!user?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
 
   const plan = await prisma.plan.findUnique({
     where: { id },
-    include: { tables: { include: { rows: true } } },
+    include: { tables: { include: { rows: true } }, user: { select: { email: true } } },
   })
 
   if (!plan) {
     return NextResponse.json({ error: 'Plan not found' }, { status: 404 })
-  }
-
-  if (plan.userId !== user.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
   }
 
   return NextResponse.json({ plan })
