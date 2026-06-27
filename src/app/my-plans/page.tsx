@@ -68,6 +68,11 @@ export default function MyPlansPage() {
   }, [user]);
 
   const handlePlanClick = (plan: Plan) => {
+    const isWorkoutPlan = plan.tables?.some((t: { title?: string }) => t?.title === 'WORKOUT PLAN');
+    if (isWorkoutPlan) {
+      router.push(`/workout-tracker?planId=${plan.id}`);
+      return;
+    }
     router.push(`/plan-detail/${plan.id}`);
   };
 
@@ -168,7 +173,10 @@ export default function MyPlansPage() {
               </div>
             ) : (
               <div className="flex-1 min-h-0 overflow-y-auto space-y-2">
-                {plans.map((plan) => (
+                {plans.map((plan) => {
+                  const isWorkoutPlan = plan.tables?.some((t: { title?: string }) => t?.title === 'WORKOUT PLAN');
+                  const isCardioPlan = !isWorkoutPlan;
+                  return (
                   <div
                     key={plan.id}
                     onClick={() => handlePlanClick(plan)}
@@ -189,7 +197,7 @@ export default function MyPlansPage() {
                           {new Date(plan.createdAt).toLocaleDateString()} • {new Date(plan.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
-                      <div className="flex items-center gap-1 flex-shrink-0 pt-0.5">
+                      <div className="flex flex-col items-center gap-1 flex-shrink-0 pt-0.5">
                         <button
                           onClick={(e) => handleDeleteClick(e, plan)}
                           className="p-1 text-gray-600 hover:text-red-400 hover:bg-red-500/10 rounded-full transition-colors"
@@ -205,10 +213,24 @@ export default function MyPlansPage() {
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4b5563" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <polyline points="9 18 15 12 9 6" />
                         </svg>
+                        {isWorkoutPlan && (
+                          <img
+                            src="/vectors/workout-icon.svg"
+                            alt=""
+                            className="w-[18px] h-[18px] opacity-70 brightness-0 invert mt-1"
+                          />
+                        )}
+                        {isCardioPlan && (
+                          <img
+                            src="/vectors/cardio-icon.svg"
+                            alt=""
+                            className="w-[18px] h-[18px] opacity-70 brightness-0 invert mt-1"
+                          />
+                        )}
                       </div>
                     </div>
                   </div>
-                ))}
+                );})}
               </div>
             )}
           </div>
