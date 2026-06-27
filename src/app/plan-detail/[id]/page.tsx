@@ -2,7 +2,7 @@
 
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import PromptBox from '@/components/PromptBox';
+import PromptBoxOpenAI from '@/components/PromptBoxOpenAI';
 import CustomButton from '@/components/CustomButton';
 import PlanTable from '@/components/PlanTable';
 import BurgerMenuButton from '@/components/BurgerMenuButton';
@@ -80,7 +80,8 @@ export default function PlanDetailPage() {
           'NUTRIENTS': '/vectors/nutrients-icon.svg',
           'RECOMMENDED': '/vectors/recomended-icon.svg',
           'CHALLENGES': '/vectors/challenges-icon.svg',
-          'SUPPLEMENTS': '/vectors/suppliments-icon.svg'
+          'SUPPLEMENTS': '/vectors/suppliments-icon.svg',
+          'WORKOUT PLAN': '/vectors/workout-icon.svg'
         };
         const defaultIcons = [
           '/vectors/meals-icon.svg',
@@ -88,7 +89,8 @@ export default function PlanDetailPage() {
           '/vectors/nutrients-icon.svg',
           '/vectors/recomended-icon.svg',
           '/vectors/challenges-icon.svg',
-          '/vectors/suppliments-icon.svg'
+          '/vectors/suppliments-icon.svg',
+          '/vectors/workout-icon.svg'
         ];
         const convertedPlanTypes: PlanTableData[] = (planData.tables || []).map((table: any, index: number) => ({
           id: index,
@@ -363,7 +365,7 @@ export default function PlanDetailPage() {
           >
             {/* No skeletons while generating, show the header directly */}
             <>
-              <div className="flex items-center gap-2 ml-12 flex-1 min-w-0">
+              <div className="flex items-center gap-2 ml-16 flex-1 min-w-0">
                 <h2 
                   className="text-white font-bold truncate"
                   style={{ 
@@ -374,16 +376,6 @@ export default function PlanDetailPage() {
                 >
                   {currentPlan.title}
                 </h2>
-                {/* Export PDF Button */}
-                <button
-                  onClick={handleExportPDF}
-                  className="flex-shrink-0 p-2 rounded-full hover:bg-gray-700/50 transition-colors"
-                  title="Export to PDF"
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-white">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </button>
               </div>
               <img 
                 src={currentPlan.icon} 
@@ -395,7 +387,7 @@ export default function PlanDetailPage() {
 
           {/* Row 2: Table Section - 400 X 360 */}
           <div 
-            className="w-full border border-[#3B3B3B00] transition-all duration-300"
+            className="w-full border border-[#3B3B3B00] transition-all duration-300 relative"
             style={{ height: `${(tableHeight / baseHeight) * 100}%` }}
           >
             <PlanTable 
@@ -409,6 +401,16 @@ export default function PlanDetailPage() {
               currentTableIndex={currentTableIndex}
               onTabClick={(index) => dispatch(setCurrentTableIndex(index))}
             />
+            {/* Export PDF Button - Bottom Right */}
+            <button
+              onClick={handleExportPDF}
+              className="absolute bottom-2 right-2 p-2 rounded-full bg-gray-800/80 hover:bg-gray-700 transition-colors z-10"
+              title="Export to PDF"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-white">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </button>
           </div>
 
           {/* Row 3: Status Controls - 400 X 100 */}
@@ -439,10 +441,12 @@ export default function PlanDetailPage() {
           >
             {/* Prompt Box */}
             <div className="w-full flex items-center justify-center flex-1 overflow-hidden mb-2">
-              <PromptBox
+              <PromptBoxOpenAI
                 value={promptText}
                 onChange={(text) => dispatch(setPromptText(text))}
+                onEnterPressed={handleGoClick}
                 isLoading={isGenerating}
+                placeholder="Describe how to modify this plan..."
               />
             </div>
             {/* Buttons Row - 176 + 226 like planner */}

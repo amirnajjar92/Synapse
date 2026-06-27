@@ -10,6 +10,11 @@ export interface MuscleHighlight {
   strokeWidth?: number;
   strokeOpacity?: number;
   blurInactive?: number; // blur amount for non-highlighted muscles (in pixels)
+  shadowColor?: string;
+  shadowX?: number;
+  shadowY?: number;
+  shadowBlur?: number;
+  shadowOpacity?: number;
 }
 
 interface MenAnatomyProps {
@@ -65,8 +70,16 @@ export default function MenAnatomy({
       strokeColor = '#ff0000',
       strokeWidth = 2,
       strokeOpacity = 0.9,
-      blurInactive = 0
+      blurInactive = 0,
+      shadowColor = 'rgba(204,4,4,0.47)',
+      shadowX = 13,
+      shadowY = 16,
+      shadowBlur = 24,
+      shadowOpacity = 0.47,
     } = highlights;
+
+    const shadowBase = `${shadowX}px ${shadowY}px ${shadowBlur}px ${shadowColor}`;
+    const shadowPulse = `${shadowX + 2}px ${shadowY + 2}px ${shadowBlur + 6}px rgba(204,4,4,${Math.min(shadowOpacity + 0.08, 1)})`;
 
     // Create or update blur filter if needed
     let defs = svgElement.querySelector('defs');
@@ -137,38 +150,26 @@ export default function MenAnatomy({
     }
 
     // Add CSS animation for pulse effect
+    const pulseStyle = `
+      @keyframes muscle-pulse {
+        0%, 100% {
+          filter: url(#active-glow) drop-shadow(${shadowBase});
+        }
+        50% {
+          filter: url(#active-glow) drop-shadow(${shadowPulse});
+        }
+      }
+      .active-muscle {
+        animation: muscle-pulse 3s ease-in-out infinite;
+      }
+    `;
     let style = svgElement.querySelector('style') as SVGStyleElement | null;
     if (!style) {
       style = document.createElementNS('http://www.w3.org/2000/svg', 'style') as SVGStyleElement;
-      style.textContent = `
-        @keyframes muscle-pulse {
-          0%, 100% {
-            filter: url(#active-glow) drop-shadow(0 0 2px rgba(255, 10, 10, 0.3)) drop-shadow(0 0 40px rgba(255, 10, 10, 0.2));
-          }
-          50% {
-            filter: url(#active-glow) drop-shadow(0 0 3px rgba(255, 10, 10, 0.4)) drop-shadow(0 0 60px rgba(255, 10, 10, 0.3));
-          }
-        }
-        .active-muscle {
-          animation: muscle-pulse 3s ease-in-out infinite;
-        }
-      `;
+      style.textContent = pulseStyle;
       svgElement.appendChild(style);
     } else {
-      // Update existing style with current fill color
-      style.textContent = `
-        @keyframes muscle-pulse {
-          0%, 100% {
-            filter: url(#active-glow) drop-shadow(0 0 2px rgba(255, 10, 10, 0.3)) drop-shadow(0 0 40px rgba(255, 10, 10, 0.2));
-          }
-          50% {
-            filter: url(#active-glow) drop-shadow(0 0 3px rgba(255, 10, 10, 0.4)) drop-shadow(0 0 60px rgba(255, 10, 10, 0.3));
-          }
-        }
-        .active-muscle {
-          animation: muscle-pulse 3s ease-in-out infinite;
-        }
-      `;
+      style.textContent = pulseStyle;
     }
 
     // First, apply blur to ALL paths in the SVG (default state)
