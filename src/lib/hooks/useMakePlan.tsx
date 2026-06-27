@@ -46,6 +46,36 @@ const safelyParseJSON = (jsonString: string) => {
   }
 };
 
+const parseMarkdownTable = (text: string): any[] | null => {
+  const lines = text.split('\n').filter(l => l.trim());
+  const tableLines = lines.filter(l => l.includes('|'));
+
+  if (tableLines.length < 3) return null;
+
+  const dataRows: string[][] = [];
+  for (const line of tableLines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('|') && !trimmed.match(/^\|[\s\-|:]+\|$/)) {
+      const cells = trimmed.split('|').map(c => c.trim()).filter(c => c.length > 0);
+      if (cells.length >= 2) {
+        dataRows.push(cells);
+      }
+    }
+  }
+
+  if (dataRows.length === 0) return null;
+
+  return dataRows.map((cells, i) => ({
+    id: i + 1,
+    columns: [
+      cells[0] || '',
+      cells[1] || '',
+      cells.slice(2, -1).join('\n') || cells[2] || '',
+      cells[cells.length - 1] || '',
+    ],
+  }));
+};
+
 // Define table metadata for each plan type
 const TABLE_METADATA = [
   {
@@ -141,7 +171,13 @@ const useMakePlan = (userPrompt: string, autoRun = false) => {
       } else if (parsedTableData && Array.isArray(parsedTableData)) {
         finalTableData = parsedTableData;
       } else {
-        console.warn(`Using mock data as fallback for ${tableTitle}`);
+        const markdownParsed = parseMarkdownTable(data.answer);
+        if (markdownParsed && markdownParsed.length > 0) {
+          console.log(`Parsed markdown table for ${tableTitle}`);
+          finalTableData = markdownParsed;
+        } else {
+          console.warn(`Using mock data as fallback for ${tableTitle}`);
+        }
       }
       
       dispatch(

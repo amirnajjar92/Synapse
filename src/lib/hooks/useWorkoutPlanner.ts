@@ -97,6 +97,43 @@ const safelyParseJSON = (jsonString: string) => {
   }
 };
 
+// Parse markdown table into PlanTableData[] (fallback for when AI returns markdown instead of JSON)
+const parseMarkdownTable = (text: string): PlanTableData[] | null => {
+  const lines = text.split('\n').filter(l => l.trim());
+  const tableLines = lines.filter(l => l.includes('|'));
+
+  if (tableLines.length < 3) return null;
+
+  // Find data rows (skip header and separator)
+  const dataRows: string[][] = [];
+  for (const line of tableLines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith('|') && !trimmed.match(/^\|[\s\-|:]+\|$/)) {
+      const cells = trimmed
+        .split('|')
+        .map(c => c.trim())
+        .filter(c => c.length > 0);
+      if (cells.length >= 2) {
+        dataRows.push(cells);
+      }
+    }
+  }
+
+  if (dataRows.length === 0) return null;
+
+  // Map markdown rows to plan structure
+  // Expected columns: Day, Focus/Type, Exercises, Duration
+  return dataRows.map((cells, i) => ({
+    id: i + 1,
+    columns: [
+      cells[0] || `Day ${i + 1}`,
+      cells[1] || '',
+      cells.slice(2, -1).join('\n') || cells[2] || '',
+      cells[cells.length - 1] || '',
+    ],
+  }));
+};
+
 // Default workout plan as fallback
 const DEFAULT_WORKOUT_PLAN: PlanTableData[] = [
   { id: 1, columns: ["Monday", "Chest & Triceps", "Bench Press: 4x8-10\nIncline DB Press: 3x12\nTricep Pushdown: 3x12", "45 min"] },
@@ -193,7 +230,14 @@ CRITICAL: And only return this JSON response with no extra characters, no text, 
       } else if (parsedData && Array.isArray(parsedData)) {
         finalPlanData = parsedData;
       } else {
-        console.warn('Using default workout plan as fallback');
+        // Try parsing as markdown table (fallback for ask-openrouter responses)
+        const markdownParsed = parseMarkdownTable(data.answer);
+        if (markdownParsed && markdownParsed.length > 0) {
+          console.log('Parsed markdown table response into plan data');
+          finalPlanData = markdownParsed;
+        } else {
+          console.warn('Using default workout plan as fallback');
+        }
       }
       
       setPlanData(finalPlanData);

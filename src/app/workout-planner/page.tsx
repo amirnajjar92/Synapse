@@ -54,40 +54,10 @@ const Spinner = ({ size = 32 }: { size?: number }) => (
 }) => {
   const [selectedDay, setSelectedDay] = useState<number>(0);
 
-  // Reset selectedDay when planData changes (e.g., new plan generated)
-  useEffect(() => {
-    if (planData.length > 0) {
-      setSelectedDay(0);
-    }
-  }, [planData.length]);
-
-  if (isLoading) {
-    return <Spinner size={36} />;
-  }
-
-  const currentRow = planData[selectedDay];
-  const exercises = currentRow
-    ? (currentRow.columns[2] || '').split('\n').filter(Boolean).map((line: string) => {
-        const parts = line.split(':');
-        const name = parts[0]?.trim() || line.trim();
-        const setsReps = parts.slice(1).join(':').trim() || '';
-        return { name, setsReps };
-      })
-    : [];
-
-  const dayNames = planData.map((row: any) => row.columns[0] || '');
-
-  const goToPrevDay = () => {
-    setSelectedDay(prev => Math.max(0, prev - 1));
-  };
-
-  const goToNextDay = () => {
-    setSelectedDay(prev => Math.min(planData.length - 1, prev + 1));
-  };
-
   // Extract muscle groups from current day's exercises
   useEffect(() => {
-    if (!currentRow || !onMuscleUpdate) return;
+    if (!planData[selectedDay] || !onMuscleUpdate) return;
+    const currentRow = planData[selectedDay];
     const exerciseStr = currentRow.columns[2] || '';
     const lines = exerciseStr.split('\n').filter(Boolean);
     const muscles = new Set<string>();
@@ -137,6 +107,37 @@ const Spinner = ({ size = 32 }: { size?: number }) => (
 
     onMuscleUpdate(Array.from(muscles));
   }, [selectedDay, planData]);
+
+  // Reset selectedDay when planData changes (e.g., new plan generated)
+  useEffect(() => {
+    if (planData.length > 0) {
+      setSelectedDay(0);
+    }
+  }, [planData.length]);
+
+  if (isLoading) {
+    return <Spinner size={36} />;
+  }
+
+  const currentRow = planData[selectedDay];
+  const exercises = currentRow
+    ? (currentRow.columns[2] || '').split('\n').filter(Boolean).map((line: string) => {
+        const parts = line.split(':');
+        const name = parts[0]?.trim() || line.trim();
+        const setsReps = parts.slice(1).join(':').trim() || '';
+        return { name, setsReps };
+      })
+    : [];
+
+  const dayNames = planData.map((row: any) => row.columns[0] || '');
+
+  const goToPrevDay = () => {
+    setSelectedDay(prev => Math.max(0, prev - 1));
+  };
+
+  const goToNextDay = () => {
+    setSelectedDay(prev => Math.min(planData.length - 1, prev + 1));
+  };
 
   return (
     <div className="w-full h-full flex flex-col p-3 sm:p-4 md:p-6 pt-12 transition-all duration-300 ease-out overflow-hidden">
@@ -336,23 +337,32 @@ export default function WorkoutPlannerPage() {
   const handleOpenChat = () => setShowChat(true);
   const handleCloseChat = () => setShowChat(false);
 
+  const [isSaving, setIsSaving] = useState(false);
+
   const handleGetStartedClick = async () => {
-    const saved = await saveWorkoutPlan(localPromptText);
-    if (saved?.id) {
-      try {
-        const userStr = localStorage.getItem('synapse_user');
-        const user = userStr ? JSON.parse(userStr) : null;
-        const url = new URL(`/api/plans/${saved.id}`, window.location.origin);
-        if (user?.email) url.searchParams.set('email', user.email);
-        await fetch(url.toString(), {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'IN_PROGRESS', startDate: new Date().toISOString() }),
-        });
-      } catch (e) {
-        console.error('Error updating plan status:', e);
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      const saved = await saveWorkoutPlan(localPromptText);
+      if (saved?.id) {
+        try {
+          const userStr = localStorage.getItem('synapse_user');
+          const user = userStr ? JSON.parse(userStr) : null;
+          const url = new URL(`/api/plans/${saved.id}`, window.location.origin);
+          if (user?.email) url.searchParams.set('email', user.email);
+          await fetch(url.toString(), {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'IN_PROGRESS', startDate: new Date().toISOString() }),
+          });
+        } catch (e) {
+          console.error('Error updating plan status:', e);
+        }
+        router.push('/workout-tracker');
       }
-      router.push('/workout-tracker');
+    } catch (e) {
+      console.error('Get started error:', e);
+      setIsSaving(false);
     }
   };
 
@@ -572,7 +582,7 @@ export default function WorkoutPlannerPage() {
             >
               <div className="w-full h-full flex items-center justify-center px-4">
                 <div 
-                  className="flex items-center justify-center relative overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-105 active:scale-95"
+                  className={`flex items-center justify-center relative overflow-hidden transition-transform duration-200 ${isSaving ? 'cursor-wait' : 'cursor-pointer hover:scale-105 active:scale-95'}`}
                   onClick={handleGetStartedClick}
                   style={{
                     width: '60%',
@@ -586,16 +596,22 @@ export default function WorkoutPlannerPage() {
                     className="w-full h-full object-contain absolute inset-0"
                     style={{transform:'rotateY(180deg)'}}
                   />
-                  <span 
-                    className="text-white font-bold z-10" 
-                    style={{ 
-                      fontFamily: 'var(--font-hanalei-fill)', 
-                      fontSize: 'calc((100vh * 0.80) * (24 / 874))',
-                      lineHeight: '1'
-                    }}
-                  >
-                    GET STARTED
-                  </span>
+                  {isSaving ? (
+                    <div className="z-10" style={{ width: 'calc((100vh * 0.80) * (22 / 874))', height: 'calc((100vh * 0.80) * (22 / 874))' }}>
+                      <Spinner size={22} />
+                    </div>
+                  ) : (
+                    <span 
+                      className="text-white font-bold z-10" 
+                      style={{ 
+                        fontFamily: 'var(--font-hanalei-fill)', 
+                        fontSize: 'calc((100vh * 0.80) * (24 / 874))',
+                        lineHeight: '1'
+                      }}
+                    >
+                      GET STARTED
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
