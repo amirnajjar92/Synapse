@@ -543,7 +543,7 @@ export default function WorkoutPlannerPage() {
             className="w-full border border-[#3B3B3B00] flex items-center justify-center overflow-hidden transition-all duration-500 ease-out"
             style={{ height: `${(row1Height / 874) * 100}%` }}
           >
-            {isGenerating || planGenerated ? (
+            <div style={{ display: isGenerating || planGenerated ? 'flex' : 'none' }} className="w-full h-full">
               <WorkoutGoalsSection 
                 prompt={localPromptText}
                 selectedMuscles={selectedMuscles}
@@ -551,7 +551,7 @@ export default function WorkoutPlannerPage() {
                 isLoading={isGenerating && planData.length === 0}
                 onMuscleUpdate={handleMuscleUpdate}
               />
-            ) : null}
+            </div>
           </div>
 
           {/* Row 3: GET STARTED button */}
