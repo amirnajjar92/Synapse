@@ -49,8 +49,13 @@ function buildSchedule(intervalMinutes: number): Date[] {
 
 // ─── sub-components ──────────────────────────────────────────────────────────
 
-const Skeleton = ({ className = '' }: { className?: string }) => (
-  <div className={`animate-pulse bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 bg-[length:200%_100%] opacity-50 ${className}`} />
+const Spinner = ({ size = 32 }: { size?: number }) => (
+  <div className="flex items-center justify-center">
+    <div
+      className="rounded-full border border-white/20 animate-spin"
+      style={{ width: size, height: size, borderTopColor: 'white', borderWidth: '2px' }}
+    />
+  </div>
 );
 
 const WaterBottleFiller = ({
@@ -65,29 +70,42 @@ const WaterBottleFiller = ({
   const numRects = 12;
   const activeRects = Math.round((waterLevel / 100) * numRects);
 
+  const isActive = (index: number) => activeRects >= index;
+
   const getRectStyle = (index: number): React.CSSProperties => {
-    const isActive = activeRects >= index;
+    const active = isActive(index);
     return {
-      fill: isAlertActive ? (alertBlink ? '#FFFFFF' : '#3659B8') : '#3659B8',
-      opacity: isActive ? 1 : 0,
-      transition: isAlertActive ? 'fill 0.1s ease-out' : 'opacity 0.2s ease-out',
+      opacity: active ? 1 : 0,
+      transition: isAlertActive && active ? 'fill 0.1s ease-out' : 'opacity 0.2s ease-out',
     };
+  };
+
+  const getFill = (index: number) => {
+    if (!isActive(index)) return 'transparent';
+    if (isAlertActive && alertBlink) return '#FFFFFF';
+    return 'url(#waterGrad)';
   };
 
   return (
     <svg viewBox="0 0 1132 2717" fill="none" xmlns="http://www.w3.org/2000/svg"
       className="w-full h-full object-contain" style={{ overflow: 'visible' }}>
-      <rect x="91"  y="2489" width="946" height="170" style={getRectStyle(1)} />
-      <rect x="91"  y="2144" width="946" height="345" style={getRectStyle(2)} />
-      <rect x="91"  y="1799" width="946" height="345" style={getRectStyle(3)} />
-      <rect x="95"  y="1463" width="946" height="336" style={getRectStyle(4)} />
-      <rect x="95"  y="1127" width="946" height="336" style={getRectStyle(5)} />
-      <rect x="95"  y="791"  width="946" height="336" style={getRectStyle(6)} />
-      <rect x="95"  y="666"  width="946" height="125" style={getRectStyle(7)} />
-      <rect x="205" y="541"  width="714" height="125" style={getRectStyle(8)} />
-      <rect x="331" y="416"  width="487" height="125" style={getRectStyle(9)} />
-      <rect x="353" y="291"  width="441" height="125" style={getRectStyle(10)} />
-      <rect x="353" y="53"   width="441" height="238" style={getRectStyle(11)} />
+      <defs>
+        <linearGradient id="waterGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+          <stop offset="0%" stopColor="#1E3A8A" />
+          <stop offset="100%" stopColor="#60A5FA" />
+        </linearGradient>
+      </defs>
+      <rect x="89"  y="2487" width="948" height="173" fill={getFill(1)} style={getRectStyle(1)} />
+      <rect x="89"  y="2142" width="948" height="348" fill={getFill(2)} style={getRectStyle(2)} />
+      <rect x="89"  y="1797" width="948" height="348" fill={getFill(3)} style={getRectStyle(3)} />
+      <rect x="93"  y="1461" width="948" height="339" fill={getFill(4)} style={getRectStyle(4)} />
+      <rect x="93"  y="1125" width="948" height="339" fill={getFill(5)} style={getRectStyle(5)} />
+      <rect x="93"  y="789"  width="948" height="339" fill={getFill(6)} style={getRectStyle(6)} />
+      <rect x="93"  y="664"  width="950" height="128" fill={getFill(7)} style={getRectStyle(7)} />
+      <rect x="203" y="539"  width="718" height="128" fill={getFill(8)} style={getRectStyle(8)} />
+      <rect x="329" y="414"  width="491" height="128" fill={getFill(9)} style={getRectStyle(9)} />
+      <rect x="351" y="289"  width="445" height="128" fill={getFill(10)} style={getRectStyle(10)} />
+      <rect x="351" y="51"   width="445" height="241" fill={getFill(11)} style={getRectStyle(11)} />
     </svg>
   );
 };
@@ -285,19 +303,19 @@ export default function WaterTrackerPage() {
         className="bg-black rounded-[40px] overflow-hidden shadow-2xl relative flex-shrink-0"
         style={{ width: `min(95vw, ${baseWidth}px)`, aspectRatio: baseWidth / baseHeight, maxHeight: '95vh' }}
       >
-        <div className="w-full h-full flex flex-col relative" style={{ backgroundColor: '#2C2C2C' }}>
+        <div className="w-full h-full flex flex-col relative" style={{ backgroundColor: '#0b0b0b4D' }}>
           <div className="absolute top-4 left-4 z-10"><BurgerMenuButton /></div>
 
           {/* Row 1 — date + progress */}
           <div className="flex w-full h-[16.48%]">
             <div className="w-1/2 h-full flex items-center justify-center">
-              {isLoading ? <Skeleton className="w-28 h-8" /> : (
-                <span className="text-white text-2xl sm:text-3xl font-light">{displayDate}</span>
+              {isLoading ? <Spinner size={24} /> : (
+                <span className="text-white/80 text-xl sm:text-2xl font-light tracking-wide">{displayDate}</span>
               )}
             </div>
             <div className="w-1/2 h-full flex items-center justify-center">
-              {isLoading ? <Skeleton className="w-24 h-10" /> : (
-                <span className="text-white text-3xl sm:text-4xl font-light">
+              {isLoading ? <Spinner size={24} /> : (
+                <span className="text-white text-2xl sm:text-3xl font-light tracking-wide">
                   {isDone ? 'DONE' : `${cupsToday}/${CUPS_PER_DAY}`}
                 </span>
               )}
@@ -305,16 +323,17 @@ export default function WaterTrackerPage() {
           </div>
 
           {/* Row 2 — WATER + day */}
-          <div className="flex w-full h-[9.61%]">
-            <div className="w-1/2 h-full border border-[#3B3B3B] flex items-center justify-center">
-              {isLoading ? <Skeleton className="w-32 h-8" /> : (
-                <span className="text-white text-3xl sm:text-4xl font-light">WATER</span>
+          <div className="flex w-full h-[9.61%] border-t border-[#3B3B3B33]">
+            <div className="w-1/2 h-full flex items-center justify-center">
+              {isLoading ? <Spinner size={24} /> : (
+                <span className="text-white font-bold" style={{ fontFamily: 'var(--font-hanalei-fill)', fontSize: 'calc((100vh * 0.95 * 0.0961) * 0.7)', lineHeight: '1' }}>
+                  WATER
+                </span>
               )}
             </div>
-            <div className="w-1/2 h-full border border-[#3B3B3B] flex items-center justify-center">
-              {isLoading ? <Skeleton className="w-32 h-8" /> : (
-                <span className="text-white font-bold text-center"
-                  style={{ fontFamily: 'var(--font-hanalei-fill)', fontSize: 'calc((100vh * 0.95 * 0.0961) * 0.806)', lineHeight: '1' }}>
+            <div className="w-1/2 h-full flex items-center justify-center border-l border-[#3B3B3B33]">
+              {isLoading ? <Spinner size={24} /> : (
+                <span className="text-white font-bold text-center" style={{ fontFamily: 'var(--font-hanalei-fill)', fontSize: 'calc((100vh * 0.95 * 0.0961) * 0.7)', lineHeight: '1' }}>
                   {dayNumber > 0 ? `DAY ${dayNumber}` : 'DAY 1'}
                 </span>
               )}
@@ -322,75 +341,43 @@ export default function WaterTrackerPage() {
           </div>
 
           {/* Row 3 — main area */}
-          <div className="w-full h-[52.75%] border border-[#3B3B3B] flex items-stretch">
+          <div className="w-full h-[52.75%] border-t border-[#3B3B3B33] flex items-stretch">
 
             {/* Left: prev→next time bar with travelling arrow */}
             <div className="w-[31.75%] h-full flex flex-col items-center py-4">
-              {isLoading ? <Skeleton className="w-full h-full rounded-lg" /> : (
+              {isLoading ? <Spinner size={24} /> : (
                 (() => {
                   const intervalMs = INTERVAL_OPTIONS[intervalIdx].minutes * 60 * 1000;
-
-                  // Previous slot time (when the last reminder fired)
                   const prevSlotMs = nextIdx === 0
                     ? schedule[0]?.getTime() - intervalMs
                     : schedule[nextIdx - 1]?.getTime();
                   const nextSlotMs = schedule[nextIdx]?.getTime();
-
                   if (!prevSlotMs || !nextSlotMs) return null;
-
                   const totalWindow = nextSlotMs - prevSlotMs;
                   const elapsed = Math.max(0, nowMs - prevSlotMs);
-                  // progress 0 = at prev label (bottom), 1 = at next label (top)
                   const progress = Math.min(1, elapsed / totalWindow);
-
-                  // Arrow travels from 80% (bottom label) up to 15% (top label)
                   const TOP_PCT = 15;
                   const BOT_PCT = 80;
                   const arrowTopPct = BOT_PCT - progress * (BOT_PCT - TOP_PCT);
-
                   const nowTime = formatTime(new Date(nowMs));
                   const prevTime = formatTime(new Date(prevSlotMs));
                   const nextTime = formatTime(new Date(nextSlotMs));
-
                   return (
                     <div className="relative w-full h-full">
-                      {/* Next time — top */}
                       <div className="absolute w-full flex justify-center" style={{ top: '8%' }}>
-                        <span className="text-white text-sm font-light">{nextTime}</span>
+                        <span className="text-white/70 text-sm font-light">{nextTime}</span>
                       </div>
-
-                      {/* Vertical track line */}
-                      <div
-                        className="absolute left-1/2 -translate-x-1/2 w-0.5 rounded-full"
-                        style={{
-                          top: '15%',
-                          bottom: '20%',
-                          background: 'linear-gradient(to bottom, #E63416 0%, #3B3B3B 100%)',
-                        }}
-                      />
-
-                      {/* Travelling arrow + current time label */}
-                      <div
-                        className="absolute left-1/2 z-10 pointer-events-none flex items-center"
-                        style={{ top: `${arrowTopPct}%`, transform: 'translateY(-50%)' }}
-                      >
-                        <svg
-                          width="16" height="26" viewBox="0 0 24 40" fill="none"
-                          style={{ flexShrink: 0, marginLeft: '-8px' }}
-                        >
+                      <div className="absolute left-1/2 -translate-x-1/2 w-0.5 rounded-full" style={{ top: '15%', bottom: '20%', background: 'linear-gradient(to bottom, #E63416 0%, #3B3B3B 100%)' }} />
+                      <div className="absolute left-1/2 z-10 pointer-events-none flex items-center" style={{ top: `${arrowTopPct}%`, transform: 'translateY(-50%)' }}>
+                        <svg width="16" height="26" viewBox="0 0 24 40" fill="none" style={{ flexShrink: 0, marginLeft: '-8px' }}>
                           <path d="M12 0L22 10L17 10L17 40L7 40L7 10L2 10L12 0Z" fill="#E63416" />
                         </svg>
-                        <span
-                          className="text-[#E63416] font-mono font-bold leading-none whitespace-nowrap"
-                          style={{ fontSize: '8px', marginLeft: '2px' }}
-                        >
+                        <span className="text-[#E63416] font-mono font-bold leading-none whitespace-nowrap" style={{ fontSize: '8px', marginLeft: '2px' }}>
                           {nowTime}
                         </span>
                       </div>
-
-                      {/* Prev time — bottom */}
                       <div className="absolute w-full flex justify-center" style={{ bottom: '8%' }}>
-                        <span className="text-gray-500 text-sm font-light line-through">{prevTime}</span>
+                        <span className="text-gray-600 text-sm font-light line-through">{prevTime}</span>
                       </div>
                     </div>
                   );
@@ -399,45 +386,45 @@ export default function WaterTrackerPage() {
             </div>
 
             {/* Center: water bottle */}
-            <div className="relative flex items-center justify-center" style={{ width: '36.5%', height: '100%' }}>
-              {isLoading ? <Skeleton className="w-full h-full rounded-lg" /> : (
+            <div className="relative flex items-center justify-center border-l border-[#3B3B3B33]" style={{ width: '36.5%', height: '100%' }}>
+              {isLoading ? <Spinner size={24} /> : (
                 <>
-                  <div className="absolute bottom-[12.04%] left-0 right-0 mx-auto w-full h-[75.92%] transition-all duration-200 ease-out">
+                  <div className="absolute bottom-[12.04%] left-0 right-0 mx-auto w-full h-[75.92%] transition-all duration-200 ease-out"
+                    style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.4))' }}>
                     <WaterBottleFiller waterLevel={waterLevel} isAlertActive={isAlertActive} alertBlink={alertBlink} />
                   </div>
                   <img src="/vectors/water-bottle.svg" alt="Water Bottle"
                     className="w-full h-[75.92%] object-contain relative z-10"
                     style={{
-                      transition: 'filter 0.1s ease-out',
-                      filter: isAlertActive ? (alertBlink ? 'brightness(0) invert(1)' : 'none') : 'none',
+                      filter: `drop-shadow(2px 4px 6px rgba(0,0,0,0.5)) ${isAlertActive ? (alertBlink ? 'brightness(0) invert(1)' : '') : ''}`,
                     }} />
                 </>
               )}
             </div>
 
             {/* Right: add/remove + countdown */}
-            <div className="w-[31.75%] h-full flex flex-col items-center justify-center gap-3">
-              {isLoading ? <Skeleton className="w-20 h-20 rounded-full" /> : (
+            <div className="w-[31.75%] h-full flex flex-col items-center justify-center gap-3 border-l border-[#3B3B3B33]">
+              {isLoading ? <Spinner size={24} /> : (
                 <>
                   <div className={`cursor-pointer ${isDone ? 'opacity-30 pointer-events-none' : ''}`} onClick={handleAddCup}>
-                    <div className="w-[70px] h-[70px] sm:w-[80px] sm:h-[80px] border-2 border-white rounded-full flex items-center justify-center hover:border-blue-400 transition-colors">
-                      <svg width="32" height="32" viewBox="0 0 40 40" fill="none">
-                        <path d="M20 5V35M5 20H35" stroke="white" strokeWidth="4" strokeLinecap="round" />
+                    <div className="w-[60px] h-[60px] rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 transition-all active:scale-90">
+                      <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
+                        <path d="M20 5V35M5 20H35" stroke="white" strokeWidth="3.5" strokeLinecap="round" />
                       </svg>
                     </div>
                   </div>
 
-                  <div className={`flex flex-col items-center transition-colors ${isAlertActive ? 'text-[#E63416]' : 'text-gray-400'}`}>
-                    <span className="text-[10px] uppercase tracking-widest leading-none">next</span>
+                  <div className={`flex flex-col items-center transition-colors ${isAlertActive ? 'text-[#E63416]' : 'text-gray-500'}`}>
+                    <span className="text-[9px] uppercase tracking-widest leading-none">next</span>
                     <span className="text-sm font-mono font-semibold tabular-nums">
                       {schedule.length > 0 ? formatCountdown(countdown) : '--:--'}
                     </span>
                   </div>
 
                   <div className={`cursor-pointer ${cupsToday <= 0 ? 'opacity-30 pointer-events-none' : ''}`} onClick={handleRemoveCup}>
-                    <div className="w-[48px] h-[48px] border border-gray-600 rounded-full flex items-center justify-center hover:border-gray-400 transition-colors">
-                      <svg width="24" height="24" viewBox="0 0 40 40" fill="none">
-                        <path d="M5 20H35" stroke="#aaa" strokeWidth="3" strokeLinecap="round" />
+                    <div className="w-[42px] h-[42px] rounded-full flex items-center justify-center border border-gray-700 hover:border-gray-500 transition-all active:scale-90">
+                      <svg width="20" height="20" viewBox="0 0 40 40" fill="none">
+                        <path d="M5 20H35" stroke="#9ca3af" strokeWidth="3" strokeLinecap="round" />
                       </svg>
                     </div>
                   </div>
@@ -447,16 +434,16 @@ export default function WaterTrackerPage() {
           </div>
 
           {/* Row 4 — interval picker + cup dots */}
-          <div className="w-full h-[20.14%] border border-[#3B3B3B] flex flex-col items-center justify-center gap-2 px-3">
-            {isLoading ? <Skeleton className="w-32 h-10" /> : (
+          <div className="w-full h-[20.14%] border-t border-[#3B3B3B33] flex flex-col items-center justify-center gap-2.5 px-3">
+            {isLoading ? <Spinner size={24} /> : (
               <>
                 <div className="flex gap-1.5">
                   {INTERVAL_OPTIONS.map((opt, idx) => (
                     <button key={idx} onClick={() => setIntervalIdx(idx)}
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-semibold transition-colors ${
+                      className={`px-3 py-1 rounded-full text-[10px] font-medium transition-all ${
                         idx === intervalIdx
-                          ? 'bg-[#3659B8] text-white'
-                          : 'bg-[#3B3B3B] text-gray-400 hover:bg-[#4a4a4a]'
+                          ? 'bg-white text-black'
+                          : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                       }`}>
                       {opt.label}
                     </button>
@@ -465,7 +452,7 @@ export default function WaterTrackerPage() {
 
                 <div className="flex gap-1 flex-wrap justify-center">
                   {Array.from({ length: CUPS_PER_DAY }).map((_, i) => (
-                    <div key={i} className="w-2.5 h-2.5 rounded-full transition-all duration-200"
+                    <div key={i} className="w-2 h-2 rounded-full transition-all duration-200"
                       style={{ backgroundColor: i < cupsToday ? '#3659B8' : '#3B3B3B' }} />
                   ))}
                 </div>
@@ -473,15 +460,14 @@ export default function WaterTrackerPage() {
                 <span className="text-gray-500 text-[10px]">
                   {cupsToday < CUPS_PER_DAY
                     ? `${CUPS_PER_DAY - cupsToday} cups remaining`
-                    : '🎉 Daily goal reached!'}
+                    : 'Daily goal reached!'}
                 </span>
               </>
             )}
           </div>
         </div>
       </div>
-      
-      {/* Floating Navigation Bar */}
+
       <FloatingNavBar />
     </div>
   );
