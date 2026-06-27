@@ -208,7 +208,7 @@ export default function Sidebar() {
                   (user?.name?.charAt(0) || user?.email?.charAt(0).toUpperCase() || 'U')
                 )}
               </div>
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 text-left">
                 <p className="text-white font-semibold truncate text-base">
                   {user?.name || user?.email || 'User'}
                 </p>
@@ -237,7 +237,10 @@ export default function Sidebar() {
                 <circle cx="12" cy="14" r="1" />
                 <circle cx="16" cy="14" r="1" />
               </svg>
-              <span className="font-medium">Planner</span>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="font-medium leading-tight">Planner</p>
+                <p className="text-[10px] text-white/45 group-hover:text-black/60 leading-tight mt-0.5">Create your training plan</p>
+              </div>
             </button>
 
             <button
@@ -254,7 +257,10 @@ export default function Sidebar() {
                 <line x1="9" y1="17" x2="13" y2="17" />
                 <path d="M9 3v3h6V3" />
               </svg>
-              <span className="font-medium">My Plans</span>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="font-medium leading-tight">My Plans</p>
+                <p className="text-[10px] text-white/45 group-hover:text-black/60 leading-tight mt-0.5">Browse saved plans</p>
+              </div>
             </button>
 
             <button
@@ -267,7 +273,10 @@ export default function Sidebar() {
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z" />
               </svg>
-              <span className="font-medium">Water Tracker</span>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="font-medium leading-tight">Water Tracker</p>
+                <p className="text-[10px] text-white/45 group-hover:text-black/60 leading-tight mt-0.5">Track daily hydration</p>
+              </div>
             </button>
 
             <button
@@ -278,11 +287,21 @@ export default function Sidebar() {
               }}
               className="group flex items-center gap-3 px-4 py-3 rounded-lg text-white/80 hover:text-black hover:bg-white transition-all duration-200"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-                <polyline points="17 6 23 6 23 12" />
-              </svg>
-              <span className="font-medium">Monitor</span>
+              <img
+                src="/vectors/cardio-icon.svg"
+                alt=""
+                className="w-5 h-5 brightness-0 invert group-hover:invert-0 transition-all duration-200"
+              />
+              <div className="flex-1 min-w-0 text-left">
+                <div className="flex items-center gap-1">
+                  <p className="font-medium leading-tight">Cardio Monitor</p>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3B63CF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                    <polyline points="17 6 23 6 23 12" />
+                  </svg>
+                </div>
+                <p className="text-[10px] text-white/45 group-hover:text-black/60 leading-tight mt-0.5">Log cardio performance</p>
+              </div>
             </button>
 
             <button
@@ -297,7 +316,10 @@ export default function Sidebar() {
                 alt=""
                 className="w-5 h-5 brightness-0 invert group-hover:invert-0 transition-all duration-200"
               />
-              <span className="font-medium">Workout Planner</span>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="font-medium leading-tight">Workout Planner</p>
+                <p className="text-[10px] text-white/45 group-hover:text-black/60 leading-tight mt-0.5">Build gym sessions</p>
+              </div>
             </button>
 
             <button
@@ -313,7 +335,10 @@ export default function Sidebar() {
                 <path d="M8 9l-2 1 1 3M16 9l2 1-1 3" />
                 <path d="M12 16.5v4M10 20.5h4" />
               </svg>
-              <span className="font-medium">Workout Tracker</span>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="font-medium leading-tight">Workout Tracker</p>
+                <p className="text-[10px] text-white/45 group-hover:text-black/60 leading-tight mt-0.5">Follow daily exercises</p>
+              </div>
             </button>
 
             {/* Admin Panel - Only show for admins */}
@@ -329,7 +354,10 @@ export default function Sidebar() {
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                   <path d="M9 12l2 2 4-4" />
                 </svg>
-                <span className="font-medium">Admin Panel</span>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="font-medium leading-tight">Admin Panel</p>
+                  <p className="text-[10px] text-white/45 group-hover:text-black/60 leading-tight mt-0.5">Manage users and roles</p>
+                </div>
               </button>
             )}
 
@@ -337,12 +365,24 @@ export default function Sidebar() {
             {activePlans.length > 0 && (
               <div className="mt-6 space-y-2">
                 <div className="px-4 mb-2">
-                  <p className="text-xs text-white/50 uppercase tracking-widest font-semibold">
-                    Active Plans
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3B63CF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="8" />
+                      <circle cx="12" cy="12" r="3" />
+                      <line x1="12" y1="2" x2="12" y2="4" />
+                      <line x1="12" y1="20" x2="12" y2="22" />
+                      <line x1="2" y1="12" x2="4" y2="12" />
+                      <line x1="20" y1="12" x2="22" y2="12" />
+                    </svg>
+                    <p className="text-xs text-white/50 uppercase tracking-widest font-semibold">
+                      Active Plans
+                    </p>
+                  </div>
+                  <p className="text-[10px] text-white/40 mt-1">Quick access to your in-progress plans</p>
                 </div>
                 {activePlans.map((plan) => {
                   const isWorkoutPlan = plan.tables?.some(t => t.title === 'WORKOUT PLAN');
+                  const subtitle = isWorkoutPlan ? 'Open workout day view' : 'View progress dashboard';
                   return (
                   <button
                     key={plan.id}
@@ -356,8 +396,22 @@ export default function Sidebar() {
                     }}
                     className="group flex items-center gap-3 px-4 py-2.5 rounded-lg text-left text-white/80 hover:text-black hover:bg-white transition-all duration-200 w-full"
                   >
-                    <div className="w-2 h-2 rounded-full bg-white flex-shrink-0" />
-                    <span className="truncate text-sm font-medium">{plan.title}</span>
+                    {isWorkoutPlan ? (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                        <path d="M6 9h12" />
+                        <path d="M4 12h16" />
+                        <path d="M6 15h12" />
+                      </svg>
+                    ) : (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                        <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+                        <polyline points="16 7 22 7 22 13" />
+                      </svg>
+                    )}
+                    <div className="flex-1 min-w-0 text-left">
+                      <p className="truncate text-sm font-medium leading-tight">{plan.title}</p>
+                      <p className="text-[10px] text-white/45 group-hover:text-black/60 leading-tight mt-0.5">{subtitle}</p>
+                    </div>
                   </button>
                 );})}
               </div>
@@ -402,7 +456,10 @@ export default function Sidebar() {
                 <polyline points="16 17 21 12 16 7" />
                 <line x1="21" y1="12" x2="9" y2="12" />
               </svg>
-              <span className="font-medium">Logout</span>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="font-medium leading-tight">Logout</p>
+                <p className="text-[10px] text-white/45 group-hover:text-black/60 leading-tight mt-0.5">Sign out of your account</p>
+              </div>
             </button>
           </div>
         </div>

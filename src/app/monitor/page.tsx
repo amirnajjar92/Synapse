@@ -5,12 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { BarChart } from '@/components/BarChart';
 import BurgerMenuButton from '@/components/BurgerMenuButton';
-import PromptBox from '@/components/PromptBox';
-import CustomButton from '@/components/CustomButton';
-import ChatRow from '@/components/ChatRow';
-import AIIcon from '@/components/AIIcon';
+import PromptBoxOpenAI from '@/components/PromptBoxOpenAI';
 import FloatingNavBar from '@/components/FloatingNavBar';
-import { getTheme, loadTheme } from '@/lib/theme';
 import {
   parseWeightGoalFromPrompt,
   generateMockWeightKg,
@@ -19,10 +15,8 @@ import {
   type PlanEntryWithMetrics,
 } from '@/lib/weightGoal';
 
-// ─── helpers ─────────────────────────────────────────────────────────────────
-
 const Skeleton = ({ className = '' }: { className?: string }) => (
-  <div className={`animate-pulse bg-gradient-to-r from-gray-700 via-gray-600 to-gray-700 bg-[length:200%_100%] ${className}`} />
+  <div className={`animate-pulse bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 bg-[length:200%_100%] opacity-50 ${className}`} />
 );
 
 function getPlanDay(startDate: string | null): number {
@@ -59,8 +53,6 @@ function getTodayStr() {
   return new Date().toISOString().split('T')[0];
 }
 
-// ─── types ────────────────────────────────────────────────────────────────────
-
 interface Plan {
   id: string;
   title: string;
@@ -69,102 +61,138 @@ interface Plan {
   status: string;
   startDate: string | null;
   endDate: string | null;
+  tables?: { title: string; rows: { columns: string[] }[] }[];
 }
 
 interface Metric { type: string; value: number; unit?: string | null; }
 
-// ─── main content ─────────────────────────────────────────────────────────────
+function isWorkoutPlan(plan: Plan): boolean {
+  return plan.tables?.some((t) => t.title === 'WORKOUT PLAN') ?? false;
+}
+
+const monitorPalettes = [
+  {
+    id: 'default',
+    primary: 'rgba(255,255,255,0.6)',
+    distance: '#E63416',
+    bg: '#0b0b0b',
+    frame: 'rgba(11,11,11,0.3)',
+    panel: 'rgba(11,11,11,0.96)',
+    text: '#e5e5e5',
+    textSecondary: 'rgba(255,255,255,0.45)',
+    textMuted: 'rgba(255,255,255,0.3)',
+    border: 'rgba(255,255,255,0.06)',
+    borderSoft: 'rgba(255,255,255,0.08)',
+  },
+  {
+    id: 'sport-blue',
+    primary: '#3B63CF',
+    distance: '#60A5FA',
+    bg: '#08111f',
+    frame: 'rgba(8,17,31,0.45)',
+    panel: 'rgba(11,18,32,0.96)',
+    text: '#eaf2ff',
+    textSecondary: 'rgba(161,185,230,0.85)',
+    textMuted: 'rgba(148,163,184,0.75)',
+    border: 'rgba(96,165,250,0.22)',
+    borderSoft: 'rgba(96,165,250,0.32)',
+  },
+  {
+    id: 'fresh-green',
+    primary: '#10B981',
+    distance: '#34D399',
+    bg: '#071910',
+    frame: 'rgba(7,25,16,0.45)',
+    panel: 'rgba(10,28,19,0.96)',
+    text: '#ecfff4',
+    textSecondary: 'rgba(167,243,208,0.85)',
+    textMuted: 'rgba(134,239,172,0.75)',
+    border: 'rgba(52,211,153,0.22)',
+    borderSoft: 'rgba(52,211,153,0.32)',
+  },
+  {
+    id: 'sunrise-orange',
+    primary: '#F59E0B',
+    distance: '#FB7185',
+    bg: '#1a1208',
+    frame: 'rgba(26,18,8,0.45)',
+    panel: 'rgba(34,24,11,0.96)',
+    text: '#fff4e6',
+    textSecondary: 'rgba(253,186,116,0.85)',
+    textMuted: 'rgba(251,191,36,0.75)',
+    border: 'rgba(245,158,11,0.24)',
+    borderSoft: 'rgba(245,158,11,0.34)',
+  },
+  {
+    id: 'ocean-energy',
+    primary: '#0EA5E9',
+    distance: '#22D3EE',
+    bg: '#061522',
+    frame: 'rgba(6,21,34,0.45)',
+    panel: 'rgba(8,26,40,0.96)',
+    text: '#e7f8ff',
+    textSecondary: 'rgba(125,211,252,0.85)',
+    textMuted: 'rgba(56,189,248,0.75)',
+    border: 'rgba(34,211,238,0.22)',
+    borderSoft: 'rgba(34,211,238,0.32)',
+  },
+];
 
 function MonitorContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<{ email: string } | null>(null);
 
-  // Plans
   const [plans, setPlans] = useState<Plan[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
 
-  // Today's metrics from DB
   const [todayMetrics, setTodayMetrics] = useState<Metric[]>([]);
-
-  // All entries for charts
   const [planEntries, setPlanEntries] = useState<PlanEntryWithMetrics[]>([]);
 
-  // Live clock
   const [now, setNow] = useState(new Date());
 
-  // Notes
   const [dailyNotes, setDailyNotes] = useState('');
   const [notesHistory, setNotesHistory] = useState<Array<{role: 'user' | 'assistant', content: string}>>([]);
 
-  // Adaptive border radius
-  const [borderRadius, setBorderRadius] = useState('40px');
-
-  // AI extraction
   const [isExtracting, setIsExtracting] = useState(false);
-  const [extractionResult, setExtractionResult] = useState<string>('');
   const [chatMessages, setChatMessages] = useState<string[]>([]);
   const [showAIModal, setShowAIModal] = useState(false);
   const [notesInput, setNotesInput] = useState('');
 
-  // Weight chart data
   const [weightsKg, setWeightsKg] = useState<number[]>([]);
   const [activityBarData, setActivityBarData] = useState<number[]>([]);
   const [distanceValuesKm, setDistanceValuesKm] = useState<number[]>([]);
+  const [paletteIndex, setPaletteIndex] = useState(0);
 
-  // Theme
-  const [currentTheme, setCurrentTheme] = useState('dark');
-  const theme = getTheme(currentTheme);
-
-  // ── bootstrap ────────────────────────────────────────────────────────────
   useEffect(() => {
     setMounted(true);
-    setCurrentTheme(loadTheme());
     const userStr = localStorage.getItem('synapse_user');
     if (!userStr) { router.push('/'); return; }
     setUser(JSON.parse(userStr));
 
-    // Listen for theme changes
-    const handleThemeChange = (e: CustomEvent) => {
-      setCurrentTheme(e.detail);
-    };
-    window.addEventListener('themeChange', handleThemeChange as EventListener);
-    return () => window.removeEventListener('themeChange', handleThemeChange as EventListener);
+    const savedPalette = Number(localStorage.getItem('monitor_palette_idx') || '0');
+    if (!Number.isNaN(savedPalette) && savedPalette >= 0 && savedPalette < monitorPalettes.length) {
+      setPaletteIndex(savedPalette);
+    }
   }, [router]);
 
-  // Live clock tick
+  const activePalette = monitorPalettes[paletteIndex] || monitorPalettes[0];
+
+  const handlePaletteCycle = () => {
+    const next = (paletteIndex + 1) % monitorPalettes.length;
+    setPaletteIndex(next);
+    localStorage.setItem('monitor_palette_idx', String(next));
+  };
+
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
   }, []);
 
-  // Adaptive border radius based on screen size
-  useEffect(() => {
-    const updateBorderRadius = () => {
-      const vh = window.innerHeight;
-      const vw = window.innerWidth;
-      const minDimension = Math.min(vh, vw);
-      
-      // Calculate border radius as percentage of screen size
-      // Smaller screens get proportionally smaller radius
-      if (minDimension < 400) {
-        setBorderRadius('20px');
-      } else if (minDimension < 600) {
-        setBorderRadius('30px');
-      } else {
-        setBorderRadius('40px');
-      }
-    };
-
-    updateBorderRadius();
-    window.addEventListener('resize', updateBorderRadius);
-    return () => window.removeEventListener('resize', updateBorderRadius);
-  }, []);
-
-  // ── fetch plans ──────────────────────────────────────────────────────────
   const fetchPlans = useCallback(async () => {
     if (!user?.email) return;
     try {
@@ -176,24 +204,58 @@ function MonitorContent() {
       if (res.ok) {
         const data = await res.json();
         const list: Plan[] = data.plans || [];
-        setPlans(list);
-        const planIdFromQuery = searchParams.get('planId');
-        const target = planIdFromQuery
-          ? list.find(p => p.id === planIdFromQuery)
-          : list.find(p => p.status === 'IN_PROGRESS') ?? list[0] ?? null;
-        setSelectedPlan(target ?? null);
+        const monitorPlans = list.filter((p) => !isWorkoutPlan(p));
+
+        // Prioritize most-used / most-logged plans first
+        const countsByPlanId = new Map<string, number>();
+        try {
+          const entriesUrl = new URL('/api/users/me/daily-entries', window.location.origin);
+          entriesUrl.searchParams.set('email', user.email);
+          const entriesRes = await fetch(entriesUrl.toString());
+          if (entriesRes.ok) {
+            const entriesData = await entriesRes.json();
+            const dailyEntries: Array<{ planId?: string }> = entriesData.dailyEntries || [];
+            for (const entry of dailyEntries) {
+              if (!entry.planId) continue;
+              countsByPlanId.set(entry.planId, (countsByPlanId.get(entry.planId) || 0) + 1);
+            }
+          }
+        } catch (e) {
+          console.error('Error fetching usage counts for plans:', e);
+        }
+
+        const sortedMonitorPlans = [...monitorPlans].sort((a, b) => {
+          const aCount = countsByPlanId.get(a.id) || 0;
+          const bCount = countsByPlanId.get(b.id) || 0;
+          if (bCount !== aCount) return bCount - aCount;
+
+          if (a.status === 'IN_PROGRESS' && b.status !== 'IN_PROGRESS') return -1;
+          if (b.status === 'IN_PROGRESS' && a.status !== 'IN_PROGRESS') return 1;
+
+          return (a.title || '').localeCompare(b.title || '');
+        });
+
+        setPlans(sortedMonitorPlans);
+        let target: Plan | null = null;
+        const planId = searchParams.get('planId');
+        if (planId) {
+          const requested = sortedMonitorPlans.find(p => p.id === planId) ?? null;
+          target = requested;
+        }
+        if (!target) {
+          target = sortedMonitorPlans.find(p => p.status === 'IN_PROGRESS') ?? sortedMonitorPlans[0] ?? null;
+        }
+        setSelectedPlan(target);
       }
-    } catch (e) { console.error(e); }
-    finally { setIsLoading(false); }
+    } catch (e) {
+      console.error('Error fetching plans:', e);
+    }
   }, [user?.email, searchParams]);
 
   useEffect(() => { fetchPlans(); }, [fetchPlans]);
 
-  // ── fetch today's entry + all entries when plan changes ──────────────────
   const fetchData = useCallback(async () => {
     if (!user?.email || !selectedPlan) return;
-
-    // All entries for charts
     try {
       const url = new URL('/api/users/me/daily-entries', window.location.origin);
       url.searchParams.set('email', user.email);
@@ -209,13 +271,11 @@ function MonitorContent() {
           }));
         setPlanEntries(entries);
 
-        // Build weight chart
         const totalDays = getPlanTotalDays(selectedPlan.startDate, selectedPlan.endDate);
         const goal = parseWeightGoalFromPrompt(selectedPlan.prompt);
         const realWeights = buildWeightKgFromEntries(entries, selectedPlan.startDate ?? '', totalDays);
         setWeightsKg(realWeights ?? generateMockWeightKg(totalDays, goal, selectedPlan.id));
 
-        // Build activity bar (distance per logged day, or 0)
         const distanceByDay: number[] = Array(totalDays).fill(0);
         const distanceKm: number[] = Array(totalDays).fill(0);
         if (selectedPlan.startDate) {
@@ -227,17 +287,18 @@ function MonitorContent() {
             const idx = Math.round((d.getTime() - start.getTime()) / 86400000);
             const dist = entry.metrics.find(m => m.type === 'distance');
             if (dist && idx >= 0 && idx < totalDays) {
-              distanceKm[idx] = dist.value; // Store actual km value
-              distanceByDay[idx] = Math.min(100, (dist.value / 15) * 100); // normalise to 0-100 (15km max)
+              distanceKm[idx] = dist.value;
+              distanceByDay[idx] = Math.min(100, (dist.value / 15) * 100);
             }
           }
         }
         setDistanceValuesKm(distanceKm);
         setActivityBarData(distanceByDay);
       }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error('Error fetching entries:', e);
+    }
 
-    // Today's entry for live metrics
     try {
       const url = new URL(
         `/api/users/me/daily-entries/${encodeURIComponent(getTodayStr())}`,
@@ -254,32 +315,26 @@ function MonitorContent() {
         setTodayMetrics([]);
         setDailyNotes('');
       }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error('Error fetching today data:', e);
+    } finally {
+      setIsLoading(false);
+    }
   }, [user?.email, selectedPlan]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // ── auto-save notes ──────────────────────────────────────────────────────
-  // Notes are now ephemeral - handled in AI modal
-
-  // ── AI metric extraction ─────────────────────────────────────────────────
   const handleSendToAI = async () => {
     if (!user?.email || !selectedPlan || !notesInput.trim()) return;
-    
-    // Add user message to history
     const userMessage = notesInput.trim();
     setNotesHistory(prev => [...prev, { role: 'user', content: userMessage }]);
-    
-    // Clear input immediately (like chat UX)
     setNotesInput('');
-    
     setIsExtracting(true);
-    setExtractionResult('');
     setChatMessages([]);
-    
+
     try {
-      setChatMessages(['🤖 Analyzing your activity notes...']);
-      
+      setChatMessages(prev => [...prev, 'Analyzing your activity notes...']);
+
       const formData = new FormData();
       formData.append('email', user.email);
       formData.append('prompt', userMessage);
@@ -293,57 +348,44 @@ function MonitorContent() {
       if (res.ok) {
         const data = await res.json();
         if (data.success) {
-          setChatMessages(prev => [...prev, '📊 Extracted metrics from your notes']);
-          
-          // Show what was extracted
+          setChatMessages(prev => [...prev, 'Extracted metrics from your notes']);
           const changes = data.metricChanges || [];
           let responseText = '';
           if (changes.length > 0) {
-            setChatMessages(prev => [...prev, '✏️ Updated metrics:']);
+            setChatMessages(prev => [...prev, 'Updated metrics:']);
             changes.forEach((c: { type: string; action: string; newValue: number; newUnit?: string }) => {
               const msg = `  • ${c.type}: ${c.newValue}${c.newUnit ? ' ' + c.newUnit : ''}`;
               setChatMessages(prev => [...prev, msg]);
               responseText += msg + '\n';
             });
           } else {
-            setChatMessages(prev => [...prev, '❌ No metrics found in notes']);
+            setChatMessages(prev => [...prev, 'No metrics found in notes']);
             responseText = 'No metrics found in your notes.';
           }
-          
-          setChatMessages(prev => [...prev, '📋 Saved to today\'s entry']);
-          
-          // Add assistant response to history
+          setChatMessages(prev => [...prev, 'Saved to today\'s entry']);
           setNotesHistory(prev => [...prev, { role: 'assistant', content: responseText || 'Metrics updated successfully.' }]);
-          
-          // Refresh metrics display
           await fetchData();
-          
-          setChatMessages(prev => [...prev, '✅ All done! Metrics updated.']);
-          setExtractionResult('success');
+          setChatMessages(prev => [...prev, 'All done! Metrics updated.']);
         } else {
           const errorMsg = 'Failed to extract metrics from your notes.';
-          setChatMessages(prev => [...prev, '❌ ' + errorMsg]);
+          setChatMessages(prev => [...prev, errorMsg]);
           setNotesHistory(prev => [...prev, { role: 'assistant', content: errorMsg }]);
-          setExtractionResult('error');
         }
       } else {
         const errorMsg = 'Network error occurred.';
-        setChatMessages(prev => [...prev, '❌ ' + errorMsg]);
+        setChatMessages(prev => [...prev, errorMsg]);
         setNotesHistory(prev => [...prev, { role: 'assistant', content: errorMsg }]);
-        setExtractionResult('error');
       }
     } catch (e) {
       console.error(e);
       const errorMsg = 'Network error occurred.';
-      setChatMessages(prev => [...prev, '❌ ' + errorMsg]);
+      setChatMessages(prev => [...prev, errorMsg]);
       setNotesHistory(prev => [...prev, { role: 'assistant', content: errorMsg }]);
-      setExtractionResult('error');
     } finally {
       setIsExtracting(false);
     }
   };
 
-  // ── derived values ────────────────────────────────────────────────────────
   const planDay = getPlanDay(selectedPlan?.startDate ?? null);
   const totalDays = getPlanTotalDays(selectedPlan?.startDate ?? null, selectedPlan?.endDate ?? null);
 
@@ -353,7 +395,6 @@ function MonitorContent() {
   const totalTime = getMetric('totalTime');
   const weight = getMetric('weight');
 
-  // Most recent value across all entries (fallback when today has nothing)
   const getLatestMetric = (type: string) => {
     for (const entry of [...planEntries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())) {
       const m = entry.metrics.find(m => m.type === type);
@@ -366,14 +407,10 @@ function MonitorContent() {
   const displayPace = pace ?? getLatestMetric('pace');
   const displayTime = totalTime ?? getLatestMetric('totalTime');
 
-  // Weight chart heights
   const weightBarHeights = toWeightChartHeights(weightsKg);
   const weightGoal = parseWeightGoalFromPrompt(selectedPlan?.prompt ?? '');
 
-  // Clock
   const dayName = now.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
-  const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: false });
-  const ampm = now.getHours() < 12 ? 'AM' : 'PM';
   const time12 = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   const [clockTime, clockAmPm] = time12.split(' ');
 
@@ -383,57 +420,55 @@ function MonitorContent() {
   if (!mounted) return null;
 
   return (
-    <div className="w-full h-screen flex items-center justify-center p-2 sm:p-4" style={{ backgroundColor: theme.colors.background }}>
+    <div className="w-full h-screen flex items-center justify-center p-2 sm:p-4" style={{ backgroundColor: activePalette.bg }}>
       <div
         className="overflow-hidden shadow-2xl relative flex-shrink-0"
         style={{ 
           width: `min(95vw, ${baseWidth}px)`, 
           aspectRatio: baseWidth / baseHeight, 
           maxHeight: '95vh',
-          borderRadius: borderRadius,
-          backgroundColor: theme.colors.card
+          borderRadius: '40px',
+          backgroundColor: activePalette.frame,
         }}
       >
         <div className="w-full h-full flex flex-col relative">
-          {/* Header Row 1 — burger menu + Synapse logo + brand name */}
+          {/* Header Row 1 */}
           <div className="flex w-full h-[6%] relative items-center">
-            {/* Burger menu */}
             <div className="absolute top-3 left-3 z-20">
               <BurgerMenuButton />
             </div>
-
-            {/* Synapse Brand Name */}
+            <button
+              onClick={handlePaletteCycle}
+              className="absolute top-3 right-3 z-20 w-5 h-5 rounded-full border transition-transform hover:scale-105"
+              style={{
+                borderColor: activePalette.borderSoft,
+                background: `linear-gradient(135deg, ${activePalette.primary} 20%, ${activePalette.distance} 100%)`,
+              }}
+              aria-label="Change monitor colors"
+              title="Change monitor colors"
+            />
             <div className="w-full h-full flex items-center justify-center">
               {isLoading ? (
                 <Skeleton className="w-32 h-8" />
               ) : (
-                <span 
-                  className="text-xl sm:text-2xl font-bold tracking-wider" 
-                  style={{ 
-                    color: theme.colors.text,
-                    fontFamily: 'var(--font-hanalei-fill)'
-                  }}
-                >
+                <span className="text-xl sm:text-2xl font-bold tracking-wider" style={{ fontFamily: 'var(--font-hanalei-fill)', color: activePalette.text }}>
                   SYNAPSE
                 </span>
               )}
             </div>
           </div>
 
-          {/* Header Row 2 — date + plan selector */}
-          <div className="flex w-full h-[6%] relative">
-            {/* Date display */}
+          {/* Header Row 2 */}
+          <div className="flex w-full h-[6%]">
             <div className="w-1/2 h-full flex items-center justify-center px-3">
               {isLoading ? (
                 <Skeleton className="w-24 h-6" />
               ) : (
-                <span className="text-lg sm:text-xl md:text-2xl font-light tabular-nums" style={{ color: theme.colors.text }}>
+                <span className="text-lg sm:text-xl md:text-2xl font-light tabular-nums" style={{ color: activePalette.text }}>
                   {now.toLocaleDateString('en-US', { month: 'numeric', year: 'numeric' })}
                 </span>
               )}
             </div>
-
-            {/* Plan selector */}
             <div className="w-1/2 h-full flex items-center justify-center px-3">
               {isLoading ? (
                 <Skeleton className="w-28 h-6" />
@@ -445,7 +480,7 @@ function MonitorContent() {
                     setSelectedPlan(p ?? null);
                   }}
                   className="bg-transparent text-sm sm:text-base font-light border-none outline-none text-center w-full truncate cursor-pointer"
-                  style={{ color: theme.colors.text }}
+                  style={{ color: activePalette.text }}
                 >
                   {plans.filter(p => p.status === 'IN_PROGRESS').length === 0
                     ? <option value="">No Active Plans</option>
@@ -456,98 +491,96 @@ function MonitorContent() {
             </div>
           </div>
 
-          {/* Row 3 — ACTIVITY + day counter */}
+          {/* Row 3 — ACTIVITY + day */}
           <div className="flex w-full h-[9.61%]">
-            <div className="w-1/2 h-full border flex items-center px-3" style={{ borderColor: theme.colors.border }}>
+            <div className="w-1/2 h-full flex items-center px-3" style={{ borderTop: `1px solid ${activePalette.border}`, borderBottom: `1px solid ${activePalette.border}`, borderRight: `1px solid ${activePalette.border}` }}>
               {isLoading ? <Skeleton className="w-24 h-6" /> : (
-                <span className="text-xl sm:text-2xl font-light" style={{ color: theme.colors.text }}>ACTIVITY</span>
+                <span className="text-xl sm:text-2xl font-light" style={{ color: activePalette.text }}>ACTIVITY</span>
               )}
             </div>
-            <div className="w-1/2 h-full border flex items-center justify-center" style={{ borderColor: theme.colors.border }}>
+            <div className="w-1/2 h-full flex items-center justify-center" style={{ borderTop: `1px solid ${activePalette.border}`, borderBottom: `1px solid ${activePalette.border}` }}>
               {isLoading ? <Skeleton className="w-28 h-8" /> : (
-                <span className="font-bold" style={{ fontFamily: 'var(--font-hanalei-fill)', fontSize: 'calc((100vh * 0.95 * 0.0961) * 0.806)', lineHeight: 1, color: theme.colors.text }}>
+                <span className="font-bold" style={{ fontFamily: 'var(--font-hanalei-fill)', fontSize: 'calc((100vh * 0.95 * 0.0961) * 0.806)', lineHeight: 1, color: activePalette.text }}>
                   DAY {planDay}
                 </span>
               )}
             </div>
           </div>
 
-          {/* Row 3 — Distance */}
+          {/* Row 4 — Distance */}
           <div className="flex w-full h-[5.72%]">
-            <div className="w-1/2 h-full border flex items-center px-3" style={{ borderColor: theme.colors.border }}>
+            <div className="w-1/2 h-full flex items-center px-3" style={{ borderBottom: `1px solid ${activePalette.border}`, borderRight: `1px solid ${activePalette.border}` }}>
               {isLoading ? <Skeleton className="w-16 h-4" /> : (
-                <span className="text-base font-light" style={{ color: theme.colors.text }}>Distance</span>
+                <span className="text-base font-light" style={{ color: activePalette.text }}>Distance</span>
               )}
             </div>
-            <div className="w-1/2 h-full border flex items-center justify-center px-3" style={{ borderColor: theme.colors.border }}>
+            <div className="w-1/2 h-full flex items-center justify-center px-3" style={{ borderBottom: `1px solid ${activePalette.border}` }}>
               {isLoading ? <Skeleton className="w-20 h-5" /> : (
                 displayDistance
                   ? <div className="text-center w-full">
-                      <span className="text-xl font-light" style={{ color: theme.colors.text }}>{displayDistance.value}</span>
-                      <span className="text-xs ml-1" style={{ color: theme.colors.textSecondary }}>{displayDistance.unit ?? 'km'}</span>
-                      {!distance && <span className="text-[8px] ml-1" style={{ color: theme.colors.textMuted }}>last</span>}
+                      <span className="text-xl font-light" style={{ color: activePalette.text }}>{displayDistance.value}</span>
+                      <span className="text-xs ml-1" style={{ color: activePalette.textSecondary }}>{displayDistance.unit ?? 'km'}</span>
+                      {!distance && <span className="text-[8px] ml-1" style={{ color: activePalette.textMuted }}>last</span>}
                     </div>
-                  : <span className="text-sm" style={{ color: theme.colors.textMuted }}>—</span>
+                  : <span className="text-sm" style={{ color: activePalette.textMuted }}>—</span>
               )}
             </div>
           </div>
 
-          {/* Row 4 — Pace */}
+          {/* Row 5 — Pace */}
           <div className="flex w-full h-[5.72%]">
-            <div className="w-1/2 h-full border flex items-center px-3" style={{ borderColor: theme.colors.border }}>
+            <div className="w-1/2 h-full flex items-center px-3" style={{ borderBottom: `1px solid ${activePalette.border}`, borderRight: `1px solid ${activePalette.border}` }}>
               {isLoading ? <Skeleton className="w-12 h-4" /> : (
-                <span className="text-base font-light" style={{ color: theme.colors.text }}>Pace</span>
+                <span className="text-base font-light" style={{ color: activePalette.text }}>Pace</span>
               )}
             </div>
-            <div className="w-1/2 h-full border flex items-center justify-center px-3" style={{ borderColor: theme.colors.border }}>
+            <div className="w-1/2 h-full flex items-center justify-center px-3" style={{ borderBottom: `1px solid ${activePalette.border}` }}>
               {isLoading ? <Skeleton className="w-20 h-5" /> : (
                 displayPace
                   ? <div className="text-center w-full">
-                      <span className="text-xl font-light" style={{ color: theme.colors.text }}>
+                      <span className="text-xl font-light" style={{ color: activePalette.text }}>
                         {displayPace.unit?.includes('second') ? formatPace(displayPace.value) : displayPace.value}
                       </span>
-                      <span className="text-xs ml-1" style={{ color: theme.colors.textSecondary }}>/km</span>
-                      {!pace && <span className="text-[8px] ml-1" style={{ color: theme.colors.textMuted }}>last</span>}
+                      <span className="text-xs ml-1" style={{ color: activePalette.textSecondary }}>/km</span>
+                      {!pace && <span className="text-[8px] ml-1" style={{ color: activePalette.textMuted }}>last</span>}
                     </div>
-                  : <span className="text-sm" style={{ color: theme.colors.textMuted }}>—</span>
+                  : <span className="text-sm" style={{ color: activePalette.textMuted }}>—</span>
               )}
             </div>
           </div>
 
-          {/* Row 5 — Total Time */}
+          {/* Row 6 — Total Time */}
           <div className="flex w-full h-[5.72%]">
-            <div className="w-1/2 h-full border flex items-center px-3" style={{ borderColor: theme.colors.border }}>
+            <div className="w-1/2 h-full flex items-center px-3" style={{ borderBottom: `1px solid ${activePalette.border}`, borderRight: `1px solid ${activePalette.border}` }}>
               {isLoading ? <Skeleton className="w-20 h-4" /> : (
-                <span className="text-base font-light" style={{ color: theme.colors.text }}>Total Time</span>
+                <span className="text-base font-light" style={{ color: activePalette.text }}>Total Time</span>
               )}
             </div>
-            <div className="w-1/2 h-full border flex items-center justify-center px-3" style={{ borderColor: theme.colors.border }}>
+            <div className="w-1/2 h-full flex items-center justify-center px-3" style={{ borderBottom: `1px solid ${activePalette.border}` }}>
               {isLoading ? <Skeleton className="w-20 h-5" /> : (
                 displayTime
                   ? <div className="text-center w-full">
-                      <span className="text-xl font-light" style={{ color: theme.colors.text }}>
+                      <span className="text-xl font-light" style={{ color: activePalette.text }}>
                         {displayTime.unit?.includes('second') ? formatSeconds(Math.round(displayTime.value)) : displayTime.value}
                       </span>
-                      {!totalTime && <span className="text-[8px] ml-1" style={{ color: theme.colors.textMuted }}>last</span>}
+                      {!totalTime && <span className="text-[8px] ml-1" style={{ color: activePalette.textMuted }}>last</span>}
                     </div>
-                  : <span className="text-sm" style={{ color: theme.colors.textMuted }}>—</span>
+                  : <span className="text-sm" style={{ color: activePalette.textMuted }}>—</span>
               )}
             </div>
           </div>
 
-          {/* Row 6 — Charts */}
+          {/* Row 7 — Charts */}
           <div className="flex w-full h-[12.93%]">
-            {/* Activity bar chart (distance per day) */}
-            <div className="w-1/2 h-full border flex flex-col p-2 overflow-hidden" style={{ borderColor: theme.colors.border }}>
+            <div className="w-1/2 h-full flex flex-col p-2 overflow-hidden" style={{ borderBottom: `1px solid ${activePalette.border}`, borderRight: `1px solid ${activePalette.border}` }}>
               {isLoading ? <Skeleton className="w-full h-full" /> : (
                 <>
-                  <div className="flex justify-between text-[9px] mb-1" style={{ color: theme.colors.textSecondary }}>
+                  <div className="flex justify-between text-[9px] mb-1" style={{ color: activePalette.textSecondary }}>
                     <span>Day 1</span>
-                    <span className="text-[#E63416]">DIST</span>
+                    <span style={{ color: activePalette.distance }}>DIST</span>
                     <span>Day {totalDays}</span>
                   </div>
                   <div className="flex-1 flex">
-                    {/* Y-axis labels column */}
                     <div className="w-7 flex flex-col justify-between pr-1 flex-shrink-0">
                       {distanceValuesKm.filter(v => v > 0).length > 0 ? (
                         (() => {
@@ -555,31 +588,30 @@ function MonitorContent() {
                           const max = Math.max(...nonZero);
                           const maxCeil = Math.ceil(max * 1.1);
                           return [maxCeil, Math.round(maxCeil * 0.75), Math.round(maxCeil * 0.5), Math.round(maxCeil * 0.25), 0].map((val, idx) => (
-                            <div key={idx} className="text-[7px] font-medium text-right leading-none" style={{ color: theme.colors.textSecondary }}>
+                            <div key={idx} className="text-[7px] font-medium text-right leading-none" style={{ color: activePalette.textSecondary }}>
                               {val}
                             </div>
                           ));
                         })()
                       ) : (
                         [15, 11, 7, 4, 0].map((val, idx) => (
-                          <div key={idx} className="text-[7px] font-medium text-right leading-none" style={{ color: theme.colors.textSecondary }}>
+                          <div key={idx} className="text-[7px] font-medium text-right leading-none" style={{ color: activePalette.textSecondary }}>
                             {val}
                           </div>
                         ))
                       )}
                     </div>
-                    {/* Chart area */}
                     <div className="flex-1">
                       <BarChart
                         data={activityBarData}
-                        color="#E63416"
+                        color={activePalette.distance}
                         activeBarCount={planDay}
-                        inactiveColor="#444"
+                        inactiveColor={activePalette.borderSoft}
                         showConnectingLine
-                        connectingLineColor={theme.colors.text}
+                        connectingLineColor={activePalette.textMuted}
                         connectingLineWidth={1}
                         showCurrentDayArrow
-                        currentDayArrowColor="#E63416"
+                        currentDayArrowColor={activePalette.distance}
                       />
                     </div>
                   </div>
@@ -587,17 +619,15 @@ function MonitorContent() {
               )}
             </div>
 
-            {/* Weight chart */}
-            <div className="w-1/2 h-full border flex flex-col p-2 relative overflow-hidden" style={{ borderColor: theme.colors.border }}>
+            <div className="w-1/2 h-full flex flex-col p-2 relative overflow-hidden" style={{ borderBottom: `1px solid ${activePalette.border}` }}>
               {isLoading ? <Skeleton className="w-full h-full" /> : (
                 <>
-                  <div className="flex justify-between text-[9px] mb-1" style={{ color: theme.colors.textSecondary }}>
+                  <div className="flex justify-between text-[9px] mb-1" style={{ color: activePalette.textSecondary }}>
                     <span>Day 1</span>
-                    <span style={{ color: theme.colors.primary }}>WEIGHT</span>
+                    <span style={{ color: activePalette.primary }}>WEIGHT</span>
                     <span>Day {totalDays}</span>
                   </div>
                   <div className="flex-1 flex relative">
-                    {/* Y-axis labels column */}
                     <div className="w-7 flex flex-col justify-between pr-1 flex-shrink-0">
                       {weightsKg.length > 0 ? (
                         (() => {
@@ -609,36 +639,34 @@ function MonitorContent() {
                           const hi = mid + displayRange / 2;
                           const lo = mid - displayRange / 2;
                           return [hi, hi - (hi - lo) * 0.25, mid, lo + (hi - lo) * 0.25, lo].map((val, idx) => (
-                            <div key={idx} className="text-[7px] font-medium text-right leading-none" style={{ color: theme.colors.textSecondary }}>
+                            <div key={idx} className="text-[7px] font-medium text-right leading-none" style={{ color: activePalette.textSecondary }}>
                               {val.toFixed(1)}
                             </div>
                           ));
                         })()
                       ) : (
                         [80, 75, 70, 65, 60].map((val, idx) => (
-                          <div key={idx} className="text-[7px] font-medium text-right leading-none" style={{ color: theme.colors.textSecondary }}>
+                          <div key={idx} className="text-[7px] font-medium text-right leading-none" style={{ color: activePalette.textSecondary }}>
                             {val}
                           </div>
                         ))
                       )}
                     </div>
-                    {/* Chart area */}
                     <div className="flex-1 relative">
                       <BarChart
                         data={weightBarHeights}
-                        color={theme.colors.primary}
+                        color={activePalette.primary}
                         showConnectingLine
-                        connectingLineColor={theme.colors.text}
+                        connectingLineColor={activePalette.textMuted}
                         connectingLineWidth={1}
-                        connectingLineShadow="#EFE9E9"
+                        connectingLineShadow="rgba(239,233,233,0.49)"
                         activeBarCount={planDay}
-                        inactiveColor="#444"
+                        inactiveColor={activePalette.borderSoft}
                         showCurrentDayArrow
-                        currentDayArrowColor={theme.colors.text}
-                        
+                        currentDayArrowColor={activePalette.primary}
                       />
                       <div className="absolute bottom-0 right-1">
-                        <span className="text-sm font-light" style={{ color: theme.colors.text }}>
+                        <span className="text-sm font-light" style={{ color: activePalette.text }}>
                           {weight
                             ? `${weight.value}kg`
                             : weightsKg.length > 0
@@ -650,7 +678,7 @@ function MonitorContent() {
                         </span>
                       </div>
                       {weightGoal.goalWeight && (
-                        <div className="absolute top-0 right-1 text-[9px]" style={{ color: theme.colors.textSecondary }}>
+                        <div className="absolute top-0 right-1 text-[9px]" style={{ color: activePalette.textSecondary }}>
                           →{weightGoal.goalWeight}kg
                         </div>
                       )}
@@ -661,54 +689,53 @@ function MonitorContent() {
             </div>
           </div>
 
-          {/* Row 7 — Live clock */}
+          {/* Row 8 — Live clock */}
           <div className="flex w-full h-[17.85%]">
-            <div className="w-[28.36%] h-full border flex items-center justify-center" style={{ borderColor: theme.colors.border }}>
+            <div className="w-[28.36%] h-full flex items-center justify-center" style={{ borderBottom: `1px solid ${activePalette.border}`, borderRight: `1px solid ${activePalette.border}` }}>
               {isLoading ? <Skeleton className="w-12 h-8" /> : (
-                <span className="text-3xl sm:text-4xl font-light" style={{ color: theme.colors.text }}>{dayName}</span>
+                <span className="text-3xl sm:text-4xl font-light" style={{ color: activePalette.text }}>{dayName}</span>
               )}
             </div>
-            <div className="w-[71.64%] h-full border flex items-center justify-center gap-2" style={{ borderColor: theme.colors.border }}>
+            <div className="w-[71.64%] h-full flex items-center justify-center gap-2" style={{ borderBottom: `1px solid ${activePalette.border}` }}>
               {isLoading ? <Skeleton className="w-32 h-16" /> : (
                 <>
-                  <span className="text-5xl sm:text-6xl font-light tabular-nums" style={{ color: theme.colors.text }}>{clockTime}</span>
-                  <span className="text-xl sm:text-2xl" style={{ color: theme.colors.textSecondary }}>{clockAmPm}</span>
+                  <span className="text-5xl sm:text-6xl font-light tabular-nums" style={{ color: activePalette.text }}>{clockTime}</span>
+                  <span className="text-xl sm:text-2xl" style={{ color: activePalette.textSecondary }}>{clockAmPm}</span>
                 </>
               )}
             </div>
           </div>
 
-          {/* Row 8 — progress bar strip */}
-          <div className="w-full h-[5.26%] border flex items-center px-3 gap-1" style={{ borderColor: theme.colors.border }}>
+          {/* Row 9 — progress bar */}
+          <div className="w-full h-[5.26%] flex items-center px-3 gap-1" style={{ borderBottom: `1px solid ${activePalette.border}` }}>
             {isLoading ? <Skeleton className="w-full h-3 rounded-full" /> : (
               <>
-                <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: theme.colors.borderAlt }}>
+                <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: activePalette.borderSoft }}>
                   <div
                     className="h-full rounded-full transition-all"
-                    style={{ width: `${Math.min(100, (planDay / totalDays) * 100)}%`, backgroundColor: theme.colors.primary }}
+                    style={{ width: `${Math.min(100, (planDay / totalDays) * 100)}%`, backgroundColor: activePalette.primary }}
                   />
                 </div>
-                <span className="text-[9px] whitespace-nowrap flex-shrink-0" style={{ color: theme.colors.textSecondary }}>
+                <span className="text-[9px] whitespace-nowrap flex-shrink-0" style={{ color: activePalette.textSecondary }}>
                   {planDay}/{totalDays}d
                 </span>
               </>
             )}
           </div>
 
-          {/* Row 9 — Smart Insights & Recommendations */}
-          <div className="w-full flex-1 border flex flex-col p-3 overflow-y-auto" style={{ borderColor: theme.colors.border }}>
+          {/* Row 10 — Insights */}
+          <div ref={scrollRef} className="w-full flex-1 flex flex-col p-3 overflow-y-auto scrollbar-thin scroll-fade-edges">
             {isLoading ? <Skeleton className="w-full h-full" /> : (
               <>
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-xs font-bold tracking-wider" style={{ color: theme.colors.primary }}>
+                  <h4 className="text-xs font-bold tracking-wider" style={{ color: activePalette.primary }}>
                     INSIGHTS & TIPS
                   </h4>
-                  <span className="text-[9px]" style={{ color: theme.colors.textMuted }}>
+                  <span className="text-[9px]" style={{ color: activePalette.textMuted }}>
                     AI Analysis
                   </span>
                 </div>
                 
-                {/* Smart analysis based on actual data */}
                 {(() => {
                   const last7Days = planEntries.slice(-7);
                   const activeDays = last7Days.filter(entry => 
@@ -720,73 +747,68 @@ function MonitorContent() {
                   }, 0);
                   const progressPercent = Math.round((planDay / totalDays) * 100);
                   
-                  // Smart insights
                   let motivation = '';
                   let analysis = '';
                   let recommendation = '';
                   
                   if (activeDays === 0) {
-                    motivation = '🚀 Ready to start strong?';
+                    motivation = 'Ready to start strong?';
                     analysis = 'No activities logged this week yet. Every journey begins with a single step!';
-                    recommendation = 'Tip: Start with a light 3-5km run today to build momentum.';
+                    recommendation = 'Start with a light 3-5km run today to build momentum.';
                   } else if (activeDays >= 5) {
-                    motivation = '🔥 Outstanding consistency!';
+                    motivation = 'Outstanding consistency!';
                     analysis = `${activeDays} active days this week! You are building an incredible routine.`;
                     recommendation = 'Keep this momentum while ensuring proper recovery days.';
                   } else if (activeDays >= 3) {
-                    motivation = '💪 Strong effort this week!';
+                    motivation = 'Strong effort this week!';
                     analysis = `${activeDays} workouts completed. You are on the right track!`;
                     recommendation = 'Try adding one more session this week for even better results.';
                   } else {
-                    motivation = '🎯 Time to level up!';
+                    motivation = 'Time to level up!';
                     analysis = `${activeDays} ${activeDays === 1 ? 'session' : 'sessions'} so far. There is room to push harder!`;
                     recommendation = 'Aim for 3-4 sessions next week for optimal progress.';
                   }
                   
-                  // Progress-based insights
                   if (progressPercent >= 75) {
-                    motivation = '🏆 Final stretch ahead!';
+                    motivation = 'Final stretch ahead!';
                     analysis = `You are ${progressPercent}% through your plan. The finish line is in sight!`;
                     recommendation = 'Stay focused and maintain your routine to finish strong.';
                   } else if (progressPercent >= 50) {
-                    motivation = '⚡ Halfway there!';
+                    motivation = 'Halfway there!';
                     analysis = `${progressPercent}% complete! You have built solid momentum.`;
                     recommendation = 'This is where habits become permanent. Keep going!';
                   }
                   
-                  // Weight goal insights
                   if (weightGoal.goalWeight && weight) {
                     const diff = weight.value - weightGoal.goalWeight;
                     if (Math.abs(diff) <= 2) {
-                      motivation = '🎉 Almost at goal weight!';
+                      motivation = 'Almost at goal weight!';
                       analysis = `Just ${Math.abs(diff).toFixed(1)}kg away from your target!`;
                       recommendation = 'Maintain consistency - you are so close!';
                     }
                   }
                   
                   return (
-                    <div className="flex-1 space-y-3 text-xs" style={{ color: theme.colors.text }}>
+                    <div className="flex-1 space-y-3 text-xs" style={{ color: activePalette.text }}>
                       <div className="leading-relaxed">
-                        <p className="font-bold mb-1" style={{ color: theme.colors.primary }}>
+                        <p className="font-bold mb-1" style={{ color: activePalette.primary }}>
                           {motivation}
                         </p>
-                        <p style={{ color: theme.colors.textSecondary }}>
+                        <p style={{ color: activePalette.textSecondary }}>
                           {analysis}
                         </p>
                       </div>
-                      
-                      <div className="leading-relaxed pt-2 border-t" style={{ borderColor: theme.colors.border }}>
-                        <p className="font-medium mb-1" style={{ color: theme.colors.text }}>
-                          💡 Recommendation
+                      <div className="leading-relaxed pt-2 border-t" style={{ borderColor: activePalette.border }}>
+                        <p className="font-medium mb-1" style={{ color: activePalette.text }}>
+                          Recommendation
                         </p>
-                        <p style={{ color: theme.colors.textSecondary }}>
+                        <p style={{ color: activePalette.textSecondary }}>
                           {recommendation}
                         </p>
                       </div>
-                      
                       {totalDistance > 0 && (
-                        <div className="leading-relaxed pt-2 border-t" style={{ borderColor: theme.colors.border }}>
-                          <p style={{ color: theme.colors.textMuted, fontSize: '10px' }}>
+                        <div className="leading-relaxed pt-2 border-t" style={{ borderColor: activePalette.border }}>
+                          <p style={{ color: activePalette.textMuted, fontSize: '10px' }}>
                             Weekly total: {totalDistance.toFixed(1)}km across {activeDays} {activeDays === 1 ? 'day' : 'days'}
                           </p>
                         </div>
@@ -797,77 +819,32 @@ function MonitorContent() {
               </>
             )}
           </div>
+
+          {showAIModal && (
+            <div className="absolute inset-x-3 bottom-3 z-30 overflow-hidden rounded-xl border" style={{ backgroundColor: activePalette.panel, borderColor: activePalette.borderSoft }}>
+              <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: activePalette.border }}>
+                <h3 className="text-sm font-semibold" style={{ fontFamily: 'var(--font-hanalei-fill)', color: activePalette.text }}>
+                  Activity Logger
+                </h3>
+              </div>
+              <div className="pb-3">
+                <PromptBoxOpenAI
+                  value={notesInput}
+                  onChange={setNotesInput}
+                  onEnterPressed={handleSendToAI}
+                  onClose={() => setShowAIModal(false)}
+                  placeholder="Log your activities and I'll extract the metrics..."
+                  isLoading={isExtracting}
+                  thinkingMessages={chatMessages}
+                  showChat
+                  chatHeight={180}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Glass Overlay Modal */}
-      {showAIModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 backdrop-blur-sm" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}>
-          <div className="w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden shadow-2xl border" style={{ backgroundColor: theme.colors.card, borderColor: theme.colors.border }}>
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: theme.colors.border }}>
-              <h3 className="text-lg font-semibold" style={{ color: currentTheme === 'light' ? '#000000' : theme.colors.text }}>
-                Activity Logger
-              </h3>
-              <button
-                onClick={() => setShowAIModal(false)}
-                className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-                style={{ backgroundColor: theme.colors.cardAlt, color: currentTheme === 'light' ? '#000000' : theme.colors.text }}
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Live ChatRow for processing */}
-            <ChatRow 
-              targetHeight={chatMessages.length > 0 ? '160px' : '0px'}
-              chatMessages={chatMessages}
-              textColor={currentTheme === 'light' ? '#000000' : '#FFFFFF'}
-              isDarkMode={currentTheme === 'dark'}
-            />
-
-            {/* Input Area */}
-            <div className="p-4">
-              <textarea
-                className="w-full rounded-lg border p-3 text-sm resize-none outline-none mb-3"
-                style={{ 
-                  backgroundColor: theme.colors.cardAlt,
-                  color: currentTheme === 'light' ? '#000000' : theme.colors.text,
-                  borderColor: theme.colors.border,
-                  minHeight: '140px'
-                }}
-                placeholder="Log your activities and I'll extract the metrics for you&#10;&#10;e.g., Ran 8km in 40min, pace 5:00/km, weight 72.5kg"
-                value={notesInput}
-                onChange={e => setNotesInput(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendToAI();
-                  }
-                }}
-              />
-              <div className="flex justify-between items-center">
-                <span className="text-xs" style={{ color: currentTheme === 'light' ? '#666666' : theme.colors.textMuted }}>
-                  Press Enter to send
-                </span>
-                <div style={{ width: '120px', height: '32px' }}>
-                  <CustomButton
-                    text={isExtracting ? "ANALYZING..." : "SEND"}
-                    onClick={handleSendToAI}
-                    fontSize="11px"
-                    width="120px"
-                    mirror={true}
-                    color={currentTheme === 'light' ? '#000000' : undefined}
-                    lightMode={currentTheme === 'light'}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Floating Navigation Bar */}
       <FloatingNavBar onAIClick={() => setShowAIModal(true)} />
     </div>
   );
@@ -876,8 +853,8 @@ function MonitorContent() {
 export default function MonitorPage() {
   return (
     <Suspense fallback={
-      <div className="w-full h-screen bg-[#151515] flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+      <div className="w-full h-screen bg-[#0b0b0b] flex items-center justify-center">
+        <Skeleton className="w-40 h-10 rounded" />
       </div>
     }>
       <MonitorContent />

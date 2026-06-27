@@ -53,7 +53,7 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
 
   const isActive = (path: string) => pathname === path;
 
-  const iconBase = { width: 20, height: 20, viewBox: '0 0 24 24', fill: 'none', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+  const iconBase = { width: 18, height: 18, viewBox: '0 0 24 24', fill: 'none', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
 
   return (
     <div 
@@ -70,7 +70,11 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
         style={{
           background: '#000000',
           border: '0.5px solid #ffffff35',
-          width: isExpanded ? 'min(380px, calc(100vw - 24px))' : '48px',
+          width: isExpanded
+            ? (activePlan
+                ? 'min(340px, calc(100vw - 16px))'
+                : 'min(305px, calc(100vw - 16px))')
+            : '48px',
           height: '48px',
         }}
       >
@@ -80,7 +84,7 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
           style={{
             right: 'calc((48px - 45px) / 2)',
             top: 'calc((48px - 46px) / 2)',
-            width: isExpanded ? 'min(72px, 20%)' : '44px',
+            width: isExpanded ? '56px' : '44px',
             height: '44px',
             background: '#ffffff',
             border: '1px solid #000000',
@@ -99,9 +103,9 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
         </button>
 
         <div
-          className="absolute h-full flex items-center gap-2 sm:gap-2.5 px-2 sm:px-3 transition-all duration-500"
+          className="absolute h-full flex items-center gap-1.5 px-2 transition-all duration-500"
           style={{
-            right: isExpanded ? 'min(82px, 22%)' : '50px',
+            right: isExpanded ? '64px' : '50px',
             opacity: isExpanded ? 1 : 0,
             pointerEvents: isExpanded ? 'auto' : 'none',
           }}
@@ -109,7 +113,7 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
           {/* Events - Calendar sparkle */}
           <button
             onClick={() => handleNavClick('/events')}
-            className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 active:scale-95 flex-shrink-0"
+            className="group w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 active:scale-95 flex-shrink-0"
             style={{ background: isActive('/events') ? '#ffffff' : 'transparent' }}
           >
             <svg {...iconBase} stroke={isActive('/events') ? '#000000' : '#ffffff'}>
@@ -125,7 +129,7 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
           {/* Entertain - Play square */}
           <button
             onClick={() => handleNavClick('/entertain')}
-            className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 active:scale-95 flex-shrink-0"
+            className="group w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 active:scale-95 flex-shrink-0"
             style={{ background: isActive('/entertain') ? '#ffffff' : 'transparent' }}
           >
             <svg {...iconBase} stroke={isActive('/entertain') ? '#000000' : '#ffffff'}>
@@ -138,7 +142,7 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
           {activePlan && (
             <button
               onClick={() => handleNavClick(`/plan-progress-tracker?planId=${activePlan.id}`)}
-              className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 active:scale-95 flex-shrink-0"
+              className="group w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 active:scale-95 flex-shrink-0"
               style={{ background: isActive('/plan-progress-tracker') ? '#ffffff' : 'transparent' }}
             >
               <svg {...iconBase} stroke={isActive('/plan-progress-tracker') ? '#000000' : '#ffffff'}>
@@ -151,7 +155,7 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
           {/* Water Tracker - Droplet */}
           <button
             onClick={() => handleNavClick('/water-tracker')}
-            className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 active:scale-95 flex-shrink-0"
+            className="group w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 active:scale-95 flex-shrink-0"
             style={{ background: isActive('/water-tracker') ? '#ffffff' : 'transparent' }}
           >
             <svg {...iconBase} stroke={isActive('/water-tracker') ? '#000000' : '#ffffff'}>
@@ -162,7 +166,7 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
           {/* My Plans - Clipboard list */}
           <button
             onClick={() => handleNavClick('/my-plans')}
-            className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 active:scale-95 flex-shrink-0"
+            className="group w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 active:scale-95 flex-shrink-0"
             style={{ background: isActive('/my-plans') ? '#ffffff' : 'transparent' }}
           >
             <svg {...iconBase} stroke={isActive('/my-plans') ? '#000000' : '#ffffff'}>
@@ -177,7 +181,7 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
           {/* Planner - Calendar days */}
           <button
             onClick={() => handleNavClick('/planner')}
-            className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 active:scale-95 flex-shrink-0"
+            className="group w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 active:scale-95 flex-shrink-0"
             style={{ background: isActive('/planner') ? '#ffffff' : 'transparent' }}
           >
             <svg {...iconBase} stroke={isActive('/planner') ? '#000000' : '#ffffff'}>
@@ -201,10 +205,10 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
               }
               setIsExpanded(false);
             }}
-            className="group w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 active:scale-95 flex-shrink-0"
+            className="group w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 active:scale-95 flex-shrink-0"
             style={{ background: 'transparent' }}
           >
-            <div className="w-5 h-5 sm:w-6 sm:h-6">
+            <div className="w-4 h-4 sm:w-5 sm:h-5">
               <AIIcon />
             </div>
           </button>
