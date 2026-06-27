@@ -360,7 +360,8 @@ export default function WorkoutTrackerPage() {
         `${row.columns[0]}: ${row.columns[1]}\n${row.columns[2]}`
       ).join('\n\n');
 
-      const res = await fetch(`${SYNAPSE_BACKEND_URL}/ask-moole`, {
+      // Use /api/ai/analyse which has OpenRouter fallback if ask-moole fails
+      const res = await fetch('/api/ai/analyse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
