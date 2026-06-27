@@ -51,20 +51,20 @@ const PlanTable: React.FC<PlanTableProps> = ({
   const isHeightClass = typeof height === "string" && (height.startsWith("h-"));
   const containerStyle = typeof height === "string" && !isHeightClass ? { height } : (typeof height === "number" ? { height: `${height}px` } : {});
   
-  // Refs for scroll management
-  const tabsContainerRef = React.useRef<HTMLDivElement>(null);
-  const activeTabRef = React.useRef<HTMLButtonElement>(null);
-  
-  // Scroll active tab into view when currentTableIndex changes
-  React.useEffect(() => {
-    if (activeTabRef.current && tabsContainerRef.current) {
-      activeTabRef.current.scrollIntoView({
-        behavior: 'smooth',
-        inline: 'center',
-        block: 'nearest'
-      });
-    }
-  }, [currentTableIndex]);
+   // Refs for scroll management
+   const tabsContainerRef = React.useRef<HTMLDivElement>(null);
+   const activeTabRef = React.useRef<HTMLButtonElement>(null);
+   
+   // Scroll active tab into view when currentTableIndex changes
+   useEffect(() => {
+     if (activeTabRef.current && tabsContainerRef.current) {
+       activeTabRef.current.scrollIntoView({
+         behavior: 'smooth',
+         inline: 'center',
+         block: 'nearest'
+       });
+     }
+   }, [currentTableIndex]);
   
   return (
     <>

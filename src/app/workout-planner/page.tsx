@@ -39,12 +39,12 @@ const Spinner = ({ size = 32 }: { size?: number }) => (
 );
 
 // Workout-specific goals display component (similar to GoalsSection)
-const WorkoutGoalsSection = ({ 
-  prompt, 
-  selectedMuscles,
-  planData,
-  isLoading = false,
-  onMuscleUpdate,
+  const WorkoutGoalsSection = ({ 
+    prompt, 
+    selectedMuscles,
+    planData,
+    isLoading = false,
+    onMuscleUpdate,
 }: { 
   prompt: string;
   selectedMuscles: string[];
@@ -52,7 +52,14 @@ const WorkoutGoalsSection = ({
   isLoading?: boolean;
   onMuscleUpdate?: (muscles: string[]) => void;
 }) => {
-  const [selectedDay, setSelectedDay] = useState(0);
+  const [selectedDay, setSelectedDay] = useState<number>(0);
+
+  // Reset selectedDay when planData changes (e.g., new plan generated)
+  useEffect(() => {
+    if (planData.length > 0) {
+      setSelectedDay(0);
+    }
+  }, [planData.length]);
 
   if (isLoading) {
     return <Spinner size={36} />;
