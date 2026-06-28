@@ -702,6 +702,18 @@ export default function WorkoutPlannerPage() {
                 {isSigningIn ? "Signing in..." : "Sign in with Google"}
               </Button>
 
+              <Button
+                disabled
+                variant="outline"
+                className="w-full bg-[#FC4C02]/10 text-[#FC4C02] border border-[#FC4C02]/20 opacity-60 cursor-not-allowed h-14 text-base font-semibold relative overflow-hidden"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" className="mr-3 flex-shrink-0" fill="#FC4C02">
+                  <path d="M7.09 21.88c-.27.01-.56.04-.86.04-2.08 0-3.77-1.34-3.77-3.73 0-2.6 1.8-5.42 4.88-5.42.88 0 1.73.27 2.36.74l.05.03-.97 1.47-.04-.02c-.33-.24-.78-.4-1.25-.4-1.61 0-2.78 1.53-2.78 3.4 0 1.28.74 2.1 1.82 2.1.24 0 .48-.04.66-.09v-1.7h-1.2v-1.57h3.08v3.86c-.55.72-1.59 1.24-2.98 1.29zM14.1 18.3c0 2.21 1.37 3.62 3.63 3.62.73 0 1.42-.15 1.99-.42v-3.77h-2.4v-1.57h4.2v5.84c-.85.5-2.12.83-3.69.83-3.33 0-5.73-2.22-5.73-5.53 0-3.3 2.37-5.57 5.6-5.57 2.04 0 3.43.84 4.2 1.94l-1.47 1.07c-.51-.75-1.4-1.29-2.73-1.29-1.97 0-3.6 1.53-3.6 3.68z"/>
+                </svg>
+                <span>Sign in with Strava</span>
+                <span className="ml-auto text-xs text-[#FC4C02]/60 font-normal bg-[#FC4C02]/10 px-2 py-0.5 rounded-full whitespace-nowrap">Coming Soon</span>
+              </Button>
+
               {process.env.NODE_ENV !== 'production' && (
                 <>
                   <div className="relative">
