@@ -45,10 +45,9 @@ const CustomButton: React.FC<CustomButtonProps> = ({ text, isLoading, onClick, w
         }}
       />
       <span 
-        className="font-bold relative z-10" 
+        className="font-bold relative z-10 text-base sm:text-lg md:text-xl" 
         style={{ 
           fontFamily: 'var(--font-hanalei-fill)', 
-          fontSize: fontSize || 'calc((100vh * 0.95 * 0.0595) * 0.6)', 
           lineHeight: '1',
           color: color || '#FFFFFF'
         }}

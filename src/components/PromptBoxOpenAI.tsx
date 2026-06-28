@@ -14,6 +14,7 @@ interface PromptBoxOpenAIProps {
   hideThinkingBox?: boolean;
   showChat?: boolean;
   chatHeight?: number;
+  bgColor?: string;
 }
 
 const PromptBoxOpenAI: React.FC<PromptBoxOpenAIProps> = ({ 
@@ -21,13 +22,14 @@ const PromptBoxOpenAI: React.FC<PromptBoxOpenAIProps> = ({
   onChange, 
   onEnterPressed,
   onClose,
-  placeholder = "Describe your fitness goal...",
+  placeholder = "e.g. Lose 5kg in 30 days, Build muscle...",
   isLoading = false,
   disabled = false,
   thinkingMessages = [],
   hideThinkingBox = false,
   showChat = false,
   chatHeight = 200,
+  bgColor = '#1e1e1e',
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messageContainerRef = useRef<HTMLDivElement>(null);
@@ -69,7 +71,7 @@ const PromptBoxOpenAI: React.FC<PromptBoxOpenAIProps> = ({
   };
 
   return (
-    <div className="w-full flex flex-col items-center justify-end gap-0 h-full">
+    <div className={`w-full flex flex-col items-center gap-0 h-full ${showChat ? 'justify-end' : 'justify-center'}`}>
       {/* Chat Messages Area - shown when showChat is true */}
       {showChat && (
         <div 
@@ -174,7 +176,7 @@ const PromptBoxOpenAI: React.FC<PromptBoxOpenAIProps> = ({
          
         }}
       >
-        <div className="w-full h-full rounded-2xl px-4 py-4 flex flex-col" style={{ backgroundColor: '#1e1e1e', border: '1px solid #333' }}>
+        <div className="w-full h-full rounded-2xl px-4 py-4 flex flex-col" style={{ backgroundColor: bgColor, border: '1px solid #333' }}>
           <textarea
             ref={textareaRef}
             value={value}

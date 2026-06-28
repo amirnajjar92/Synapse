@@ -20,7 +20,7 @@ const PromptBox: React.FC<PromptBoxProps> = ({ value, onChange, isLoading, usePl
   // }
 
   return (
-    <div className="w-full h-full relative transition-all duration-300 ease-out ">
+    <div className="w-full h-full relative transition-all duration-300 ease-out">
       {/* Frame container */}
       <div className="absolute inset-0 flex items-center justify-center">
         <img
@@ -29,23 +29,16 @@ const PromptBox: React.FC<PromptBoxProps> = ({ value, onChange, isLoading, usePl
           className="w-full h-full object-contain"
         />
       </div>
-      {/* Input container */}
-      <div className="absolute inset-0 flex items-center justify-center">
+      {/* Input container - matches frame exactly */}
+      <div className="absolute inset-0 flex items-center justify-center p-6 sm:p-8">
         <div 
-          className="flex items-start justify-start p-2 sm:p-3 md:p-4 relative transition-all duration-200 shadow-lg hover:shadow-xl"
-          style={{
-            width: usePlannerStyle 
-              ? `calc(${(327 / 400) * 100}% - 36px)` 
-              : 'calc(100% - 30px)',
-            height: `${(125 / 206) * 100}%`,
-            backgroundColor: '#FFFFFF',
-            borderRadius: '10px'
-          }}
+          className="w-full h-full relative transition-all duration-200"
+          style={{ backgroundColor: 'transparent' }}
         >
           {/* TELL ME text container */}
           <div className="absolute w-full top-[-30px] left-0 pointer-events-none">
             <span 
-              className="text-white font-bold"
+              className="text-black font-bold"
               style={{ 
                 fontFamily: 'var(--font-hanalei-fill)', 
                 fontSize: 'calc((100vh * 0.95) * (31 / 874))',
@@ -56,7 +49,7 @@ const PromptBox: React.FC<PromptBoxProps> = ({ value, onChange, isLoading, usePl
             </span>
           </div>
           <textarea
-            className="w-full h-full text-gray-800 text-sm sm:text-base md:text-xl font-light text-left bg-transparent border-none resize-none outline-none placeholder-gray-400 focus:ring-0"
+            className="w-full h-full text-black text-sm sm:text-base md:text-xl font-light text-left bg-transparent border-none resize-none outline-none placeholder-gray-400 focus:ring-0 overflow-hidden"
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder="Describe your fitness goal... (e.g., Lose 5kg in 30 days, Build muscle for marathon, Improve endurance)"

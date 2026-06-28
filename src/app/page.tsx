@@ -84,7 +84,7 @@ export default function Home() {
             animation: "fadeInOut 2s ease-in-out infinite",
           }}
         >
-          Loading...
+          {/* Loading... */}
         </p>
       </div>
 
@@ -103,11 +103,11 @@ export default function Home() {
         <div
           style={{
             height: "100%",
-            background: "linear-gradient(90deg, #FF3366, #FF6699)",
+            background: "linear-gradient(90deg, #fc0d0dff, #FF6699)",
             width: "100%",
             transformOrigin: "left",
             animation: "progressBar 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards",
-            boxShadow: "0 0 10px rgba(255, 51, 102, 0.5)",
+            boxShadow: "0 0 10px rgba(255, 255, 255, 0.5)",
           }}
         />
       </div>

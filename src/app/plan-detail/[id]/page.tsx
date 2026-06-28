@@ -2,13 +2,17 @@
 
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import PromptBoxOpenAI from '@/components/PromptBoxOpenAI';
+import PlanModifyDialog from '@/components/PlanModifyDialog';
 import CustomButton from '@/components/CustomButton';
 import PlanTable from '@/components/PlanTable';
 import BurgerMenuButton from '@/components/BurgerMenuButton';
+import FloatingNavBar from '@/components/FloatingNavBar';
+import Skeleton from '@/components/ui/Skeleton';
 import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks';
 import { setCurrentTableIndex, setPromptText, setPlanTypes } from '@/lib/redux/slices/planSlice';
 import { exportPlanToPDF } from '@/lib/pdfExport';
+import { iconMap, defaultIcons } from '@/lib/constants/planIcons';
+import usePlanModifier from '@/lib/hooks/usePlanModifier';
 
 interface PlanTableData {
   id: number;
@@ -32,78 +36,47 @@ interface Plan {
   updatedAt: string;
 }
 
-// Skeleton Component
-const Skeleton = ({ className = '' }: { className?: string }) => (
-  <div className={`animate-pulse bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 bg-[length:200%_100%] opacity-50 ${className}`} />
-);
-
 export default function PlanDetailPage() {
   const router = useRouter();
   const { id } = useParams();
   const dispatch = useAppDispatch();
-  const { planTypes, currentTableIndex, promptText, isGenerating } = useAppSelector((state) => state.plan);
+  const { planTypes, currentTableIndex, isGenerating } = useAppSelector((state) => state.plan);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [plan, setPlan] = useState<Plan | null>(null);
+  const [showModifyDialog, setShowModifyDialog] = useState(false);
+  const { updateCell, updateRow, addRow, removeRow, batchUpdateTables, getPlanSnapshot } = usePlanModifier(plan ? String(id) : null);
 
-  // Fetch plan from API using id OR use existing Redux plan if available
   useEffect(() => {
     const fetchPlan = async () => {
       if (!id || typeof id !== 'string') return;
 
-      // Otherwise, fetch from API
-      // Get user email from localStorage
       const userStr = localStorage.getItem('synapse_user');
       const user = userStr ? JSON.parse(userStr) : null;
-      
+
       try {
-        // Use query parameter for email since GET requests shouldn't have a body
         const url = new URL(`/api/plans/${id}`, window.location.origin);
-        if (user?.email) {
-          url.searchParams.set('email', user.email);
-        }
+        if (user?.email) url.searchParams.set('email', user.email);
         const finalResponse = await fetch(url.toString());
-        
-        if (!finalResponse.ok) {
-          throw new Error('Failed to fetch plan');
-        }
+
+        if (!finalResponse.ok) throw new Error('Failed to fetch plan');
         const data = await finalResponse.json();
         const planData: Plan = data.plan;
 
-        // Set plan state
         setPlan(planData);
 
-        // Convert the plan.tables to the planTypes format we use in Redux
-        const iconMap: Record<string, string> = {
-          'MEALS': '/vectors/meals-icon.svg',
-          'CARDIO': '/vectors/cardio-icon.svg',
-          'NUTRIENTS': '/vectors/nutrients-icon.svg',
-          'RECOMMENDED': '/vectors/recomended-icon.svg',
-          'CHALLENGES': '/vectors/challenges-icon.svg',
-          'SUPPLEMENTS': '/vectors/suppliments-icon.svg',
-          'WORKOUT PLAN': '/vectors/workout-icon.svg'
-        };
-        const defaultIcons = [
-          '/vectors/meals-icon.svg',
-          '/vectors/cardio-icon.svg',
-          '/vectors/nutrients-icon.svg',
-          '/vectors/recomended-icon.svg',
-          '/vectors/challenges-icon.svg',
-          '/vectors/suppliments-icon.svg',
-          '/vectors/workout-icon.svg'
-        ];
         const convertedPlanTypes: PlanTableData[] = (planData.tables || []).map((table: any, index: number) => ({
           id: index,
           title: table.title || `Table ${index + 1}`,
           icon: iconMap[table.title] || defaultIcons[index] || planData.icon || '/vectors/plan-icon.svg',
           tableData: (table.rows || []).map((row: any, rowIndex: number) => ({
             id: row.id || rowIndex,
-            columns: row.columns || []
+            columns: row.columns || [],
           })),
           columnWidths: table.columnWidths,
-          horizontalScroll: table.horizontalScroll || false
+          horizontalScroll: table.horizontalScroll || false,
         }));
-        
+
         dispatch(setPlanTypes(convertedPlanTypes));
         dispatch(setPromptText(planData.prompt));
         setError(null);
@@ -118,97 +91,42 @@ export default function PlanDetailPage() {
     fetchPlan();
   }, [id, dispatch]);
 
-  // Get current plan
   const currentPlan = planTypes[currentTableIndex];
 
-  // Handle next button click
   const handleNextTable = () => {
-    const nextIndex = (currentTableIndex + 1) % planTypes.length;
-    dispatch(setCurrentTableIndex(nextIndex));
+    dispatch(setCurrentTableIndex((currentTableIndex + 1) % planTypes.length));
   };
 
-  // Handle prev button click
   const handlePrevTable = () => {
-    const prevIndex = (currentTableIndex - 1 + planTypes.length) % planTypes.length;
-    dispatch(setCurrentTableIndex(prevIndex));
+    dispatch(setCurrentTableIndex((currentTableIndex - 1 + planTypes.length) % planTypes.length));
   };
 
-  // Handle GO button click - save updated prompt
-  const handleGoClick = async () => {
-    if (!promptText.trim() || !plan) return;
-
-    // Get user email from localStorage
-    const userStr = localStorage.getItem('synapse_user');
-    const user = userStr ? JSON.parse(userStr) : null;
-    
-    if (!user?.email) return;
-
+  const getPlanDurationInDays = async (prompt: string): Promise<number> => {
+    const weekMatch = prompt.match(/(\d+)\s*week/i);
+    if (weekMatch) return parseInt(weekMatch[1]) * 7;
+    const monthMatch = prompt.match(/(\d+)\s*month/i);
+    if (monthMatch) return parseInt(monthMatch[1]) * 30;
+    const dayMatch = prompt.match(/(\d+)\s*day/i);
+    if (dayMatch) return parseInt(dayMatch[1]);
     try {
-      // Save the updated prompt to UserPrompt table
-      await fetch('/api/prompts', {
+      const res = await fetch('/api/ai/analyse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: user.email,
-          planId: plan.id,
-          prompt: promptText,
+          question: `You are a helpful assistant. Respond only with a single number: the total number of days for this fitness plan: ${prompt}`,
         }),
       });
-
-      console.log('✅ Prompt logged to database');
-    } catch (error) {
-      console.error('❌ Error logging prompt:', error);
-    }
-  };
-
-  // Handle back button click
-  const handleBackClick = () => {
-    router.push('/my-plans');
-  };
-
-  // Function to ask AI for plan duration in days
-  const getPlanDurationInDays = async (prompt: string): Promise<number> => {
-    // First try simple regex parsing for common durations like "8 weeks" etc.
-    const weekMatch = prompt.match(/(\d+)\s*week/i);
-    if (weekMatch) {
-      return parseInt(weekMatch[1]) * 7;
-    }
-    const monthMatch = prompt.match(/(\d+)\s*month/i);
-    if (monthMatch) {
-      return parseInt(monthMatch[1]) * 30;
-    }
-    const dayMatch = prompt.match(/(\d+)\s*day/i);
-    if (dayMatch) {
-      return parseInt(dayMatch[1]);
-    }
-    // If regex fails, use analyse route (with OpenRouter fallback)
-    try {
-      const apiUrl = '/api/ai/analyse';
-      const systemPrompt = `You are a helpful assistant that extracts only responds with a single number: the total number of days for the fitness plan described in the user's prompt. If you only respond with a number, no extra text.`;
-      const userPrompt = `What is the total number of days for this fitness plan? ${prompt}`;
-      
-      const res = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: `${systemPrompt}\n\n${userPrompt}` }),
-      });
-      if (!res.ok) throw new Error('Failed to get duration');
+      if (!res.ok) throw new Error('Failed');
       const data = await res.json();
-      const answer = data.answer?.trim();
-      const number = parseInt(answer);
+      const number = parseInt(data.answer?.trim());
       if (!isNaN(number)) return number;
-    } catch (err) {
-      console.error('Error getting plan duration from AI:', err);
-    }
-    // Default to 30 days if all fails
+    } catch {}
     return 30;
   };
 
-  // Handle plan status change
   const handleStatusChange = async () => {
     if (!plan || !id) return;
 
-    // Get user email from localStorage
     const userStr = localStorage.getItem('synapse_user');
     const user = userStr ? JSON.parse(userStr) : null;
 
@@ -224,9 +142,7 @@ export default function PlanDetailPage() {
         const end = new Date(startDate);
         end.setDate(end.getDate() + durationDays);
         endDate = end.toISOString();
-      } catch (err) {
-        console.error('Error calculating end date:', err);
-        // Fallback to 30 days
+      } catch {
         const end = new Date(startDate);
         end.setDate(end.getDate() + 30);
         endDate = end.toISOString();
@@ -242,21 +158,13 @@ export default function PlanDetailPage() {
     }
 
     try {
-      // Call API to update status
       const url = new URL(`/api/plans/${id}`, window.location.origin);
-      if (user?.email) {
-        url.searchParams.set('email', user.email);
-      }
+      if (user?.email) url.searchParams.set('email', user.email);
       const response = await fetch(url.toString(), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          status: newStatus,
-          startDate,
-          endDate,
-        }),
+        body: JSON.stringify({ status: newStatus, startDate, endDate }),
       });
-
       if (response.ok) {
         const data = await response.json();
         setPlan(data.plan);
@@ -266,35 +174,12 @@ export default function PlanDetailPage() {
     }
   };
 
-  // Handle PDF export
   const handleExportPDF = () => {
     if (!plan) return;
-    
-    // Icon mapping
-    const iconMap: Record<string, string> = {
-      'MEALS': '/vectors/meals-icon.svg',
-      'CARDIO': '/vectors/cardio-icon.svg',
-      'NUTRIENTS': '/vectors/nutrients-icon.svg',
-      'RECOMMENDED': '/vectors/recomended-icon.svg',
-      'CHALLENGES': '/vectors/challenges-icon.svg',
-      'SUPPLEMENTS': '/vectors/suppliments-icon.svg'
-    };
-    
-    const defaultIcons = [
-      '/vectors/meals-icon.svg',
-      '/vectors/cardio-icon.svg',
-      '/vectors/nutrients-icon.svg',
-      '/vectors/recomended-icon.svg',
-      '/vectors/challenges-icon.svg',
-      '/vectors/suppliments-icon.svg'
-    ];
-    
-    // Add icons to tables
     const tablesWithIcons = plan.tables.map((table: any, index: number) => ({
       ...table,
-      icon: iconMap[table.title] || defaultIcons[index] || plan.icon
+      icon: iconMap[table.title] || defaultIcons[index] || plan.icon,
     }));
-    
     exportPlanToPDF({
       title: plan.title,
       prompt: plan.prompt,
@@ -304,14 +189,8 @@ export default function PlanDetailPage() {
     });
   };
 
-  // Base dimensions (original design)
   const baseWidth = 402;
   const baseHeight = 874;
-
-  // Row heights based on size guide
-  const headerHeight = 100;
-  const tableHeight = 360;
-  const emptyRowHeight = 100;
 
   if (!hasLoaded) {
     return (
@@ -339,85 +218,112 @@ export default function PlanDetailPage() {
 
   return (
     <div className="w-full h-screen bg-[#151515] flex items-center justify-center p-2 sm:p-4">
-      {/* Responsive iPhone Frame */}
-      <div 
+      <div
         className="bg-black rounded-[40px] overflow-hidden shadow-2xl relative flex-shrink-0"
         style={{
           width: `min(95vw, ${baseWidth}px)`,
           aspectRatio: baseWidth / baseHeight,
-          maxHeight: '95vh'
+          maxHeight: '95vh',
         }}
       >
-        {/* Main Container */}
-        <div 
-          className="w-full h-full flex flex-col pb-2 sm:pb-3 md:pb-4 relative"
+        <div
+          className="w-full h-full flex flex-col gap-2 relative pt-10"
           style={{ backgroundColor: '#0b0b0bff' }}
         >
-          {/* Burger Menu Button */}
+          {/* Burger Menu - top left */}
           <div className="absolute top-4 left-4 z-10">
             <BurgerMenuButton />
           </div>
-          
-          {/* Row 1: Header - 400 X 100 */}
-          <div 
-            className="w-full border border-[#3B3B3B00] flex items-center justify-between px-3 sm:px-4 md:px-6 transition-all duration-300"
-            style={{ height: `${(headerHeight / baseHeight) * 100}%` }}
-          >
-            {/* No skeletons while generating, show the header directly */}
-            <>
-              <div className="flex items-center gap-2 ml-16 flex-1 min-w-0">
-                <h2 
-                  className="text-white font-bold truncate"
-                  style={{ 
-                    fontFamily: 'var(--font-hanalei-fill)', 
-                    fontSize: 'calc((100vh * 0.95) * (36 / 874))',
-                    lineHeight: '1'
-                  }}
-                >
-                  {currentPlan.title}
-                </h2>
-              </div>
-              <img 
-                src={currentPlan.icon} 
-                alt={`${currentPlan.title} Icon`} 
-                className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 object-contain"
-              />
-            </>
-          </div>
 
-          {/* Row 2: Table Section - 400 X 360 */}
-          <div 
-            className="w-full border border-[#3B3B3B00] transition-all duration-300 relative"
-            style={{ height: `${(tableHeight / baseHeight) * 100}%` }}
-          >
-            <PlanTable 
-              data={currentPlan.tableData}
-              columnWidths={currentPlan.columnWidths}
-              isLoading={isGenerating}
-              onNext={handleNextTable}
-              onPrev={handlePrevTable}
-              horizontalScroll={currentPlan.horizontalScroll}
-              tableTitles={planTypes.map(p => p.title)}
-              currentTableIndex={currentTableIndex}
-              onTabClick={(index) => dispatch(setCurrentTableIndex(index))}
-            />
-            {/* Export PDF Button - Bottom Right */}
+          {/* Export PDF - top right */}
+          <div className="absolute top-4 right-4 z-10">
             <button
               onClick={handleExportPDF}
-              className="absolute bottom-2 right-2 p-2 rounded-full bg-gray-800/80 hover:bg-gray-700 transition-colors z-10"
+              className="flex items-center gap-1.5 p-1.5 rounded-full hover:bg-gray-700 transition-colors"
               title="Export to PDF"
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-white">
+              <span className="text-[10px] text-gray-400 hover:text-white">PDF</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gray-400 hover:text-white">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </button>
           </div>
 
-          {/* Row 3: Status Controls - 400 X 100 */}
-          <div 
-            className="w-full border border-[#3B3B3B00] flex items-center justify-center"
-            style={{ height: `${(emptyRowHeight / baseHeight) * 100}%` }}
-          >
+          {/* Header - flex-[1] */}
+          <div className="flex-[0.5] flex items-center justify-between px-3 sm:px-4 md:px-6 pt-4 pb-1 min-h-0 overflow-hidden">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <h2
+                className="text-white font-bold truncate"
+                style={{
+                  fontFamily: 'var(--font-hanalei-fill)',
+                  fontSize: 'calc((100vh * 0.95) * (36 / 874))',
+                  lineHeight: '1',
+                }}
+              >
+                {currentPlan.title}
+              </h2>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <img
+                src={currentPlan.icon}
+                alt={`${currentPlan.title} Icon`}
+                className="w-12 h-12 sm:w-14 sm:h-14 object-contain"
+              />
+            </div>
+          </div>
+
+          {/* Table - flex-[3] */}
+          <div className="flex-[3] min-h-0 overflow-hidden" style={{ maxHeight: '25vh' }}>
+            <PlanTable
+              data={currentPlan.tableData}
+              columnWidths={currentPlan.columnWidths}
+              isLoading={isGenerating}
+              horizontalScroll={currentPlan.horizontalScroll}
+              showTabs={false}
+            />
+          </div>
+
+          {/* Tabs - flex-[1] */}
+          <div className="flex-[1] min-h-0 flex items-center overflow-hidden px-2" style={{ maxHeight: '6.25vh' }}>
+            <div className="w-full flex items-center justify-between gap-1">
+              <button
+                onClick={handlePrevTable}
+                className="p-1.5 text-white hover:bg-gray-700 rounded-full transition-colors flex-shrink-0"
+                aria-label="Previous table"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+              </button>
+              <div className="flex gap-1 flex-1 overflow-x-auto hide-scrollbar justify-center" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                {planTypes.map((p, index) => (
+                  <button
+                    key={index}
+                    onClick={() => dispatch(setCurrentTableIndex(index))}
+                    className={`px-2 py-1 rounded-full text-[10px] sm:text-xs transition-all whitespace-nowrap ${
+                      index === currentTableIndex
+                        ? 'bg-white text-black font-semibold'
+                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                    }`}
+                  >
+                    {p.title}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={handleNextTable}
+                className="p-1.5 text-white hover:bg-gray-700 rounded-full transition-colors flex-shrink-0"
+                aria-label="Next table"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Status Controls - flex-[1] */}
+          <div className="flex-[1] min-h-0 flex items-center justify-center gap-3 overflow-hidden">
             {plan && (
               <CustomButton
                 mirror={true}
@@ -432,62 +338,57 @@ export default function PlanDetailPage() {
                 fontSize="16px"
               />
             )}
-          </div>
-
-          {/* Row 4: Prompt Section */}
-          <div 
-            className="w-full border border-[#3B3B3B00] flex flex-col items-center justify-center p-3 sm:p-4 pb-6 sm:pb-7 md:pb-8"
-            style={{ height: `${((baseHeight - headerHeight - tableHeight - emptyRowHeight) / baseHeight) * 100}%` }}
-          >
-            {/* Prompt Box */}
-            <div className="w-full flex items-center justify-center flex-1 overflow-hidden mb-2">
-              <PromptBoxOpenAI
-                value={promptText}
-                onChange={(text) => dispatch(setPromptText(text))}
-                onEnterPressed={handleGoClick}
-                isLoading={isGenerating}
-                placeholder="Describe how to modify this plan..."
-              />
-            </div>
-            {/* Buttons Row - 176 + 226 like planner */}
-            <div 
-              className="flex w-full"
-              style={{ height: `${(52 / baseHeight) * 100}%` }}
+            <button
+              onClick={() => setShowModifyDialog(true)}
+              className="flex items-center gap-1.5 text-[11px] text-gray-400 hover:text-white transition-colors bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-full px-4 py-2"
             >
-              {/* Back Button */}
-              <div 
-                className="h-full flex items-center justify-center px-2 cursor-pointer"
-                style={{ width: `${(176 / 400) * 100}%` }}
-                onClick={handleBackClick}
-              >
-                {!isGenerating && (
-                  <span 
-                    className="text-white font-bold"
-                    style={{ 
-                      fontFamily: 'var(--font-hanalei-fill)', 
-                      fontSize: 'calc((100vh * 0.95) * (17.31 / 874))',
-                      lineHeight: '1'
-                    }}
-                  >
-                    BACK TO PLANBOOK
-                  </span>
-                )}
-              </div>
-              {/* GO Button */}
-              <div 
-                className="h-full flex items-center justify-center p-1 sm:p-2 relative"
-                style={{ width: `${(226 / 400) * 100}%` }}
-              >
-                <CustomButton
-                  text="GO"
-                  isLoading={isGenerating}
-                  onClick={handleGoClick}
-                />
-              </div>
-            </div>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                <path d="m15 5 4 4" />
+              </svg>
+              Modify with AI
+            </button>
           </div>
         </div>
       </div>
+
+      <PlanModifyDialog
+        open={showModifyDialog}
+        onClose={() => setShowModifyDialog(false)}
+        planContext={plan ? `Plan title: ${plan.title}\nPrompt: ${plan.prompt}\nStatus: ${plan.status}` : undefined}
+        onApply={async (modificationPrompt, aiResponse) => {
+          if (!plan || !id || typeof id !== 'string') return;
+          const snapshot = getPlanSnapshot();
+          const userStr = localStorage.getItem('synapse_user');
+          const user = userStr ? JSON.parse(userStr) : null;
+          const res = await fetch('/api/ai/analyse', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              question: `You are a fitness plan data transformer. Given the current plan tables below and the user's modification request, output ONLY valid JSON representing the updated tables. No explanation, no markdown, no code fences—just the JSON array.
+
+Current tables:
+${JSON.stringify(snapshot, null, 2)}
+
+Modification request: ${modificationPrompt}
+
+AI analysis of changes: ${aiResponse}
+
+Return a JSON array where each object has "title" (string) and "rows" (array of {columns: string[]}). Preserve the same number of tables and rows; only update column values as needed.`,
+            }),
+          });
+          const data = await res.json();
+          let updatedTables;
+          try {
+            const cleaned = data.answer.replace(/```json\s*/gi, '').replace(/```\s*$/g, '').trim();
+            updatedTables = JSON.parse(cleaned);
+          } catch {
+            throw new Error('Failed to parse AI response');
+          }
+          await batchUpdateTables(updatedTables);
+        }}
+      />
+      <FloatingNavBar />
     </div>
   );
 }

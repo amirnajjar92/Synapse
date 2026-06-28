@@ -34,8 +34,8 @@ const ChatRow: React.FC<ChatRowProps> = ({ targetHeight, chatMessages }) => {
         transition: "height 500ms ease-out"
       }}
     >
-      <div className="w-full h-full flex flex-col p-2 sm:p-3 md:p-4">
-        <div className="flex items-center gap-2 mb-2">
+      <div className="w-full h-full flex flex-col pt-0 pb-1.5 sm:pb-2 md:pb-3 px-1.5 sm:px-2 md:px-3">
+        <div className="flex items-center gap-2 mb-1">
           <div className="w-5 h-5 flex items-center justify-center">
             <img 
               src="/vectors/ai-icon.svg" 

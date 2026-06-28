@@ -116,3 +116,177 @@ export async function DELETE(
   await prisma.plan.delete({ where: { id } })
   return NextResponse.json({ message: 'Plan deleted' })
 }
+
+// PATCH: Update plan table content (cells, rows, table titles)
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params
+  const user = await getUserFromRequest(request)
+  if (!user?.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const plan = await prisma.plan.findUnique({
+    where: { id },
+    include: { tables: { include: { rows: true }, orderBy: { createdAt: 'asc' } } },
+  })
+
+  if (!plan) {
+    return NextResponse.json({ error: 'Plan not found' }, { status: 404 })
+  }
+
+  if (plan.userId !== user.id) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+  }
+
+  const body = await request.json()
+  const { action } = body
+
+  try {
+    switch (action) {
+      // Update a single cell value
+      case 'updateCell': {
+        const { tableIndex, rowIndex, colIndex, value } = body
+        const table = plan.tables[tableIndex]
+        if (!table) return NextResponse.json({ error: 'Invalid table index' }, { status: 400 })
+        const row = table.rows[rowIndex]
+        if (!row) return NextResponse.json({ error: 'Invalid row index' }, { status: 400 })
+
+        const newColumns = [...row.columns]
+        newColumns[colIndex] = value
+
+        await prisma.planRow.update({
+          where: { id: row.id },
+          data: { columns: newColumns },
+        })
+
+        // Return updated tables
+        const updatedPlan = await prisma.plan.findUnique({
+          where: { id },
+          include: { tables: { include: { rows: true }, orderBy: { createdAt: 'asc' } } },
+        })
+        return NextResponse.json({ plan: updatedPlan })
+      }
+
+      // Update an entire row's columns
+      case 'updateRow': {
+        const { tableIndex, rowIndex, columns } = body
+        const table = plan.tables[tableIndex]
+        if (!table) return NextResponse.json({ error: 'Invalid table index' }, { status: 400 })
+        const row = table.rows[rowIndex]
+        if (!row) return NextResponse.json({ error: 'Invalid row index' }, { status: 400 })
+
+        await prisma.planRow.update({
+          where: { id: row.id },
+          data: { columns },
+        })
+
+        const updatedPlan = await prisma.plan.findUnique({
+          where: { id },
+          include: { tables: { include: { rows: true }, orderBy: { createdAt: 'asc' } } },
+        })
+        return NextResponse.json({ plan: updatedPlan })
+      }
+
+      // Add a new row to a table
+      case 'addRow': {
+        const { tableIndex, columns } = body
+        const table = plan.tables[tableIndex]
+        if (!table) return NextResponse.json({ error: 'Invalid table index' }, { status: 400 })
+
+        await prisma.planRow.create({
+          data: {
+            tableId: table.id,
+            columns: columns || table.rows[0]?.columns.map(() => '') || [],
+          },
+        })
+
+        const updatedPlan = await prisma.plan.findUnique({
+          where: { id },
+          include: { tables: { include: { rows: true }, orderBy: { createdAt: 'asc' } } },
+        })
+        return NextResponse.json({ plan: updatedPlan })
+      }
+
+      // Remove a row from a table
+      case 'removeRow': {
+        const { tableIndex, rowIndex } = body
+        const table = plan.tables[tableIndex]
+        if (!table) return NextResponse.json({ error: 'Invalid table index' }, { status: 400 })
+        const row = table.rows[rowIndex]
+        if (!row) return NextResponse.json({ error: 'Invalid row index' }, { status: 400 })
+
+        await prisma.planRow.delete({
+          where: { id: row.id },
+        })
+
+        const updatedPlan = await prisma.plan.findUnique({
+          where: { id },
+          include: { tables: { include: { rows: true }, orderBy: { createdAt: 'asc' } } },
+        })
+        return NextResponse.json({ plan: updatedPlan })
+      }
+
+      // Update table title
+      case 'updateTableTitle': {
+        const { tableIndex, title } = body
+        const table = plan.tables[tableIndex]
+        if (!table) return NextResponse.json({ error: 'Invalid table index' }, { status: 400 })
+
+        await prisma.planTable.update({
+          where: { id: table.id },
+          data: { title },
+        })
+
+        const updatedPlan = await prisma.plan.findUnique({
+          where: { id },
+          include: { tables: { include: { rows: true }, orderBy: { createdAt: 'asc' } } },
+        })
+        return NextResponse.json({ plan: updatedPlan })
+      }
+
+      // Batch update: replace all tables at once (for AI modifications)
+      case 'batchUpdate': {
+        const { tables: newTables } = body
+
+        // Delete existing tables and rows
+        for (const table of plan.tables) {
+          await prisma.planRow.deleteMany({ where: { tableId: table.id } })
+        }
+        await prisma.planTable.deleteMany({ where: { planId: id } })
+
+        // Create new tables
+        for (const table of newTables) {
+          const createdTable = await prisma.planTable.create({
+            data: {
+              planId: id,
+              title: table.title,
+            },
+          })
+          if (table.rows?.length) {
+            await prisma.planRow.createMany({
+              data: table.rows.map((row: any) => ({
+                tableId: createdTable.id,
+                columns: row.columns,
+              })),
+            })
+          }
+        }
+
+        const updatedPlan = await prisma.plan.findUnique({
+          where: { id },
+          include: { tables: { include: { rows: true }, orderBy: { createdAt: 'asc' } } },
+        })
+        return NextResponse.json({ plan: updatedPlan })
+      }
+
+      default:
+        return NextResponse.json({ error: `Unknown action: ${action}` }, { status: 400 })
+    }
+  } catch (error) {
+    console.error('Error patching plan:', error)
+    return NextResponse.json({ error: 'Failed to update plan' }, { status: 500 })
+  }
+}

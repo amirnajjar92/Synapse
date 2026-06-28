@@ -2,19 +2,18 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import PromptBox from '@/components/PromptBox';
-import CustomButton from '@/components/CustomButton';
+import PromptBoxOpenAI from '@/components/PromptBoxOpenAI';
 import GoalsSection from '@/components/GoalsSection';
 import ViewPlanButton from '@/components/ViewPlanButton';
 import ChatRow from '@/components/ChatRow';
 import BurgerMenuButton from '@/components/BurgerMenuButton';
 import FloatingNavBar from '@/components/FloatingNavBar';
-import SynapseFitLogo from '@/components/SynapseFitLogo';
 import AnimatedLogo from '@/components/AnimatedLogo';
+import SynapseFitLogo from '@/components/SynapseFitLogo';
 import useMakePlan from '@/lib/hooks/useMakePlan';
 import usePromptEnhancer from '@/lib/hooks/usePromptEnhancer';
 import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks';
-import { setPromptText, setEnhancedPromptText, resetPlan, addPromptToHistory } from '@/lib/redux/slices/planSlice';
+import { setPromptText, setEnhancedPromptText, addPromptToHistory } from '@/lib/redux/slices/planSlice';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
@@ -265,15 +264,6 @@ export default function PlannerPage() {
   const baseWidth = 402;
   const baseHeight = 874;
 
-  // Dynamic dimensions based on state (original heights)
-  const row1Height = planGenerated ? 370 : 302;
-  const row2Height = planGenerated ? 140 : 206;
-  const row3Height = planGenerated ? 106 : 52;
-  const row4Height = planGenerated ? 206 : 0;
-  const row5Height = planGenerated ? 52 : 0;
-  const row6Height = planGenerated ? 30 : 0;
-  const chatRowHeight = showChat ? (planGenerated ? row2Height : 100) : 0; // Chat row height
-
   if (!mounted || isCheckingAuth) {
     return (
       <div className="w-full h-screen bg-[#0a0a0a] flex items-center justify-center">
@@ -286,122 +276,73 @@ export default function PlannerPage() {
     <div className="w-full h-screen bg-[#151515] flex items-center justify-center p-2 sm:p-4 relative">
       {/* Responsive iPhone Frame (Planner Page Content) */}
       <div 
-        className="bg-black rounded-[40px] overflow-hidden shadow-2xl relative flex-shrink-0"
+        className="bg-black/20 rounded-[40px] overflow-hidden shadow-2xl relative flex-shrink-0"
         style={{
           width: `min(95vw, ${baseWidth}px)`,
           aspectRatio: baseWidth / baseHeight,
           maxHeight: '95vh'
         }}
       >
+        {/* Background logo animation within frame */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-20 pointer-events-none z-0 scale-150 -translate-y-[20%]">
+          <SynapseFitLogo size={180} loading={true} accentInk="#FFFFFF" />
+        </div>
+
         {/* Main Container */}
         <div 
-          className="w-full h-full flex flex-col relative"
-          style={{ backgroundColor: '#0b0b0bff' }}
+          className="w-full h-full flex flex-col relative z-10"
+          style={{ backgroundColor: '#15151580' }}
         >
           {/* Burger Menu Button */}
           <div className="absolute top-4 left-4 z-10">
             <BurgerMenuButton />
           </div>
-          
-          {/* Row 1: 400 X (370 or 302) - ORIGINAL HEIGHT */}
-          <div 
-            className="w-full border border-[#3B3B3B00] flex items-center justify-center overflow-hidden transition-all duration-500 ease-out"
-            style={{ height: `${(row1Height / 874) * 100}%` }}
-          >
-            {isGenerating || planGenerated ? (
-              <GoalsSection isLoading={false} />
-            ) : null}
-          </div>
 
-          {/* Row 3: 400 X (106 or 52) - VIEW PLAN BUTTON (Moved up) */}
-          {planGenerated && (
-            <div 
-              className="w-full border border-[#3B3B3B00] flex items-center justify-center transition-all duration-500 ease-out overflow-hidden"
-              style={{ height: `${(row3Height / 874) * 100}%` }}
-            >
-              <ViewPlanButton isLoading={false} onClick={handleViewPlanClick} />
-            </div>
-          )}
-
-          {/* Chat Row (after first GO click, always shown) */}
-          {showChat && (
-            <ChatRow 
-              targetHeight={`${(chatRowHeight / 874) * 100}%`} 
-              chatMessages={chatMessages} 
-            />
-          )}
-
-          {/* Row 2: 400 X (114 or 206) */}
-          {!planGenerated && !isGenerating ? (
-            <div 
-              className="w-full border border-[#3B3B3B00] flex items-center justify-center relative transition-all duration-500 ease-out"
-              style={{ height: `${(row2Height / 874) * 100}%` }}
-            >
-              <PromptBox
-                value={localPromptText}
-                onChange={setLocalPromptText}
-                isLoading={false}
-                usePlannerStyle={true}
-              />
-            </div>
-          ) : (
-            planGenerated ? (
-              // Show nothing here because ChatRow is already shown
-              null
-            ) : null
-          )}
-
-          {/* Row 4: 400 X 206 - only when plan is generated (PromptBox moved here) */}
-          {planGenerated && (
-            <div 
-              className="w-full border border-[#3B3B3B00] flex items-center justify-center relative transition-all duration-500 ease-out overflow-hidden"
-              style={{ height: `${(row4Height / 874) * 100}%` }}
-            >
-              <PromptBox
-                value={localPromptText}
-                onChange={setLocalPromptText}
-                isLoading={false}
-                usePlannerStyle={true}
-              />
-            </div>
-          )}
-
-          {/* Row 5: 176 X 52 + 226 X 52 */}
-          {!isGenerating && (
-            <div 
-              className="flex w-full border border-[#3B3B3B00] transition-all duration-300"
-              style={{ height: `${(52 / 874) * 100}%` }}
-            >
-              <div 
-                className="h-full border border-[#3B3B3B00] flex items-center justify-center"
-                style={{ width: `${(176 / 400) * 100}%` }}
-              />
-              <div 
-                className="h-full border border-[#3B3B3B00] flex items-center justify-center p-1 sm:p-2 relative"
-                style={{ width: `${(226 / 400) * 100}%` }}
-              >
-                <CustomButton
-                  text="GO"
-                  isLoading={false}
-                  onClick={handleGoClick}
-                />
+          {planGenerated ? (
+            // === POST-GENERATION ===
+            <div className="flex-1 flex flex-col overflow-hidden pt-12 sm:pt-14 pb-3">
+              <div className="flex-[1.5] min-h-0 flex items-start justify-center overflow-hidden mb-[50px]">
+                <GoalsSection isLoading={false} />
+              </div>
+              {showChat && (
+                <div className="flex-[1] min-h-0 overflow-hidden">
+                  <ChatRow 
+                    targetHeight="100%" 
+                    chatMessages={chatMessages} 
+                  />
+                </div>
+              )}
+              <div className="flex-[1] min-h-0 flex items-center justify-center overflow-hidden">
+                <ViewPlanButton isLoading={false} onClick={handleViewPlanClick} />
               </div>
             </div>
-          )}
-          {/* Empty div to preserve layout while generating */}
-          {isGenerating && (
-            <div 
-              className="flex w-full border border-[#3B3B3B00]"
-              style={{ height: `${(52 / 874) * 100}%` }}
-            />
-          )}
-
-          {/* Row 6: 400 X 30 - only when plan is generated */}
-          {planGenerated && (
-            <div 
-              className="w-full border border-[#3B3B3B00] transition-all duration-500 ease-out"
-              style={{ height: `${(row6Height / 874) * 100}%` }}
-            />
+          ) : isGenerating || showChat ? (
+            // === DURING GENERATION ===
+            <div className="flex-1 flex flex-col overflow-hidden pt-12 sm:pt-14 pb-3">
+              <div className="flex-[1.2] min-h-0 overflow-hidden">
+                <GoalsSection isLoading={false} />
+              </div>
+              {showChat && (
+                <div className="flex-[1] min-h-0 overflow-hidden">
+                  <ChatRow 
+                    targetHeight="100%" 
+                    chatMessages={chatMessages} 
+                  />
+                </div>
+              )}
+            </div>
+          ) : (
+            // === BEFORE GENERATION ===
+            <div className="flex-1 flex items-center justify-center px-4">
+              <PromptBoxOpenAI
+                value={localPromptText}
+                onChange={setLocalPromptText}
+                onEnterPressed={handleGoClick}
+                isLoading={false}
+                placeholder="e.g. Lose 5kg in 30 days, Build muscle..."
+                bgColor="#1e1e1e70"
+              />
+            </div>
           )}
         </div>
       </div>

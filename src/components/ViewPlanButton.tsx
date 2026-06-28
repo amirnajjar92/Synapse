@@ -21,13 +21,10 @@ const ViewPlanButton: React.FC<ViewPlanButtonProps> = ({ isLoading, onClick }) =
       className="w-full h-full flex items-center justify-center relative overflow-hidden cursor-pointer"
       onClick={onClick}
     >
-      {/* 200x50 container */}
+      {/* Standard button container with consistent aspect ratio */}
       <div 
-        className="relative flex items-center justify-center transition-transform duration-200 hover:scale-105 active:scale-95"
-        style={{
-          width: '50%', // 200/400
-          height: `${(50 / 106) * 100}%`, // 50px tall relative to row height
-        }}
+        className="relative flex items-center justify-center transition-transform duration-200 hover:scale-105 active:scale-95 w-2/5"
+        style={{ aspectRatio: 931 / 230, maxHeight: '56px' }}
       >
         <img
           src="/vectors/button-frame.svg"
@@ -36,10 +33,9 @@ const ViewPlanButton: React.FC<ViewPlanButtonProps> = ({ isLoading, onClick }) =
           style={{ transform: 'scaleX(-1)' }}
         />
         <span 
-          className="text-white font-bold z-10" 
+          className="text-white font-bold z-10 text-base sm:text-lg" 
           style={{ 
             fontFamily: 'var(--font-hanalei-fill)', 
-            fontSize: 'calc((100vh * 0.80) * (37 / 874))',
             lineHeight: '1'
           }}
         >
