@@ -112,6 +112,7 @@ export async function POST(request: Request) {
       await pusherServer.trigger(`chat-${conversation.id}`, 'new-message', {
         id: message.id,
         senderId: message.senderId,
+        senderEmail: message.sender.email,
         senderName: message.sender.name,
         text: message.text,
         timestamp: message.createdAt.toISOString(),

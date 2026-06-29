@@ -78,6 +78,10 @@ export default function TrainingStudio() {
   const [editingDayIdx, setEditingDayIdx] = useState<number | null>(null);
   const [activeClients, setActiveClients] = useState<Client[]>([]);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const userIdRef = useRef<string | null>(null);
+  const userEmailRef = useRef<string | null>(null);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const [isLoadingClients, setIsLoadingClients] = useState(true);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
@@ -99,6 +103,9 @@ export default function TrainingStudio() {
     if (userStr) {
       const user = JSON.parse(userStr);
       setUserEmail(user.email);
+      setUserId(user.id);
+      userIdRef.current = user.id;
+      userEmailRef.current = user.email;
       fetchPlans(user.email);
       fetchClients(user.email);
     }
@@ -160,6 +167,7 @@ export default function TrainingStudio() {
       if (response.ok) {
         const data = await response.json();
         setChatMessages(data.messages || []);
+        setConversationId(data.conversationId || null);
       }
     } catch (error) {
       console.error('Error fetching messages:', error);
@@ -171,6 +179,42 @@ export default function TrainingStudio() {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [chatMessages]);
+
+  // Pusher real-time subscription for trainer chat
+  useEffect(() => {
+    if (!conversationId || !process.env.NEXT_PUBLIC_PUSHER_KEY) return;
+    let pusher: any;
+    let channel: any;
+
+    const initPusher = async () => {
+      const PusherJS = (await import('pusher-js')).default;
+      pusher = new PusherJS(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
+        cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+        forceTLS: true,
+      });
+      channel = pusher.subscribe(`chat-${conversationId}`);
+      channel.bind('new-message', (data: any) => {
+        if (data.senderEmail === userEmailRef.current) return;
+        setChatMessages((prev) => {
+          if (prev.some((m) => m.id === data.id)) return prev;
+          const isOwn = data.senderEmail === userEmailRef.current;
+          return [...prev, {
+            id: data.id,
+            senderId: isOwn ? 'trainer' as const : data.senderId,
+            senderName: data.senderName,
+            text: data.text,
+            timestamp: data.timestamp,
+          }];
+        });
+      });
+    };
+    initPusher();
+
+    return () => {
+      if (channel) { channel.unbind_all(); channel.unsubscribe(); }
+      if (pusher) pusher.disconnect();
+    };
+  }, [conversationId, userId]);
 
   const handleGoogleSignIn = useCallback(async () => {
     setIsSigningIn(true);

@@ -26,21 +26,13 @@ const WorkoutGoalsSection = ({
   onMuscleUpdate,
   gender,
   onGenderChange,
-  trainerConvs,
-  unreadCount,
-  isLoggedIn,
-  onOpenTrainerChat,
 }: {
   planData: { id: string | number; columns: string[] }[];
   selectedDay: number;
   onDayChange: (day: number) => void;
-  onMuscleUpdate?: (muscles: string[]) => void;
+  onMuscleUpdate?: ((muscles: string[]) => void) | undefined;
   gender: 'male' | 'female';
   onGenderChange: (g: 'male' | 'female') => void;
-  trainerConvs: any[];
-  unreadCount: number;
-  isLoggedIn: boolean;
-  onOpenTrainerChat: () => void;
 }) => {
   const currentRow = planData[selectedDay];
   const exercises = currentRow
@@ -111,7 +103,7 @@ const WorkoutGoalsSection = ({
   }, [selectedDay, planData]);
 
   return (
-    <div className="w-full h-full flex flex-col p-3 sm:p-4 md:p-6 pt-12 transition-all duration-300 ease-out overflow-hidden">
+    <div className="w-full h-full flex flex-col p-3 sm:p-4 md:p-6 pt-12 transition-all duration-300 ease-out">
       <div className="flex items-center justify-end mb-1 flex-shrink-0 gap-2">
         <button
           onClick={() => {
@@ -142,22 +134,6 @@ const WorkoutGoalsSection = ({
           <span className={`text-[9px] font-medium transition-colors ${gender === 'female' ? 'text-white' : 'text-gray-600'}`}>Women</span>
         </div>
       </div>
-
-      {/* Trainer chat button under gender toggle */}
-      {isLoggedIn && trainerConvs.length > 0 && (
-        <button onClick={onOpenTrainerChat}
-          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all mb-2 relative">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FC4C02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
-            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-          </svg>
-          <span className="text-[10px] text-white/70">Chat with Trainer</span>
-          {unreadCount > 0 && (
-            <span className="ml-auto w-4 h-4 bg-red-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center">
-              {unreadCount}
-            </span>
-          )}
-        </button>
-      )}
 
       {currentRow && (
         <div className="mb-2 flex-shrink-0">
@@ -250,6 +226,8 @@ export default function WorkoutTrackerPage() {
   const [isOwner, setIsOwner] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const userIdRef = useRef<string | null>(null);
+  const userEmailRef = useRef<string | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
 
   // Trainer chat
@@ -274,6 +252,8 @@ export default function WorkoutTrackerPage() {
         const user = userStr ? JSON.parse(userStr) : null;
         setIsLoggedIn(!!user);
         setUserId(user?.id || null);
+        userIdRef.current = user?.id || null;
+        userEmailRef.current = user?.email || null;
 
         const planId = new URLSearchParams(window.location.search).get('planId');
 
@@ -446,6 +426,8 @@ export default function WorkoutTrackerPage() {
         if (!conv.conversationId) return;
         const channel = pusher.subscribe(`chat-${conv.conversationId}`);
         channel.bind('new-message', (data: any) => {
+          // Skip own messages — already handled by optimistic + API response
+          if (data.senderEmail === userEmailRef.current) return;
           setTrainerConvs((prev: any[]) => {
             const idx = prev.findIndex((c: any) => c.conversationId === conv.conversationId);
             if (idx === -1) return prev;
@@ -627,7 +609,7 @@ export default function WorkoutTrackerPage() {
             {isLoading ? (
               <Spinner size={36} />
             ) : planData.length > 0 ? (
-              <WorkoutGoalsSection planData={planData} selectedDay={selectedDay} onDayChange={setSelectedDay} onMuscleUpdate={handleMuscleUpdate} gender={gender} onGenderChange={setGender} trainerConvs={trainerConvs} unreadCount={unreadCount} isLoggedIn={isLoggedIn} onOpenTrainerChat={handleOpenTrainerChat} />
+              <WorkoutGoalsSection planData={planData} selectedDay={selectedDay} onDayChange={setSelectedDay} onMuscleUpdate={handleMuscleUpdate} gender={gender} onGenderChange={setGender} />
             ) : (
               <div className="flex flex-col items-center justify-center text-gray-500 text-sm gap-3">
                 <span>No active workout plan</span>
@@ -640,6 +622,24 @@ export default function WorkoutTrackerPage() {
               </div>
             )}
           </div>
+
+          {/* Trainer chat button - between workout plan and videos */}
+          {isLoggedIn && trainerConvs.length > 0 && (
+            <div className="px-3 py-1 flex-shrink-0">
+              <button onClick={handleOpenTrainerChat}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all relative">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FC4C02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                </svg>
+                <span className="text-[10px] text-white/70">Chat with Trainer</span>
+                {unreadCount > 0 && (
+                  <span className="ml-auto w-4 h-4 bg-red-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          )}
 
           {/* Middle: Videos + Coach Tip */}
           {planData.length > 0 && (
