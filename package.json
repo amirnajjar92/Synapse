@@ -26,6 +26,8 @@
     "lucide-react": "^1.21.0",
     "next": "^16.2.7",
     "next-auth": "^4.24.14",
+    "pusher": "^5.3.4",
+    "pusher-js": "^8.5.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-redux": "^9.3.0",

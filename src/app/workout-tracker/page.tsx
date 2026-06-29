@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import PromptBoxOpenAI from '@/components/PromptBoxOpenAI';
@@ -26,6 +26,10 @@ const WorkoutGoalsSection = ({
   onMuscleUpdate,
   gender,
   onGenderChange,
+  trainerConvs,
+  unreadCount,
+  isLoggedIn,
+  onOpenTrainerChat,
 }: {
   planData: { id: string | number; columns: string[] }[];
   selectedDay: number;
@@ -33,6 +37,10 @@ const WorkoutGoalsSection = ({
   onMuscleUpdate?: (muscles: string[]) => void;
   gender: 'male' | 'female';
   onGenderChange: (g: 'male' | 'female') => void;
+  trainerConvs: any[];
+  unreadCount: number;
+  isLoggedIn: boolean;
+  onOpenTrainerChat: () => void;
 }) => {
   const currentRow = planData[selectedDay];
   const exercises = currentRow
@@ -135,6 +143,22 @@ const WorkoutGoalsSection = ({
         </div>
       </div>
 
+      {/* Trainer chat button under gender toggle */}
+      {isLoggedIn && trainerConvs.length > 0 && (
+        <button onClick={onOpenTrainerChat}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition-all mb-2 relative">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FC4C02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+          </svg>
+          <span className="text-[10px] text-white/70">Chat with Trainer</span>
+          {unreadCount > 0 && (
+            <span className="ml-auto w-4 h-4 bg-red-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center">
+              {unreadCount}
+            </span>
+          )}
+        </button>
+      )}
+
       {currentRow && (
         <div className="mb-2 flex-shrink-0">
           <h3 className="text-white text-xs font-semibold">
@@ -224,7 +248,17 @@ export default function WorkoutTrackerPage() {
   const [showVideo, setShowVideo] = useState(false);
   const [videoSearching, setVideoSearching] = useState(false);
   const [isOwner, setIsOwner] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
+
+  // Trainer chat
+  const [showTrainerChat, setShowTrainerChat] = useState(false);
+  const [trainerConvs, setTrainerConvs] = useState<any[]>([]);
+  const [activeTrainerIdx, setActiveTrainerIdx] = useState(0);
+  const [trainerChatText, setTrainerChatText] = useState('');
+  const [sendingTrainerMsg, setSendingTrainerMsg] = useState(false);
+  const trainerChatRef = useRef<HTMLDivElement>(null);
 
   const baseWidth = 402;
   const baseHeight = 874;
@@ -238,6 +272,8 @@ export default function WorkoutTrackerPage() {
       try {
         const userStr = localStorage.getItem('synapse_user');
         const user = userStr ? JSON.parse(userStr) : null;
+        setIsLoggedIn(!!user);
+        setUserId(user?.id || null);
 
         const planId = new URLSearchParams(window.location.search).get('planId');
 
@@ -279,6 +315,166 @@ export default function WorkoutTrackerPage() {
     };
     loadActivePlan();
   }, [router]);
+
+  // Fetch trainer conversations
+  const fetchTrainerChats = useCallback(async () => {
+    const userStr = localStorage.getItem('synapse_user');
+    if (!userStr) return;
+    const user = JSON.parse(userStr);
+    try {
+      const res = await fetch(`/api/training/client-conversations?email=${encodeURIComponent(user.email)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setTrainerConvs(data.conversations || []);
+      }
+    } catch (e) {
+      console.error('Error fetching trainer conversations:', e);
+    }
+  }, []);
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('synapse_user');
+    if (userStr) fetchTrainerChats();
+  }, [fetchTrainerChats]);
+
+  const unreadCount = useMemo(() => {
+    return trainerConvs.reduce((sum, conv) => {
+      const lastRead = localStorage.getItem(`trainerChatRead_${conv.trainer.id}`);
+      const unread = conv.messages.filter((m: any) => {
+        if (m.senderId === 'me') return false;
+        return !lastRead || new Date(m.timestamp) > new Date(lastRead);
+      }).length;
+      return sum + unread;
+    }, 0);
+  }, [trainerConvs]);
+
+  const handleOpenTrainerChat = () => {
+    setShowTrainerChat(true);
+    trainerConvs.forEach((conv) => {
+      const msgs = conv.messages;
+      if (msgs.length > 0) {
+        const last = msgs[msgs.length - 1];
+        localStorage.setItem(`trainerChatRead_${conv.trainer.id}`, last.timestamp);
+      }
+    });
+  };
+
+  const handleCloseTrainerChat = () => setShowTrainerChat(false);
+
+  const handleSendTrainerMsg = async () => {
+    const text = trainerChatText.trim();
+    if (!text || trainerConvs.length === 0) return;
+    const conv = trainerConvs[activeTrainerIdx];
+    const userStr = localStorage.getItem('synapse_user');
+    if (!userStr) return;
+    const user = JSON.parse(userStr);
+
+    const optimistic: any = {
+      id: `opt-${Date.now()}`,
+      senderId: 'me',
+      senderName: null,
+      text,
+      timestamp: new Date().toISOString(),
+    };
+
+    setTrainerConvs((prev: any[]) => {
+      const updated = [...prev];
+      updated[activeTrainerIdx] = {
+        ...updated[activeTrainerIdx],
+        messages: [...updated[activeTrainerIdx].messages, optimistic],
+      };
+      return updated;
+    });
+    setTrainerChatText('');
+    setSendingTrainerMsg(true);
+
+    try {
+      const res = await fetch('/api/training/client-conversations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user.email, trainerId: conv.trainer.id, text }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTrainerConvs((prev: any[]) => {
+          const updated = [...prev];
+          updated[activeTrainerIdx] = {
+            ...updated[activeTrainerIdx],
+            messages: updated[activeTrainerIdx].messages.map((m: any) =>
+              m.id === optimistic.id ? data.message : m
+            ),
+          };
+          return updated;
+        });
+      }
+    } catch (err) {
+      console.error('Error sending trainer message:', err);
+      setTrainerConvs((prev: any[]) => {
+        const updated = [...prev];
+        updated[activeTrainerIdx] = {
+          ...updated[activeTrainerIdx],
+          messages: updated[activeTrainerIdx].messages.filter((m: any) => m.id !== optimistic.id),
+        };
+        return updated;
+      });
+    } finally {
+      setSendingTrainerMsg(false);
+    }
+  };
+
+  // Scroll trainer chat to bottom
+  useEffect(() => {
+    if (trainerChatRef.current) {
+      trainerChatRef.current.scrollTop = trainerChatRef.current.scrollHeight;
+    }
+  }, [trainerConvs, activeTrainerIdx]);
+
+  // Pusher real-time subscription for trainer chat
+  useEffect(() => {
+    if (!trainerConvs.length || !process.env.NEXT_PUBLIC_PUSHER_KEY) return;
+    let pusher: any;
+    let channels: any[] = [];
+
+    const initPusher = async () => {
+      const PusherJS = (await import('pusher-js')).default;
+      pusher = new PusherJS(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
+        cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+        forceTLS: true,
+      });
+
+      trainerConvs.forEach((conv: any) => {
+        if (!conv.conversationId) return;
+        const channel = pusher.subscribe(`chat-${conv.conversationId}`);
+        channel.bind('new-message', (data: any) => {
+          setTrainerConvs((prev: any[]) => {
+            const idx = prev.findIndex((c: any) => c.conversationId === conv.conversationId);
+            if (idx === -1) return prev;
+            const exists = prev[idx].messages.some((m: any) => m.id === data.id);
+            if (exists) return prev;
+            const updated = [...prev];
+            updated[idx] = {
+              ...updated[idx],
+              messages: [...updated[idx].messages, {
+                id: data.id,
+                senderId: data.senderId === userId ? 'me' : 'trainer',
+                senderName: data.senderName,
+                text: data.text,
+                timestamp: data.timestamp,
+              }],
+            };
+            return updated;
+          });
+        });
+        channels.push(channel);
+      });
+    };
+    initPusher();
+
+    return () => {
+      channels.forEach((ch) => { ch.unbind_all(); ch.unsubscribe(); });
+      if (pusher) pusher.disconnect();
+    };
+  }, [trainerConvs, userId]);
 
   // Generate coach advice when day changes
   useEffect(() => {
@@ -431,7 +627,7 @@ export default function WorkoutTrackerPage() {
             {isLoading ? (
               <Spinner size={36} />
             ) : planData.length > 0 ? (
-              <WorkoutGoalsSection planData={planData} selectedDay={selectedDay} onDayChange={setSelectedDay} onMuscleUpdate={handleMuscleUpdate} gender={gender} onGenderChange={setGender} />
+              <WorkoutGoalsSection planData={planData} selectedDay={selectedDay} onDayChange={setSelectedDay} onMuscleUpdate={handleMuscleUpdate} gender={gender} onGenderChange={setGender} trainerConvs={trainerConvs} unreadCount={unreadCount} isLoggedIn={isLoggedIn} onOpenTrainerChat={handleOpenTrainerChat} />
             ) : (
               <div className="flex flex-col items-center justify-center text-gray-500 text-sm gap-3">
                 <span>No active workout plan</span>
@@ -448,7 +644,72 @@ export default function WorkoutTrackerPage() {
           {/* Middle: Videos + Coach Tip */}
           {planData.length > 0 && (
             <div className="flex-1 flex flex-col min-h-0 px-3 pb-3">
-              {showChat ? (
+              {showTrainerChat ? (
+                <div className="flex-1 flex flex-col min-h-0">
+                  <div className="flex items-center justify-between mb-2 flex-shrink-0">
+                    <div className="flex items-center gap-2">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FC4C02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                      </svg>
+                      <span className="text-white font-semibold text-sm">Chat with Trainer</span>
+                    </div>
+                    <button onClick={handleCloseTrainerChat} className="p-1 rounded-full hover:bg-white/10 transition-colors">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M18 6L6 18" /><path d="M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  {trainerConvs.length > 1 && (
+                    <div className="flex gap-1.5 mb-2 overflow-x-auto scrollbar-none flex-shrink-0">
+                      {trainerConvs.map((conv: any, i: number) => (
+                        <button key={conv.trainer.id} onClick={() => setActiveTrainerIdx(i)}
+                          className={`px-3 py-1 rounded-full text-[11px] font-medium whitespace-nowrap transition-all ${i === activeTrainerIdx ? 'bg-[#FC4C02] text-white' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}>
+                          {conv.trainer.name || conv.trainer.email}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  <div ref={trainerChatRef} className="flex-1 overflow-y-auto space-y-2 pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+                    {trainerConvs[activeTrainerIdx]?.messages.length === 0 ? (
+                      <div className="h-full flex items-center justify-center text-center text-white/30 text-xs px-4">
+                        No messages yet. Say hello!
+                      </div>
+                    ) : (
+                      trainerConvs[activeTrainerIdx]?.messages.map((msg: any) => {
+                        const isMe = msg.senderId === 'me';
+                        return (
+                          <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+                            <div className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-xs ${isMe ? 'bg-[#FC4C02] text-white rounded-tr-none' : 'bg-white/10 text-white rounded-tl-none'}`}>
+                              {msg.text}
+                            </div>
+                            <span className="text-[9px] text-white/30 mt-0.5 px-1">
+                              {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  <div className="flex-shrink-0 pt-2 flex gap-2">
+                    <input type="text" value={trainerChatText}
+                      onChange={e => setTrainerChatText(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter' && !sendingTrainerMsg) handleSendTrainerMsg(); }}
+                      placeholder="Type a message..."
+                      className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-white text-xs placeholder-white/30 outline-none focus:border-white/20"
+                    />
+                    <button onClick={handleSendTrainerMsg} disabled={!trainerChatText.trim() || sendingTrainerMsg}
+                      className="w-9 h-9 rounded-xl bg-[#FC4C02] disabled:opacity-30 text-white flex items-center justify-center transition-opacity flex-shrink-0">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13" />
+                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              ) : showChat ? (
                 <div className="flex-1 flex items-end justify-center z-20">
                   <div className="w-full">
                     <PromptBoxOpenAI
@@ -469,7 +730,7 @@ export default function WorkoutTrackerPage() {
                   {!showChat && (
                     <div
                       onClick={coachAdvice && !coachAdviceLoading ? handleOpenChat : undefined}
-                      className={`w-full rounded-2xl p-3 mb-3 flex-shrink-0 transition-all duration-200 ${coachAdvice && !coachAdviceLoading ? 'cursor-pointer active:scale-95' : ''}`}
+                      className={`w-full rounded-2xl p-3 mb-3 flex-shrink-0 transition-all duration-200 overflow-y-auto ${coachAdvice && !coachAdviceLoading ? 'cursor-pointer active:scale-95' : ''}`}
                       style={{
                         backgroundColor: 'rgba(0, 0, 0, 0.4)',
                         maxHeight: '140px',
@@ -544,7 +805,7 @@ export default function WorkoutTrackerPage() {
                           </div>
                         </div>
                       ) : (
-                        <div className="px-4 py-3 space-y-1.5">
+                        <div className="px-4 py-3 space-y-1.5 overflow-y-auto">
                           <span className="text-[9px] text-gray-500 font-medium uppercase tracking-wider">Exercise Videos</span>
                           {videoSearching ? (
                             <div className="flex items-center gap-2 py-2">
@@ -599,9 +860,9 @@ export default function WorkoutTrackerPage() {
         </div>
       </div>
 
-      {!showChat && isOwner && <FloatingNavBar onAIClick={handleOpenChat} />}
+      {!showChat && !showTrainerChat && isLoggedIn && <FloatingNavBar onAIClick={handleOpenChat} />}
 
-      {authChecked && !isOwner && planData.length > 0 && (
+      {authChecked && !isLoggedIn && planData.length > 0 && (
         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm rounded-[40px]">
           <div className="w-[80%] max-w-[320px] flex flex-col items-center gap-4 text-center">
             <img src="/vectors/ai-icon.svg" alt="" className="w-10 h-10 opacity-60" />

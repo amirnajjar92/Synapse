@@ -135,6 +135,7 @@ model Plan {
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   tables         PlanTable[]
   userPrompts    UserPrompt[]
+  clientAssignments TrainerClient[]
 }
 
 model PlanRow {
@@ -164,25 +165,31 @@ model Session {
 }
 
 model User {
-  id             String           @id @default(cuid())
-  name           String?
-  email          String?          @unique
-  emailVerified  DateTime?
-  image          String?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime
-  role           UserRole         @default(USER)
-  conversations  AIConversation[]
-  accounts       Account[]
-  activities     Activity[]
-  dailyEntries   DailyEntry[]
-  plans          Plan[]
-  sessions       Session[]
-  userPrompts    UserPrompt[]
-  waterLogs      WaterLog[]
-  reminders      Reminder[]
-  workoutPlans   WorkoutPlan[]
-  exerciseLogs   ExerciseLog[]
+  id                  String           @id @default(cuid())
+  name                String?
+  email               String?          @unique
+  emailVerified       DateTime?
+  image               String?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime
+  role                UserRole         @default(USER)
+  conversations       AIConversation[]
+  accounts            Account[]
+  activities          Activity[]
+  dailyEntries        DailyEntry[]
+  plans               Plan[]
+  sessions            Session[]
+  userPrompts         UserPrompt[]
+  waterLogs           WaterLog[]
+  reminders           Reminder[]
+  workoutPlans        WorkoutPlan[]
+  exerciseLogs        ExerciseLog[]
+  trainerClients      TrainerClient[]  @relation("TrainerClients")
+  clientTrainers      TrainerClient[]  @relation("ClientTrainers")
+  trainerConversations Conversation[]  @relation("TrainerConversations")
+  clientConversations Conversation[]  @relation("ClientConversations")
+  messages            Message[]
+  sentInvitations     Invitation[]
 }
 
 model UserPrompt {
@@ -221,6 +228,12 @@ enum PlanStatus {
   IN_PROGRESS
   PAUSED
   COMPLETED
+}
+
+enum ClientPlanStatus {
+  NONE
+  ACTIVE
+  PAUSED
 }
 
 enum UserRole {
@@ -326,6 +339,75 @@ model ExerciseLog {
   
   @@index([userId, date])
   @@index([exerciseId, date])
+}
+
+model TrainerClient {
+  id             String           @id @default(cuid())
+  trainerId      String
+  clientId       String
+  planStatus     ClientPlanStatus @default(NONE)
+  assignedPlanId String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  trainer        User             @relation("TrainerClients", fields: [trainerId], references: [id], onDelete: Cascade)
+  client         User             @relation("ClientTrainers", fields: [clientId], references: [id], onDelete: Cascade)
+  assignedPlan   Plan?            @relation(fields: [assignedPlanId], references: [id], onDelete: SetNull)
+
+  @@unique([trainerId, clientId])
+  @@index([trainerId])
+  @@index([clientId])
+}
+
+model Conversation {
+  id         String    @id @default(cuid())
+  trainerId  String
+  clientId   String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  trainer    User      @relation("TrainerConversations", fields: [trainerId], references: [id], onDelete: Cascade)
+  client     User      @relation("ClientConversations", fields: [clientId], references: [id], onDelete: Cascade)
+  messages   Message[]
+
+  @@unique([trainerId, clientId])
+  @@index([trainerId])
+  @@index([clientId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  senderId       String
+  text           String
+  createdAt      DateTime     @default(now())
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+}
+
+model Invitation {
+  id         String           @id @default(cuid())
+  trainerId  String
+  clientEmail String
+  status     InvitationStatus @default(PENDING)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  trainer    User             @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+
+  @@unique([trainerId, clientEmail])
+  @@index([clientEmail, status])
+  @@index([trainerId])
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
 }
 
 enum Difficulty {

@@ -44,7 +44,7 @@ export async function GET(request: Request) {
 }
 
 // Helper to extract goal weight from prompt using AI
-const extractGoalWeight = async (prompt: string): Promise<{ weight: number | null, unit: string | null }> => {
+const extractGoalWeight = async (prompt: string, baseUrl: string): Promise<{ weight: number | null, unit: string | null }> => {
   try {
     // First try simple regex for common patterns
     const kgMatch = prompt.match(/(\d+(?:\.\d+)?)\s*kg/i);
@@ -58,10 +58,9 @@ const extractGoalWeight = async (prompt: string): Promise<{ weight: number | nul
     }
 
     // If regex fails, use AI to extract (with OpenRouter fallback)
-    const apiUrl = '/api/ai/analyse';
     const systemPrompt = `Extract the goal weight from the user's fitness prompt. Respond ONLY with a JSON object in this exact format: {"weight": number, "unit": "kg" or "lbs"}. If no goal weight is mentioned, respond with: {"weight": null, "unit": null}. Do not include any other text.`;
     
-    const res = await fetch(apiUrl, {
+    const res = await fetch(new URL('/api/ai/analyse', baseUrl).toString(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ question: `${systemPrompt}\n\nUser prompt: ${prompt}` }),
@@ -102,7 +101,7 @@ export async function POST(request: Request) {
     console.log('User found:', user);
 
     // Extract goal weight from prompt
-    const { weight: goalWeight, unit: goalWeightUnit } = await extractGoalWeight(prompt);
+    const { weight: goalWeight, unit: goalWeightUnit } = await extractGoalWeight(prompt, request.url);
     console.log('Extracted goal weight:', { goalWeight, goalWeightUnit });
 
     const plan = await prisma.plan.create({

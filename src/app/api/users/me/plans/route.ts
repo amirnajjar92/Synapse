@@ -9,7 +9,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
-    // Find the user first
     const user = await prisma.user.findUnique({
       where: { email: email }
     });
@@ -18,12 +17,41 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Get all plans for this user with tables and rows
-    const plans = await prisma.plan.findMany({
+    // Get own plans
+    const ownPlans = await prisma.plan.findMany({
       where: { userId: user.id },
       include: { tables: { include: { rows: true } } },
       orderBy: { createdAt: 'desc' }
     });
+
+    // Get plans assigned via TrainerClient (client receiving plans from trainers)
+    const clientAssignments = await prisma.trainerClient.findMany({
+      where: {
+        clientId: user.id,
+        assignedPlanId: { not: null },
+      },
+      include: {
+        assignedPlan: {
+          include: { tables: { include: { rows: true } } },
+        },
+      },
+    });
+
+    const assignedPlans = clientAssignments
+      .map((tc) => tc.assignedPlan)
+      .filter((p): p is NonNullable<typeof p> => p !== null);
+
+    // Merge: own plans first, then assigned plans (deduplicate by id)
+    const allPlanIds = new Set<string>();
+    const plans = [...ownPlans];
+    ownPlans.forEach((p) => allPlanIds.add(p.id));
+
+    for (const plan of assignedPlans) {
+      if (!allPlanIds.has(plan.id)) {
+        plans.push(plan);
+        allPlanIds.add(plan.id);
+      }
+    }
 
     return NextResponse.json({ plans });
   } catch (error) {

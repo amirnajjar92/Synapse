@@ -6,6 +6,7 @@ import { useSidebar } from './SidebarContext';
 import { useSession, signIn } from 'next-auth/react';
 import { themes, loadTheme, saveTheme } from '@/lib/theme';
 import NotificationToggle from './NotificationToggle';
+import InvitationBell from './InvitationBell';
 
 interface UserData {
   email: string;
@@ -340,6 +341,29 @@ export default function Sidebar() {
                 <p className="text-[10px] text-white/45 group-hover:text-black/60 leading-tight mt-0.5">Follow daily exercises</p>
               </div>
             </button>
+
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                router.push('/training-studio');
+              }}
+              className="group flex items-center gap-3 px-4 py-3 rounded-lg text-white/80 hover:text-black hover:bg-white transition-all duration-200"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                <path d="M2 17l10 5 10-5" />
+                <path d="M2 12l10 5 10-5" />
+              </svg>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="font-medium leading-tight">Training Studio</p>
+                <p className="text-[10px] text-white/45 group-hover:text-black/60 leading-tight mt-0.5">Manage clients & build plans</p>
+              </div>
+            </button>
+
+            {/* Invitation Bell - Show for all logged-in users */}
+            {user?.email && (
+              <InvitationBell userEmail={user.email} />
+            )}
 
             {/* Admin Panel - Only show for admins */}
             {isAdmin && (

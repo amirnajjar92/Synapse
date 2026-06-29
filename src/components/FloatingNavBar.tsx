@@ -195,6 +195,19 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
             </svg>
           </button>
 
+          {/* Training Studio - Layers */}
+          <button
+            onClick={() => handleNavClick('/training-studio')}
+            className="group w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 active:scale-95 flex-shrink-0"
+            style={{ background: isActive('/training-studio') ? '#FC4C02' : 'transparent' }}
+          >
+            <svg {...iconBase} stroke={isActive('/training-studio') ? '#ffffff' : '#ffffff'}>
+              <path d="M12 2L2 7l10 5 10-5-10-5z" />
+              <path d="M2 17l10 5 10-5" />
+              <path d="M2 12l10 5 10-5" />
+            </svg>
+          </button>
+
           {/* AI Icon */}
           <button
             onClick={() => {
