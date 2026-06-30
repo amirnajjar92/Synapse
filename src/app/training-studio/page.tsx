@@ -64,6 +64,9 @@ export default function TrainingStudio() {
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
   const [chatInput, setChatInput] = useState('');
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [deletingMsgId, setDeletingMsgId] = useState<string | null>(null);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const longPressFiredRef = useRef(false);
 
   const [builderPrompt, setBuilderPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -226,9 +229,12 @@ export default function TrainingStudio() {
             localStorage.setItem('sidebarUnreadCount', String(Object.keys(next).length));
             return next;
           });
-        }
-      });
-    };
+          }
+        });
+        channel.bind('message-deleted', (data: any) => {
+          setChatMessages(prev => prev.filter(m => m.id !== data.messageId));
+        });
+      };
     initPusher();
 
     return () => {
@@ -315,6 +321,18 @@ export default function TrainingStudio() {
       setChatMessages(prev => prev.filter(msg => msg.id !== optimisticMsg.id));
     }
   }, [chatInput, selectedClient, userEmail]);
+
+  const handleDeleteChat = useCallback(async (messageId: string) => {
+    setDeletingMsgId(null);
+    setChatMessages(prev => prev.filter(msg => msg.id !== messageId));
+    try {
+      await fetch(`/api/training/messages/${messageId}?email=${encodeURIComponent(userEmail!)}`, {
+        method: 'DELETE',
+      });
+    } catch (err) {
+      console.error('Error deleting message:', err);
+    }
+  }, [userEmail]);
 
   const handleGeneratePlan = useCallback(async () => {
     if (!builderPrompt.trim()) return;
@@ -1036,10 +1054,40 @@ export default function TrainingStudio() {
                   ) : (
                     chatMessages.map(msg => {
                       const isTrainer = msg.senderId === 'trainer';
+                      const showDelete = isTrainer && deletingMsgId === msg.id;
                       return (
                         <div key={msg.id} className={`flex flex-col ${isTrainer ? 'items-end' : 'items-start'}`}>
-                          <div className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-xs ${isTrainer ? 'bg-[#FC4C02] text-white rounded-tr-none' : 'bg-white/10 text-white rounded-tl-none'}`}>
-                            {msg.text}
+                          <div className="flex items-center gap-1.5 max-w-[85%]">
+                            {showDelete && (
+                              <button
+                                onClick={() => handleDeleteChat(msg.id)}
+                                className="w-7 h-7 rounded-full bg-red-500/20 hover:bg-red-500/40 flex items-center justify-center flex-shrink-0 transition-colors"
+                                title="Delete message"
+                              >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="3 6 5 6 21 6" />
+                                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                </svg>
+                              </button>
+                            )}
+                            <div
+                              className={`rounded-2xl px-3.5 py-2 text-xs ${isTrainer ? 'bg-[#FC4C02] text-white rounded-tr-none' : 'bg-white/10 text-white rounded-tl-none'}`}
+                              onContextMenu={e => { if (isTrainer) { e.preventDefault(); setDeletingMsgId(showDelete ? null : msg.id); } }}
+                              onPointerDown={() => {
+                                if (!isTrainer) return;
+                                longPressFiredRef.current = false;
+                                longPressTimerRef.current = setTimeout(() => {
+                                  longPressFiredRef.current = true;
+                                  setDeletingMsgId(msg.id);
+                                }, 500);
+                              }}
+                              onPointerUp={() => { clearTimeout(longPressTimerRef.current); }}
+                              onPointerLeave={() => { clearTimeout(longPressTimerRef.current); }}
+                              onPointerCancel={() => { clearTimeout(longPressTimerRef.current); }}
+                              onClick={() => { if (showDelete && !longPressFiredRef.current) setDeletingMsgId(null); }}
+                            >
+                              {msg.text}
+                            </div>
                           </div>
                           <span className="text-[9px] text-white/30 mt-0.5 px-1">
                             {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

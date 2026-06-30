@@ -251,6 +251,9 @@ export default function WorkoutTrackerPage() {
   const [activeTrainerIdx, setActiveTrainerIdx] = useState(0);
   const [trainerChatText, setTrainerChatText] = useState('');
   const [sendingTrainerMsg, setSendingTrainerMsg] = useState(false);
+  const [deletingMsgId, setDeletingMsgId] = useState<string | null>(null);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const longPressFiredRef = useRef(false);
   const trainerChatRef = useRef<HTMLDivElement>(null);
 
   const baseWidth = 402;
@@ -424,6 +427,30 @@ export default function WorkoutTrackerPage() {
     }
   };
 
+  const handleDeleteTrainerMsg = async (messageId: string) => {
+    setDeletingMsgId(null);
+    const userStr = localStorage.getItem('synapse_user');
+    if (!userStr) return;
+    const user = JSON.parse(userStr);
+
+    setTrainerConvs((prev: any[]) => {
+      const updated = [...prev];
+      updated[activeTrainerIdx] = {
+        ...updated[activeTrainerIdx],
+        messages: updated[activeTrainerIdx].messages.filter((m: any) => m.id !== messageId),
+      };
+      return updated;
+    });
+
+    try {
+      await fetch(`/api/training/messages/${messageId}?email=${encodeURIComponent(user.email)}`, {
+        method: 'DELETE',
+      });
+    } catch (err) {
+      console.error('Error deleting message:', err);
+    }
+  };
+
   // Scroll trainer chat to bottom
   useEffect(() => {
     if (trainerChatRef.current) {
@@ -469,6 +496,18 @@ export default function WorkoutTrackerPage() {
             return updated;
           });
           // System notification handled globally by PusherNotificationListener
+        });
+        channel.bind('message-deleted', (data: any) => {
+          setTrainerConvs((prev: any[]) => {
+            const idx = prev.findIndex((c: any) => c.conversationId === conv.conversationId);
+            if (idx === -1) return prev;
+            const updated = [...prev];
+            updated[idx] = {
+              ...updated[idx],
+              messages: updated[idx].messages.filter((m: any) => m.id !== data.messageId),
+            };
+            return updated;
+          });
         });
         channels.push(channel);
       });
@@ -703,10 +742,40 @@ export default function WorkoutTrackerPage() {
                     ) : (
                       trainerConvs[activeTrainerIdx]?.messages.map((msg: any) => {
                         const isMe = msg.senderId === 'me';
+                        const showDelete = isMe && deletingMsgId === msg.id;
                         return (
                           <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                            <div className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-xs ${isMe ? 'bg-[#FC4C02] text-white rounded-tr-none' : 'bg-white/10 text-white rounded-tl-none'}`}>
-                              {msg.text}
+                            <div className="flex items-center gap-1.5 max-w-[85%]">
+                              {showDelete && (
+                                <button
+                                  onClick={() => handleDeleteTrainerMsg(msg.id)}
+                                  className="w-7 h-7 rounded-full bg-red-500/20 hover:bg-red-500/40 flex items-center justify-center flex-shrink-0 transition-colors"
+                                  title="Delete message"
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="3 6 5 6 21 6" />
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                  </svg>
+                                </button>
+                              )}
+                              <div
+                                className={`rounded-2xl px-3.5 py-2 text-xs ${isMe ? 'bg-[#FC4C02] text-white rounded-tr-none' : 'bg-white/10 text-white rounded-tl-none'}`}
+                                onContextMenu={e => { if (isMe) { e.preventDefault(); setDeletingMsgId(showDelete ? null : msg.id); } }}
+                                onPointerDown={() => {
+                                  if (!isMe) return;
+                                  longPressFiredRef.current = false;
+                                  longPressTimerRef.current = setTimeout(() => {
+                                    longPressFiredRef.current = true;
+                                    setDeletingMsgId(msg.id);
+                                  }, 500);
+                                }}
+                                onPointerUp={() => { clearTimeout(longPressTimerRef.current); }}
+                                onPointerLeave={() => { clearTimeout(longPressTimerRef.current); }}
+                                onPointerCancel={() => { clearTimeout(longPressTimerRef.current); }}
+                                onClick={() => { if (showDelete && !longPressFiredRef.current) setDeletingMsgId(null); }}
+                              >
+                                {msg.text}
+                              </div>
                             </div>
                             <span className="text-[9px] text-white/30 mt-0.5 px-1">
                               {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
