@@ -44,6 +44,20 @@ export default function PusherNotificationListener() {
         channel = pusher.subscribe(`notifications-${userEmail}`);
         channel.bind('notification', (data: NotificationEvent) => {
           showToast(data);
+          // Also show system notification via SW registration (works on all pages)
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(reg => {
+              const nData = data.data as Record<string, unknown> | undefined;
+              reg.showNotification(data.title, {
+                body: data.body || '',
+                icon: '/icons/icon-192x192.png',
+                badge: '/icons/icon-72x72.png',
+                tag: 'synapse-chat',
+                requireInteraction: true,
+                data: nData || {},
+              });
+            }).catch(() => {});
+          }
         });
       } catch {}
     };

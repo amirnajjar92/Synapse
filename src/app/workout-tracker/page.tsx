@@ -468,19 +468,7 @@ export default function WorkoutTrackerPage() {
             };
             return updated;
           });
-          // Show system notification via SW registration
-          if (data.senderEmail !== userEmailRef.current && 'serviceWorker' in navigator) {
-            navigator.serviceWorker.ready.then(reg => {
-              reg.showNotification(`New message from ${data.senderName || 'Trainer'}`, {
-                body: data.text.length > 120 ? data.text.slice(0, 120) + '…' : data.text,
-                icon: '/icons/icon-192x192.png',
-                badge: '/icons/icon-72x72.png',
-                tag: `chat-${conv.conversationId}`,
-                requireInteraction: true,
-                data: { url: '/workout-tracker?openChat=true', type: 'chat' },
-              });
-            }).catch(() => {});
-          }
+          // System notification handled globally by PusherNotificationListener
         });
         channels.push(channel);
       });
