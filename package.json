@@ -9,6 +9,7 @@
     "lint": "next lint",
     "postinstall": "prisma generate",
     "db:test": "tsx scripts/db-test.ts",
+    "screenshots:capture": "node scripts/capture-screenshots.mjs",
     "test:ai": "node scripts/test-ai-assistant.js",
     "test:ai-ts": "tsx scripts/test-ai-assistant.ts",
     "test:ai-watch": "nodemon --watch src/app/api/ai --exec 'npm run test:ai'"

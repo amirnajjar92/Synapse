@@ -81,6 +81,7 @@ export default function PWAInstallButton() {
 
   return (
     <button
+      data-screenshot-hide="true"
       onClick={handleInstallClick}
       className="group fixed top-4 right-4 z-50 w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 shadow-lg hover:shadow-xl"
       style={{

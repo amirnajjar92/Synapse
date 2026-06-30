@@ -7,6 +7,7 @@ import PromptBoxOpenAI from '@/components/PromptBoxOpenAI';
 import BurgerMenuButton from '@/components/BurgerMenuButton';
 import FloatingNavBar from '@/components/FloatingNavBar';
 import MuscleMapDisplay from '@/components/MuscleMapDisplay';
+import { MOCK_CLIENTS, MOCK_MESSAGES_BY_CLIENT, MOCK_PLAN } from '@/lib/screenshot-data';
 
 interface Client {
   id: string;
@@ -103,6 +104,36 @@ export default function TrainingStudio() {
   const selectedClientRef = useRef<string | null>(null);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const isShow = params.get('show') === 'true';
+
+    // Screenshot mode: use mock data
+    if (isShow) {
+      setIsSignedIn(true);
+      setUserEmail('demo@synapse.app');
+      setUserId('trainer-1');
+      userIdRef.current = 'trainer-1';
+      userEmailRef.current = 'demo@synapse.app';
+      setActiveClients(MOCK_CLIENTS as any);
+      setPlans([MOCK_PLAN]);
+      setIsLoadingClients(false);
+      setIsLoadingPlans(false);
+
+      const tabParam = params.get('tab');
+      if (tabParam === 'messages') {
+        setActiveTab('messages');
+        activeTabRef.current = 'messages';
+        setSelectedClient(MOCK_CLIENTS[0].id);
+        selectedClientRef.current = MOCK_CLIENTS[0].id;
+        setChatMessages(MOCK_MESSAGES_BY_CLIENT[MOCK_CLIENTS[0].id] || []);
+        setConversationId('conv-1');
+      } else {
+        setActiveTab('dashboard');
+        activeTabRef.current = 'dashboard';
+      }
+      return;
+    }
+
     const token = localStorage.getItem('synapse_token');
     const userStr = localStorage.getItem('synapse_user');
     setIsSignedIn(!!token);

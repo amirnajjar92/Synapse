@@ -1,14 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
-import { StoreProvider } from '@/lib/redux/StoreProvider';
 import Providers from './providers';
-import Sidebar from '@/components/Sidebar';
-import { SidebarProvider } from '@/components/SidebarContext';
-import PWAUpdater from '@/components/PWAUpdater';
-import PWAInstallButton from '@/components/PWAInstallButton';
-import PushNotificationManager from '@/components/PushNotificationManager';
-import PusherNotificationListener from '@/components/PusherNotificationListener';
-import DynamicThemeColor from '@/components/DynamicThemeColor';
+import AppShell from '@/components/AppShell';
 import { Hanalei_Fill } from "next/font/google";
 
 const hanaleiFill = Hanalei_Fill({
@@ -52,21 +45,11 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="theme-color" content="#0a0a0a" />
       </head>
-      <body
-        className={`antialiased`}
-      >
-        <PWAUpdater />
-        <PWAInstallButton />
-        <PushNotificationManager />
-        <PusherNotificationListener />
-        <DynamicThemeColor />
+      <body className={`antialiased`}>
         <Providers>
-          <StoreProvider>
-            <SidebarProvider>
-              <Sidebar />
-              {children}
-            </SidebarProvider>
-          </StoreProvider>
+          <AppShell>
+            {children}
+          </AppShell>
         </Providers>
       </body>
     </html>

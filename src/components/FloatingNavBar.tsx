@@ -57,6 +57,7 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
 
   return (
     <div 
+      data-screenshot-hide="true"
       className="fixed bottom-4 sm:bottom-8 z-40 transition-all duration-500" 
       style={{ 
         maxWidth: 'calc(100vw - 16px)',

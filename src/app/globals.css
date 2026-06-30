@@ -325,6 +325,11 @@ body {
   }
 }
 
+/* ─── Screenshot Mode ──────────────────────────────────────────── */
+html.screenshot-mode [data-screenshot-hide] {
+  display: none !important;
+}
+
 .sf-tagline {
   margin: 0;
   font-size: 0.85rem;

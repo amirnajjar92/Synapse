@@ -9,6 +9,7 @@ export default function BurgerMenuButton() {
 
   return (
     <button
+      data-screenshot-hide="true"
       onClick={() => setIsOpen(true)}
       className="group relative w-12 h-12 flex items-center justify-center hover:scale-105 transition-all duration-300 flex-shrink-0 rounded-full"
       style={{

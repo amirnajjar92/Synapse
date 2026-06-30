@@ -7,6 +7,7 @@ import PromptBoxOpenAI from '@/components/PromptBoxOpenAI';
 import BurgerMenuButton from '@/components/BurgerMenuButton';
 import FloatingNavBar from '@/components/FloatingNavBar';
 import MuscleMapDisplay from '@/components/MuscleMapDisplay';
+import { MOCK_PLAN, MOCK_MESSAGES_BY_CLIENT } from '@/lib/screenshot-data';
 
 const SYNAPSE_BACKEND_URL = "https://moole-back.vercel.app";
 
@@ -273,8 +274,25 @@ export default function WorkoutTrackerPage() {
         userIdRef.current = user?.id || null;
         userEmailRef.current = user?.email || null;
 
-        const planId = new URLSearchParams(window.location.search).get('planId');
-        const openChat = new URLSearchParams(window.location.search).get('openChat');
+        const params = new URLSearchParams(window.location.search);
+        const planId = params.get('planId');
+        const openChat = params.get('openChat');
+        const isShow = params.get('show') === 'true';
+
+        // Screenshot mode: use mock data
+        if (isShow) {
+          const rows = MOCK_PLAN.tables[0].rows;
+          setPlanData(rows);
+          setIsOwner(true);
+          setAuthChecked(true);
+          setIsLoading(false);
+          setTrainerConvs([{
+            trainer: { id: 'trainer-1', name: 'Coach Alex', email: 'alex@synapse.app' },
+            conversationId: 'conv-1',
+            messages: MOCK_MESSAGES_BY_CLIENT['client-1'],
+          }]);
+          return;
+        }
 
         // If openChat param is set, open trainer chat after page loads
         if (openChat === 'true') {
