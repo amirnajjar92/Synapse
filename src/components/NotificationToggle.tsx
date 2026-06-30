@@ -51,18 +51,33 @@ export default function NotificationToggle() {
     const userEmail = getUserEmail();
     setTesting(true);
 
+    // Get the SW registration for showing notifications from page context
+    let swReg: ServiceWorkerRegistration | null = null;
+    try {
+      if ('serviceWorker' in navigator) {
+        swReg = await navigator.serviceWorker.ready;
+      }
+    } catch {}
+
     for (const msg of TEST_MESSAGES) {
       await new Promise(r => setTimeout(r, msg.delay));
 
-      // 1. Local browser notification (tests Notification API)
+      const options: NotificationOptions = {
+        body: msg.body,
+        icon: '/icons/icon-192x192.png',
+        badge: '/icons/icon-72x72.png',
+        tag: msg.tag,
+        requireInteraction: true,
+      };
+
+      // 1. Show notification via SW registration (more reliable than new Notification())
       try {
-        const notif = new Notification(msg.title, {
-          body: msg.body,
-          icon: '/icons/icon-192x192.png',
-          badge: '/icons/icon-72x72.png',
-          tag: msg.tag,
-        });
-        notif.onclick = () => { window.focus(); notif.close(); };
+        if (swReg) {
+          await swReg.showNotification(msg.title, options);
+        } else {
+          new Notification(msg.title, options);
+        }
+        console.log(`✓ Local notification shown: "${msg.title}"`);
       } catch (e) {
         console.warn('Local notification failed:', e);
       }
@@ -70,7 +85,7 @@ export default function NotificationToggle() {
       // 2. Server-side push notification (tests VAPID + SW delivery)
       if (userEmail) {
         try {
-          await fetch('/api/push/send', {
+          const res = await fetch('/api/push/send', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -80,6 +95,8 @@ export default function NotificationToggle() {
               data: { url: '/', type: 'test' },
             }),
           });
+          const json = await res.json();
+          console.log(`✓ Push API response:`, json);
         } catch (e) {
           console.warn('Server push failed:', e);
         }
