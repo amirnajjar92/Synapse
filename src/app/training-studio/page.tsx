@@ -95,6 +95,9 @@ export default function TrainingStudio() {
   const [isLoadingPlans, setIsLoadingPlans] = useState(true);
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+  const activeTabRef = useRef<Tab>('dashboard');
+  const selectedClientRef = useRef<string | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('synapse_token');
@@ -149,6 +152,7 @@ export default function TrainingStudio() {
   useEffect(() => {
     if (activeClients.length > 0 && !selectedClient) {
       setSelectedClient(activeClients[0].id);
+      selectedClientRef.current = activeClients[0].id;
     }
   }, [activeClients, selectedClient]);
 
@@ -168,6 +172,7 @@ export default function TrainingStudio() {
         const data = await response.json();
         setChatMessages(data.messages || []);
         setConversationId(data.conversationId || null);
+        markClientRead(clientId);
       }
     } catch (error) {
       console.error('Error fetching messages:', error);
@@ -206,6 +211,13 @@ export default function TrainingStudio() {
             timestamp: data.timestamp,
           }];
         });
+        // Increment unread if not on messages tab
+        if (activeTabRef.current !== 'messages' && selectedClientRef.current) {
+          setUnreadCounts(prev => {
+            if (prev[selectedClientRef.current!]) return prev;
+            return { ...prev, [selectedClientRef.current!]: 1 };
+          });
+        }
       });
     };
     initPusher();
@@ -215,6 +227,38 @@ export default function TrainingStudio() {
       if (pusher) pusher.disconnect();
     };
   }, [conversationId, userId]);
+
+  // Sync refs with state for Pusher callback freshness
+  useEffect(() => { activeTabRef.current = activeTab; }, [activeTab]);
+  useEffect(() => { selectedClientRef.current = selectedClient; }, [selectedClient]);
+
+  // Compute unread counts from localStorage when clients change
+  useEffect(() => {
+    const counts: Record<string, number> = {};
+    activeClients.forEach(client => {
+      if (!client.lastMessageTime) return;
+      const lastRead = localStorage.getItem(`trainerLastRead_${client.id}`);
+      if (!lastRead || new Date(client.lastMessageTime) > new Date(lastRead)) {
+        counts[client.id] = 1;
+      }
+    });
+    setUnreadCounts(counts);
+  }, [activeClients]);
+
+  const markClientRead = (clientId: string) => {
+    localStorage.setItem(`trainerLastRead_${clientId}`, new Date().toISOString());
+    setUnreadCounts(prev => {
+      const next = { ...prev };
+      delete next[clientId];
+      return next;
+    });
+  };
+
+  const handleSelectClient = (clientId: string) => {
+    setSelectedClient(clientId);
+    selectedClientRef.current = clientId;
+    markClientRead(clientId);
+  };
 
   const handleGoogleSignIn = useCallback(async () => {
     setIsSigningIn(true);
@@ -525,15 +569,26 @@ export default function TrainingStudio() {
                 { id: 'messages' as Tab, label: 'Messages', icon: 'M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z' },
               ].map(tab => {
                 const isActive = activeTab === tab.id;
+                const unreadCount = Object.keys(unreadCounts).length;
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={() => {
+                      setActiveTab(tab.id);
+                      if (tab.id === 'messages' && selectedClient) markClientRead(selectedClient);
+                    }}
                     className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-medium transition-all duration-200 ${isActive ? 'bg-white text-black' : 'text-white/50 hover:text-white/80'}`}
                   >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
-                      <path d={tab.icon} />
-                    </svg>
+                    <div className="relative">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                        <path d={tab.icon} />
+                      </svg>
+                      {tab.id === 'messages' && unreadCount > 0 && (
+                        <span className="absolute -top-1.5 -right-2 w-3.5 h-3.5 rounded-full bg-[#FC4C02] text-white text-[8px] font-bold flex items-center justify-center leading-none">
+                          {unreadCount > 9 ? '9+' : unreadCount}
+                        </span>
+                      )}
+                    </div>
                     <span className="hidden sm:inline">{tab.label}</span>
                   </button>
                 );
@@ -695,7 +750,7 @@ export default function TrainingStudio() {
                         <div
                           key={client.id}
                           onClick={() => {
-                            setSelectedClient(client.id);
+                            handleSelectClient(client.id);
                             setActiveTab('messages');
                           }}
                           className="bg-white/5 rounded-xl p-3.5 hover:bg-white/10 transition-all cursor-pointer border border-white/5"
@@ -952,7 +1007,7 @@ export default function TrainingStudio() {
                     {activeClients.map(client => (
                       <button
                         key={client.id}
-                        onClick={() => setSelectedClient(client.id)}
+                        onClick={() => handleSelectClient(client.id)}
                         className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${selectedClient === client.id ? 'bg-[#FC4C02] text-white' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}
                       >
                         {client.name}
