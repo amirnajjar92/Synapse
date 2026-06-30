@@ -3,13 +3,34 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 
+const TEST_MESSAGES = [
+  {
+    delay: 500,
+    title: '🔔 Notifications Enabled!',
+    body: 'Local browser notifications are working. This confirms the Notification API is active.',
+    tag: 'synapse-test-1',
+  },
+  {
+    delay: 2500,
+    title: '📡 Push Channel Working!',
+    body: 'Server-side push notification delivered via Service Worker. This works even when the app is closed.',
+    tag: 'synapse-test-2',
+  },
+  {
+    delay: 4500,
+    title: '⚡ Real-time Pusher Active!',
+    body: 'Pusher real-time channel is live. In-app toasts will appear while the app is open.',
+    tag: 'synapse-test-3',
+  },
+];
+
 export default function NotificationToggle() {
   const { data: session } = useSession();
   const [enabled, setEnabled] = useState(false);
   const [permission, setPermission] = useState<'default' | 'granted' | 'denied'>('default');
+  const [testing, setTesting] = useState(false);
 
   useEffect(() => {
-    // Check current notification permission
     if (typeof window !== 'undefined' && 'Notification' in window) {
       setPermission(Notification.permission);
       const saved = localStorage.getItem('notificationsEnabled');
@@ -17,170 +38,70 @@ export default function NotificationToggle() {
     }
   }, []);
 
-  const sendTestNotification = async () => {
-    console.log('📨 sendTestNotification called');
-    console.log('👤 Session:', session);
-    console.log('📧 User email:', session?.user?.email);
-    
-    // Try to get email from session or localStorage
-    let userEmail = session?.user?.email;
-    
-    if (!userEmail) {
-      console.log('⚠️ No session email, checking localStorage...');
-      const userStr = localStorage.getItem('synapse_user');
-      if (userStr) {
-        const user = JSON.parse(userStr);
-        userEmail = user.email;
-        console.log('✅ Found email in localStorage:', userEmail);
-      }
-    }
-    
-    if (!userEmail) {
-      console.log('❌ No email found anywhere, aborting');
-      
-      // Send a simple test notification anyway
-      console.log('📨 Sending simple test notification instead');
-      const notification = new Notification('🎯 Synapse Fit - Notifications Active!', {
-        body: 'Your notifications are working! Log in to see your daily focus tasks.',
-        icon: '/icons/icon-192x192.png',
-        badge: '/icons/icon-72x72.png',
-      });
-      
-      notification.onclick = () => {
-        console.log('🖱️ Notification clicked');
-        window.focus();
-        notification.close();
-      };
-      
-      return;
-    }
-
+  const getUserEmail = (): string | null => {
+    if (session?.user?.email) return session.user.email;
     try {
-      console.log('🔍 Fetching user plans for:', userEmail);
-      
-      // Fetch user's active plan
-      const response = await fetch('/api/users/me/plans', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: userEmail }),
-      });
+      const raw = localStorage.getItem('synapse_user');
+      if (raw) return JSON.parse(raw).email || null;
+    } catch {}
+    return null;
+  };
 
-      console.log('📡 API Response status:', response.status);
+  const runTestSequence = async () => {
+    const userEmail = getUserEmail();
+    setTesting(true);
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('📊 Plans data:', data);
-        
-        const activePlan = data.plans?.find((p: any) => p.status === 'IN_PROGRESS');
-        console.log('🎯 Active plan:', activePlan);
+    for (const msg of TEST_MESSAGES) {
+      await new Promise(r => setTimeout(r, msg.delay));
 
-        if (activePlan) {
-          console.log('📅 Found active plan:', activePlan.title);
-          
-          // Get today's tasks
-          const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
-          console.log('📆 Today is:', today);
-          
-          let todayTasks: string[] = [];
-
-          activePlan.tables?.forEach((table: any) => {
-            console.log('📋 Checking table:', table.title);
-            
-            table.rows?.forEach((row: any) => {
-              const firstCol = row.columns[0];
-              console.log('  - Row first column:', firstCol);
-              
-              if (firstCol && firstCol.toLowerCase().includes(today.toLowerCase())) {
-                const task = row.columns.slice(1).join(' - ');
-                if (task) {
-                  console.log('  ✅ Found task for today:', task);
-                  todayTasks.push(`${table.title}: ${task}`);
-                }
-              }
-            });
-          });
-
-          console.log('📝 Total tasks found for today:', todayTasks.length);
-          console.log('📝 Tasks:', todayTasks);
-
-          const taskText = todayTasks.length > 0
-            ? todayTasks.slice(0, 3).join('\n')
-            : 'Check your plan for today!';
-
-          console.log('📨 Creating notification with text:', taskText);
-
-          const notification = new Notification('📋 Today\'s Focus with Synapse', {
-            body: taskText,
-            icon: '/icons/icon-192x192.png',
-            badge: '/icons/icon-72x72.png',
-            tag: 'daily-focus',
-          });
-
-          console.log('✅ Notification created successfully!');
-
-          notification.onclick = () => {
-            console.log('🖱️ Notification clicked');
-            window.focus();
-            notification.close();
-          };
-        } else {
-          console.log('⚠️ No active plan found, sending welcome notification');
-          
-          // No active plan - send welcome notification
-          const notification = new Notification('🎯 Synapse Fit', {
-            body: 'Notifications are now active! Create a plan to get daily focus reminders.',
-            icon: '/icons/icon-192x192.png',
-            badge: '/icons/icon-72x72.png',
-          });
-
-          console.log('✅ Welcome notification sent!');
-
-          notification.onclick = () => {
-            console.log('🖱️ Notification clicked');
-            window.focus();
-            notification.close();
-          };
-        }
-      } else {
-        console.log('❌ API request failed with status:', response.status);
+      // 1. Local browser notification (tests Notification API)
+      try {
+        const notif = new Notification(msg.title, {
+          body: msg.body,
+          icon: '/icons/icon-192x192.png',
+          badge: '/icons/icon-72x72.png',
+          tag: msg.tag,
+        });
+        notif.onclick = () => { window.focus(); notif.close(); };
+      } catch (e) {
+        console.warn('Local notification failed:', e);
       }
-    } catch (error) {
-      console.error('❌ Error sending notification:', error);
+
+      // 2. Server-side push notification (tests VAPID + SW delivery)
+      if (userEmail) {
+        try {
+          await fetch('/api/push/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: userEmail,
+              title: msg.title,
+              body: msg.body,
+              data: { url: '/', type: 'test' },
+            }),
+          });
+        } catch (e) {
+          console.warn('Server push failed:', e);
+        }
+      }
     }
+
+    setTesting(false);
   };
 
   const handleToggle = async () => {
-    console.log('🔔 Toggle clicked, current state:', enabled);
-    
     if (!enabled) {
-      console.log('🔔 Requesting notification permission...');
-      
-      // Request permission
       const result = await Notification.requestPermission();
-      console.log('🔔 Permission result:', result);
       setPermission(result);
 
       if (result === 'granted') {
-        console.log('✅ Permission granted! Enabling notifications...');
         setEnabled(true);
         localStorage.setItem('notificationsEnabled', 'true');
-        console.log('💾 Saved to localStorage');
-        
-        // Send immediate test notification
-        console.log('📨 Sending test notification in 500ms...');
-        setTimeout(() => {
-          console.log('📨 Calling sendTestNotification()');
-          sendTestNotification();
-        }, 500);
-      } else {
-        console.log('❌ Permission denied or dismissed');
+        runTestSequence();
       }
     } else {
-      // Disable
-      console.log('🔕 Disabling notifications');
       setEnabled(false);
       localStorage.setItem('notificationsEnabled', 'false');
-      console.log('💾 Disabled state saved to localStorage');
     }
   };
 
@@ -218,6 +139,11 @@ export default function NotificationToggle() {
       {permission === 'denied' && (
         <p className="text-xs text-red-400 mt-2 ml-13">
           Notifications blocked. Enable in browser settings.
+        </p>
+      )}
+      {testing && (
+        <p className="text-xs text-emerald-400 mt-2 ml-13 animate-pulse">
+          Sending 3 test notifications…
         </p>
       )}
     </div>

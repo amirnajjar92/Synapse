@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import pusherServer from '@/lib/pusher-server';
+import { sendNotification } from '@/lib/notifications';
 
 export async function GET(
   request: Request,
@@ -101,6 +102,17 @@ export async function POST(
     } catch (e) {
       console.error('Pusher trigger failed (non-fatal):', e);
     }
+  }
+
+  // Send push notification to the recipient
+  const client = await prisma.user.findUnique({ where: { id: clientId } });
+  if (client?.email) {
+    sendNotification({
+      email: client.email,
+      title: `New message from ${message.sender.name || 'Trainer'}`,
+      body: message.text.length > 120 ? message.text.slice(0, 120) + '…' : message.text,
+      data: { url: `/workout-tracker`, type: 'chat' },
+    }).catch(() => {});
   }
 
   return NextResponse.json({

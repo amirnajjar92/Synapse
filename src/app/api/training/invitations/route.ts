@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { sendNotification } from '@/lib/notifications';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -83,6 +84,14 @@ export async function POST(request: Request) {
         trainer: { select: { name: true, email: true } },
       },
     });
+
+    sendNotification({
+      email: clientEmail,
+      title: `New training invitation from ${updated.trainer.name || 'Trainer'}`,
+      body: `${updated.trainer.name || 'A trainer'} has invited you to be their client.`,
+      data: { url: '/', type: 'invitation' },
+    }).catch(() => {});
+
     return NextResponse.json({ invitation: updated });
   }
 
@@ -96,6 +105,13 @@ export async function POST(request: Request) {
       trainer: { select: { name: true, email: true } },
     },
   });
+
+  sendNotification({
+    email: clientEmail,
+    title: `New training invitation from ${invitation.trainer.name || 'Trainer'}`,
+    body: `${invitation.trainer.name || 'A trainer'} has invited you to be their client.`,
+    data: { url: '/', type: 'invitation' },
+  }).catch(() => {});
 
   return NextResponse.json({ invitation }, { status: 201 });
 }

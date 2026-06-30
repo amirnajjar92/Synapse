@@ -6,6 +6,8 @@ import Sidebar from '@/components/Sidebar';
 import { SidebarProvider } from '@/components/SidebarContext';
 import PWAUpdater from '@/components/PWAUpdater';
 import PWAInstallButton from '@/components/PWAInstallButton';
+import PushNotificationManager from '@/components/PushNotificationManager';
+import PusherNotificationListener from '@/components/PusherNotificationListener';
 import DynamicThemeColor from '@/components/DynamicThemeColor';
 import { Hanalei_Fill } from "next/font/google";
 
@@ -55,6 +57,8 @@ export default function RootLayout({
       >
         <PWAUpdater />
         <PWAInstallButton />
+        <PushNotificationManager />
+        <PusherNotificationListener />
         <DynamicThemeColor />
         <Providers>
           <StoreProvider>

@@ -5,19 +5,22 @@ import MenAnatomy, { MuscleHighlight } from '@/components/MenAnatomy';
 import WomenAnatomy from '@/components/WomenAnatomy';
 
 type Gender = 'male' | 'female';
+type AnatomyView = 'front' | 'back';
 
 interface MuscleMapDisplayProps {
   highlights?: MuscleHighlight;
   defaultGender?: Gender;
   showToggle?: boolean;
   onMuscleClick?: (muscleGroups: string[]) => void;
+  view?: AnatomyView;
 }
 
 export default function MuscleMapDisplay({
   highlights,
   defaultGender = 'male',
   showToggle = true,
-  onMuscleClick
+  onMuscleClick,
+  view = 'front',
 }: MuscleMapDisplayProps) {
   const [gender, setGender] = useState<Gender>(defaultGender);
 
@@ -93,7 +96,7 @@ export default function MuscleMapDisplay({
           }}>
             {gender === 'male' ? (
               <MenAnatomy
-                view="front"
+                view={view}
                 highlights={defaultHighlights}
                 width="100%"
                 height="100%"
@@ -104,7 +107,7 @@ export default function MuscleMapDisplay({
               />
             ) : (
               <WomenAnatomy
-                view="front"
+                view={view}
                 highlights={defaultHighlights}
                 width="100%"
                 height="100%"

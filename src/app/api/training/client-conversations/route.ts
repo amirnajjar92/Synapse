@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import pusherServer from '@/lib/pusher-server';
+import { sendNotification } from '@/lib/notifications';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -120,6 +121,17 @@ export async function POST(request: Request) {
     } catch (e) {
       console.error('Pusher trigger failed (non-fatal):', e);
     }
+  }
+
+  // Send push notification to the trainer
+  const trainer = await prisma.user.findUnique({ where: { id: trainerId } });
+  if (trainer?.email) {
+    sendNotification({
+      email: trainer.email,
+      title: `New message from ${message.sender.name || 'Client'}`,
+      body: message.text.length > 120 ? message.text.slice(0, 120) + '…' : message.text,
+      data: { url: '/training-studio', type: 'chat' },
+    }).catch(() => {});
   }
 
   return NextResponse.json({

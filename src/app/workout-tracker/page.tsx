@@ -26,6 +26,8 @@ const WorkoutGoalsSection = ({
   onMuscleUpdate,
   gender,
   onGenderChange,
+  anatomyView,
+  onAnatomyViewChange,
 }: {
   planData: { id: string | number; columns: string[] }[];
   selectedDay: number;
@@ -33,6 +35,8 @@ const WorkoutGoalsSection = ({
   onMuscleUpdate?: ((muscles: string[]) => void) | undefined;
   gender: 'male' | 'female';
   onGenderChange: (g: 'male' | 'female') => void;
+  anatomyView: 'front' | 'back';
+  onAnatomyViewChange: (v: 'front' | 'back') => void;
 }) => {
   const currentRow = planData[selectedDay];
   const exercises = currentRow
@@ -122,16 +126,26 @@ const WorkoutGoalsSection = ({
           TODAY'S PLAN
         </h2>
       </div>
-      <div className="flex items-center justify-end mb-2 flex-shrink-0">
-        <div className="flex items-center gap-1.5">
+      <div className="flex flex-col items-end mb-2 flex-shrink-0 gap-1">
+        <div className="flex items-center gap-1.5 w-[104px] justify-between">
           <span className={`text-[9px] font-medium transition-colors ${gender === 'male' ? 'text-white' : 'text-gray-600'}`}>Men</span>
           <button
             onClick={() => onGenderChange(gender === 'male' ? 'female' : 'male')}
-            className="w-7 h-3.5 rounded-full bg-gray-700 relative transition-colors cursor-pointer"
+            className="w-7 h-3.5 rounded-full bg-gray-700 relative transition-colors cursor-pointer flex-shrink-0"
           >
             <div className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white transition-transform ${gender === 'female' ? 'translate-x-4' : 'translate-x-0.5'}`} />
           </button>
           <span className={`text-[9px] font-medium transition-colors ${gender === 'female' ? 'text-white' : 'text-gray-600'}`}>Women</span>
+        </div>
+        <div className="flex items-center gap-1.5 w-[104px] justify-between">
+          <span className={`text-[9px] font-medium transition-colors ${anatomyView === 'front' ? 'text-white' : 'text-gray-600'}`}>Front</span>
+          <button
+            onClick={() => onAnatomyViewChange(anatomyView === 'front' ? 'back' : 'front')}
+            className="w-7 h-3.5 rounded-full bg-gray-700 relative transition-colors cursor-pointer flex-shrink-0"
+          >
+            <div className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white transition-transform ${anatomyView === 'back' ? 'translate-x-4' : 'translate-x-0.5'}`} />
+          </button>
+          <span className={`text-[9px] font-medium transition-colors ${anatomyView === 'back' ? 'text-white' : 'text-gray-600'}`}>Back</span>
         </div>
       </div>
 
@@ -218,6 +232,7 @@ export default function WorkoutTrackerPage() {
   const [coachAdvice, setCoachAdvice] = useState('');
   const [coachAdviceLoading, setCoachAdviceLoading] = useState(false);
   const [gender, setGender] = useState<'male' | 'female'>('male');
+  const [anatomyView, setAnatomyView] = useState<'front' | 'back'>('front');
   const coachTipsCache = useRef<Record<number, string>>({});
   const [videoUrl, setVideoUrl] = useState('');
   const [videoTitle, setVideoTitle] = useState('');
@@ -577,7 +592,7 @@ export default function WorkoutTrackerPage() {
         {/* Muscle Map Background */}
         <div className="absolute inset-0 z-0 opacity-100 pointer-events-auto">
           <MuscleMapDisplay
-            key={gender}
+            key={`${gender}-${anatomyView}`}
             highlights={{
               muscles: selectedMuscles,
               fillColor: '#D20A0A',
@@ -593,6 +608,7 @@ export default function WorkoutTrackerPage() {
             }}
             defaultGender={gender}
             showToggle={false}
+            view={anatomyView}
           />
         </div>
 
@@ -609,7 +625,7 @@ export default function WorkoutTrackerPage() {
             {isLoading ? (
               <Spinner size={36} />
             ) : planData.length > 0 ? (
-              <WorkoutGoalsSection planData={planData} selectedDay={selectedDay} onDayChange={setSelectedDay} onMuscleUpdate={handleMuscleUpdate} gender={gender} onGenderChange={setGender} />
+              <WorkoutGoalsSection planData={planData} selectedDay={selectedDay} onDayChange={setSelectedDay} onMuscleUpdate={handleMuscleUpdate} gender={gender} onGenderChange={setGender} anatomyView={anatomyView} onAnatomyViewChange={setAnatomyView} />
             ) : (
               <div className="flex flex-col items-center justify-center text-gray-500 text-sm gap-3">
                 <span>No active workout plan</span>
