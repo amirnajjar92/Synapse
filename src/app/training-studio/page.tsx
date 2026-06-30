@@ -550,7 +550,7 @@ export default function TrainingStudio() {
           </div>
 
           {/* Header */}
-          <div className="flex-shrink-0 px-5 pt-14 pb-3">
+          <div className="flex-shrink-0 px-5 pt-20 pb-3">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FC4C02] to-orange-500 flex items-center justify-center flex-shrink-0">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
