@@ -111,7 +111,7 @@ export async function POST(
       email: client.email,
       title: `New message from ${message.sender.name || 'Trainer'}`,
       body: message.text.length > 120 ? message.text.slice(0, 120) + '…' : message.text,
-      data: { url: `/workout-tracker`, type: 'chat' },
+      data: { url: `/workout-tracker?openChat=true`, type: 'chat' },
     }).catch(() => {});
   }
 

@@ -271,6 +271,13 @@ export default function WorkoutTrackerPage() {
         userEmailRef.current = user?.email || null;
 
         const planId = new URLSearchParams(window.location.search).get('planId');
+        const openChat = new URLSearchParams(window.location.search).get('openChat');
+
+        // If openChat param is set, open trainer chat after page loads
+        if (openChat === 'true') {
+          // Will be handled after trainerConvs are loaded
+          setTimeout(() => setShowTrainerChat(true), 2000);
+        }
 
         // If a specific planId is provided, load that plan
         if (planId) {
@@ -461,6 +468,19 @@ export default function WorkoutTrackerPage() {
             };
             return updated;
           });
+          // Show system notification via SW registration
+          if (data.senderEmail !== userEmailRef.current && 'serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(reg => {
+              reg.showNotification(`New message from ${data.senderName || 'Trainer'}`, {
+                body: data.text.length > 120 ? data.text.slice(0, 120) + '…' : data.text,
+                icon: '/icons/icon-192x192.png',
+                badge: '/icons/icon-72x72.png',
+                tag: `chat-${conv.conversationId}`,
+                requireInteraction: true,
+                data: { url: '/workout-tracker?openChat=true', type: 'chat' },
+              });
+            }).catch(() => {});
+          }
         });
         channels.push(channel);
       });

@@ -130,7 +130,7 @@ export async function POST(request: Request) {
       email: trainer.email,
       title: `New message from ${message.sender.name || 'Client'}`,
       body: message.text.length > 120 ? message.text.slice(0, 120) + '…' : message.text,
-      data: { url: '/training-studio', type: 'chat' },
+      data: { url: '/training-studio?tab=messages', type: 'chat' },
     }).catch(() => {});
   }
 

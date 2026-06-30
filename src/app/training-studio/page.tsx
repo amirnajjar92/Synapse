@@ -112,6 +112,13 @@ export default function TrainingStudio() {
       fetchPlans(user.email);
       fetchClients(user.email);
     }
+
+    // Handle ?tab=messages from notification click
+    const tabParam = new URLSearchParams(window.location.search).get('tab');
+    if (tabParam === 'messages') {
+      setActiveTab('messages');
+      activeTabRef.current = 'messages';
+    }
   }, []);
 
   const fetchClients = async (email: string) => {
