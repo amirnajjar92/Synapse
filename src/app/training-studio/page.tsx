@@ -222,7 +222,9 @@ export default function TrainingStudio() {
         if (activeTabRef.current !== 'messages' && selectedClientRef.current) {
           setUnreadCounts(prev => {
             if (prev[selectedClientRef.current!]) return prev;
-            return { ...prev, [selectedClientRef.current!]: 1 };
+            const next = { ...prev, [selectedClientRef.current!]: 1 };
+            localStorage.setItem('sidebarUnreadCount', String(Object.keys(next).length));
+            return next;
           });
         }
       });
@@ -250,6 +252,7 @@ export default function TrainingStudio() {
       }
     });
     setUnreadCounts(counts);
+    localStorage.setItem('sidebarUnreadCount', String(Object.keys(counts).length));
   }, [activeClients]);
 
   const markClientRead = (clientId: string) => {
@@ -257,6 +260,7 @@ export default function TrainingStudio() {
     setUnreadCounts(prev => {
       const next = { ...prev };
       delete next[clientId];
+      localStorage.setItem('sidebarUnreadCount', String(Object.keys(next).length));
       return next;
     });
   };

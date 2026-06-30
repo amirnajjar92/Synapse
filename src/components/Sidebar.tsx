@@ -36,6 +36,7 @@ export default function Sidebar() {
   const [activePlans, setActivePlans] = useState<Plan[]>([]);
   const [currentTheme, setCurrentTheme] = useState('dark');
   const [isAdmin, setIsAdmin] = useState(false);
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
   // Strava integration (disabled for now)
   // const [isStravaConnected, setIsStravaConnected] = useState(false);
   // const [isSyncing, setIsSyncing] = useState(false);
@@ -103,6 +104,21 @@ export default function Sidebar() {
     // Check every 500ms for auth changes
     const interval = setInterval(checkAuth, 500);
     return () => clearInterval(interval);
+  }, []);
+
+  // Sync unread chat count from localStorage
+  useEffect(() => {
+    const updateCount = () => {
+      const raw = localStorage.getItem('sidebarUnreadCount');
+      setUnreadChatCount(raw ? parseInt(raw, 10) || 0 : 0);
+    };
+    updateCount();
+    const interval = setInterval(updateCount, 2000);
+    window.addEventListener('storage', updateCount);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('storage', updateCount);
+    };
   }, []);
 
   const handleThemeChange = (themeId: string) => {
@@ -349,11 +365,18 @@ export default function Sidebar() {
               }}
               className="group flex items-center gap-3 px-4 py-3 rounded-lg text-white/80 hover:text-black hover:bg-white transition-all duration-200"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                <path d="M2 17l10 5 10-5" />
-                <path d="M2 12l10 5 10-5" />
-              </svg>
+              <div className="relative">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                  <path d="M2 17l10 5 10-5" />
+                  <path d="M2 12l10 5 10-5" />
+                </svg>
+                {unreadChatCount > 0 && (
+                  <span className="absolute -top-1.5 -right-2 w-3.5 h-3.5 rounded-full bg-[#FC4C02] text-white text-[8px] font-bold flex items-center justify-center leading-none">
+                    {unreadChatCount > 9 ? '9+' : unreadChatCount}
+                  </span>
+                )}
+              </div>
               <div className="flex-1 min-w-0 text-left">
                 <p className="font-medium leading-tight">Training Studio</p>
                 <p className="text-[10px] text-white/45 group-hover:text-black/60 leading-tight mt-0.5">Manage clients & build plans</p>
