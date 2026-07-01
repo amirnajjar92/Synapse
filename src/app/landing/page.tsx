@@ -2,10 +2,18 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { signIn } from 'next-auth/react';
-import ScreenshotCollage from '@/components/ScreenshotCollage';
-import CardioCarousel from '@/components/CardioCarousel';
+import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import MenAnatomy from '@/components/MenAnatomy';
 import WomenAnatomy from '@/components/WomenAnatomy';
+
+// Lazy load heavy components
+const ScreenshotCollage = dynamic(() => import('@/components/ScreenshotCollage'), {
+  loading: () => <div className="h-96 animate-pulse bg-gray-800/20 rounded-xl" />,
+});
+const CardioCarousel = dynamic(() => import('@/components/CardioCarousel'), {
+  loading: () => <div className="h-96 animate-pulse bg-gray-800/20 rounded-xl" />,
+});
 
 /* ─────────────────────────────────────────────────────
    SYNAPSE LANDING — Premium Ultra Edition
@@ -98,7 +106,7 @@ function Reveal({
   useEffect(() => {
     const obs = new IntersectionObserver(
       ([e]) => { if (e.isIntersecting) setVis(true); },
-      { threshold: 0.06, rootMargin: '0px 0px -48px 0px' }
+      { threshold: 0.01, rootMargin: '200px 0px 200px 0px' } // Increased margins for earlier loading
     );
     if (ref.current) obs.observe(ref.current);
     return () => obs.disconnect();
@@ -107,12 +115,13 @@ function Reveal({
     <div ref={ref} className={className} style={{
       ...extraStyle,
       opacity: vis ? 1 : 0,
-      transform: vis ? 'translateY(0) scale(1)' : 'translateY(32px) scale(0.98)',
-      filter: vis ? 'blur(0px)' : 'blur(4px)',
-      transition: `opacity .8s cubic-bezier(.16,1,.3,1) ${delay}s,
-                   transform .8s cubic-bezier(.16,1,.3,1) ${delay}s,
-                   filter .6s ease ${delay}s`,
-      willChange: 'opacity, transform, filter',
+      transform: vis ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.99)', // Reduced movement
+      filter: vis ? 'blur(0px)' : 'blur(2px)', // Less blur
+      transition: `opacity .5s cubic-bezier(.16,1,.3,1) ${delay}s,
+                   transform .5s cubic-bezier(.16,1,.3,1) ${delay}s,
+                   filter .4s ease ${delay}s`, // Faster transitions
+      willChange: 'opacity, transform',
+      contentVisibility: 'auto', // CSS containment for better performance
     }}>
       {children}
     </div>
@@ -124,14 +133,22 @@ function AnatomyBackground() {
   const [scrollOpacity, setScrollOpacity] = useState(1);
 
   useEffect(() => {
+    let ticking = false;
+    
     const handleScroll = () => {
-      const scrolled = window.scrollY;
-      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-      const scrollPercent = scrolled / maxScroll;
-      
-      // Fade out from 1 to 0.1 as we scroll down, fade back in when scrolling up
-      const newOpacity = Math.max(0.1, 1 - (scrollPercent * 0.9));
-      setScrollOpacity(newOpacity);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const scrolled = window.scrollY;
+          const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+          const scrollPercent = scrolled / maxScroll;
+          
+          // Fade out from 1 to 0.1 as we scroll down, fade back in when scrolling up
+          const newOpacity = Math.max(0.1, 1 - (scrollPercent * 0.9));
+          setScrollOpacity(newOpacity);
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -150,9 +167,10 @@ function AnatomyBackground() {
         maxWidth: '300px',
         height: 'auto',
         opacity: scrollOpacity * 0.15,
-        transition: 'opacity 0.3s ease-out',
+        transition: 'opacity 0.2s ease-out',
         pointerEvents: 'none',
         zIndex: 1,
+        willChange: 'opacity',
       }}>
         <MenAnatomy
           view="front"
@@ -180,9 +198,10 @@ function AnatomyBackground() {
         maxWidth: '300px',
         height: 'auto',
         opacity: scrollOpacity * 0.15,
-        transition: 'opacity 0.3s ease-out',
+        transition: 'opacity 0.2s ease-out',
         pointerEvents: 'none',
         zIndex: 1,
+        willChange: 'opacity',
       }}>
         <WomenAnatomy
           view="back"
@@ -203,41 +222,51 @@ function AnatomyBackground() {
   );
 }
 
+/* ── Cloudinary CDN Base ── */
+const CDN = 'https://res.cloudinary.com/vj5y67l9/image/upload';
+
+// Cloudinary optimization helper
+const optimizeImage = (url: string, width?: number) => {
+  const opts = ['f_auto', 'q_auto'];
+  if (width) opts.push(`w_${width}`);
+  return url.replace('/upload/', `/upload/${opts.join(',')}/`);
+};
+
 /* ── Features Data with High-Impact Copywriting ── */
 const FEATURES = [
   { 
     eyebrow: 'Hyper-Personalization', 
     title: 'An adaptive engine\nbuilt around your biomechanics.', 
     body: 'Tell Synapse your targets. It constructs a highly precise, week-by-week protocol optimized for your available equipment, recovery rate, and performance data. Then, it dynamically evolves as you unlock raw strength.', 
-    img: '/screeenshots/planner-page.jpg' 
+    img: optimizeImage(`${CDN}/v1782909959/planner-page_o8qws3.jpg`, 800)
   },
   { 
     eyebrow: 'Precision Tracking', 
     title: 'Zero friction.\nMaximum data velocity.', 
     body: 'Engage with real-time muscle workload visualization, instant HD form references, and contextual coaching notes precisely when you unrack. The gym floor, fully digitized.', 
-    img: '/screeenshots/workout-tracker-1.png' 
+    img: optimizeImage(`${CDN}/v1782909972/workout-tracker-1_pqlbtp.png`, 800)
   },
   { 
     eyebrow: 'Predictive Analytics', 
     title: 'Isolate what delivers results.\nEliminate guessing.', 
     body: 'Bridge the gap between target metrics and actual execution. Discover training biases, capture volume imbalances, and contextualize your systemic data loops—hydration, mass, and cardio trends—in a unified pane of glass.', 
-    img: '/screeenshots/sidebar-activeplans.jpg' 
+    img: optimizeImage(`${CDN}/v1782909997/sidebar-activeplans_mdzu8i.jpg`, 800)
   },
   { 
     eyebrow: 'Human Co-Pilot', 
     title: 'Your elite human coach,\nembedded natively.', 
     body: 'Empower your coach to modify parameters mid-session, push real-time programmatic revisions, and audit telemetry as you perform reps. High-touch elite coaching meets high-scale intelligence.', 
-    img: '/screeenshots/ai-planner-generating.jpg' 
+    img: optimizeImage(`${CDN}/v1782909941/ai-planner-generating_rj2naj.jpg`, 800)
   },
 ];
 
 const MQ = [
-  '/screeenshots/workout-tracker-1.png',
-  '/screeenshots/planner-page.jpg',
-  '/screeenshots/ai-planner-generating.jpg',
-  '/screeenshots/sidebar-activeplans.jpg',
-  '/screeenshots/water-tracker%20.jpg',
-  '/screeenshots/events.jpg',
+  optimizeImage(`${CDN}/v1782909972/workout-tracker-1_pqlbtp.png`, 400),
+  optimizeImage(`${CDN}/v1782909959/planner-page_o8qws3.jpg`, 400),
+  optimizeImage(`${CDN}/v1782909941/ai-planner-generating_rj2naj.jpg`, 400),
+  optimizeImage(`${CDN}/v1782909997/sidebar-activeplans_mdzu8i.jpg`, 400),
+  optimizeImage(`${CDN}/v1782909961/water-tracker_fqqw12.jpg`, 400),
+  `${CDN}/v1782910005/events_yqad2i.jpg`,
 ];
 
 export default function LandingPage() {
@@ -354,8 +383,8 @@ export default function LandingPage() {
         </h1>
         <p className="hu" style={{ animationDelay:'.5s',
           color:'rgba(255,255,255,0.5)', fontSize:16, lineHeight:1.7,
-          maxWidth:560, marginTop:24 }}>
-          Synapse transforms your raw training data into hyper-optimized performance blueprints. AI-powered planning, real-time execution tracking, and predictive analytics—all working together to unlock your full athletic potential.
+          maxWidth:540, marginTop:24 }}>
+          AI-powered training plans that adapt in real-time. Transform your raw data into performance breakthroughs.
         </p>
         <div className="hu" style={{ animationDelay:'.65s', display:'flex', gap:16, marginTop:40, flexWrap:'wrap', justifyContent:'center' }}>
           <button onClick={()=>signIn()} style={{
@@ -424,11 +453,12 @@ export default function LandingPage() {
                     position:'absolute', inset:0,
                     opacity: activeIdx===i ? 1 : 0,
                     transform: `scale(${activeIdx===i ? 1 : activeIdx>i ? .95 : .98}) translateY(${activeIdx===i ? 0 : activeIdx>i ? -24 : 24}px)`,
-                    transition:'opacity .5s cubic-bezier(.16,1,.3,1), transform .5s cubic-bezier(.16,1,.3,1)',
+                    transition:'opacity .4s cubic-bezier(.16,1,.3,1), transform .4s cubic-bezier(.16,1,.3,1)',
                     pointerEvents: activeIdx===i ? 'auto' : 'none',
+                    willChange: activeIdx===i || Math.abs(activeIdx-i)<=1 ? 'opacity, transform' : 'auto',
                   }}>
                     <div style={{ width:'100%', height:'100%', aspectRatio:'402/874',
-                      borderRadius:'10%', background:'#0c0c0c',
+                      borderRadius:'40px', background:'#0c0c0c',
                       border:'1px solid rgba(255,255,255,0.12)', overflow:'hidden',
                       boxShadow:`0 32px 96px rgba(0,0,0,0.85), 0 0 64px ${SIG_GLOW}`,
                     }}>
@@ -487,7 +517,7 @@ export default function LandingPage() {
             {[...MQ,...MQ].map((src,i) => (
               <div key={i} style={{ width:130, aspectRatio:'402/874', borderRadius:16, overflow:'hidden',
                 border:'1px solid rgba(255,255,255,0.08)', flexShrink:0, background:'#111' }}>
-                <img src={src} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', opacity:.65 }}/>
+                <img src={src} alt="" loading="lazy" style={{ width:'100%', height:'100%', objectFit:'cover', opacity:.65 }}/>
               </div>
             ))}
           </div>
@@ -495,11 +525,11 @@ export default function LandingPage() {
             {[...[...MQ].reverse(),...[...MQ].reverse()].map((src,i) => (
               <div key={i} style={{ width:130, aspectRatio:'402/874', borderRadius:16, overflow:'hidden',
                 border:'1px solid rgba(255,255,255,0.08)', flexShrink:0, background:'#111' }}>
-                <img src={src} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', opacity:.5 }}/>
+                <img src={src} alt="" loading="lazy" style={{ width:'100%', height:'100%', objectFit:'cover', opacity:.5 }}/>
               </div>
             ))}
           </div>
-          <div style={{ height:1, background:'linear-gradient(90deg,transparent,rgba(255,255,255,0.06) 30%,rgba(255,255,255,0.06) 70%,transparent)', marginTop:24 }}/>
+          <div style={{ height:1, background:'linear-gradient(90px,transparent,rgba(255,255,255,0.06) 30%,rgba(255,255,255,0.06) 70%,transparent)', marginTop:24 }}/>
         </section>
       </Reveal>
 
@@ -539,14 +569,15 @@ export default function LandingPage() {
             </p>
           </div>
           <div style={{ display:'flex', justifyContent:'center' }}>
-            <div style={{ width:'min(45vw, 260px)', aspectRatio:'402/874', borderRadius:'10%',
+            <div style={{ width:'min(45vw, 260px)', aspectRatio:'402/874', borderRadius:'40px',
               background:'#0a0a0a', border:'1px solid rgba(255,255,255,0.12)', overflow:'hidden',
               position:'relative', flexShrink:0,
               boxShadow:`0 40px 120px rgba(0,0,0,0.9), 0 0 80px ${SIG_GLOW}`,
             }}>
               <video
-                src="/videos/compressed-Sequence%2002%20(1).mp4"
+                src="https://res.cloudinary.com/vj5y67l9/video/upload/q_auto,f_auto/v1782910263/compressed-Sequence_02_1_kge9tm.mp4"
                 autoPlay muted loop playsInline
+                preload="metadata"
                 style={{ width:'100%', height:'100%', display:'block', objectFit:'cover' }}
               />
               <div style={{ position:'absolute', inset:0, pointerEvents:'none',

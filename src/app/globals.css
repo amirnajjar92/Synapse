@@ -34,6 +34,26 @@ body {
   -ms-overflow-style: none;
 }
 
+/* Smooth scroll performance */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+/* Optimize rendering performance */
+img, video {
+  content-visibility: auto;
+}
+
 /* AI Assistant Modal Animations */
 @keyframes fadeIn {
   from {

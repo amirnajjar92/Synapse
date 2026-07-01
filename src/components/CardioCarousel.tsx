@@ -5,13 +5,15 @@ import { useEffect, useState } from 'react';
 const SIG = '#3B82F6';
 const SIG_GLOW = 'rgba(59,130,246,0.07)';
 
+const CDN = 'https://res.cloudinary.com/vj5y67l9/image/upload';
+
 const CARDIO_IMAGES = [
-  { src: '/screeenshots/cardio-monitor-1.png' },
-  { src: '/screeenshots/cardio-monitor-2.jpg' },
-  { src: '/screeenshots/cardio-monitor-3.jpg' },
-  { src: '/screeenshots/cardio-monitor-4.jpg' },
-  { src: '/screeenshots/cardio-monitor-5.jpg' },
-  { src: '/screeenshots/cardio-monitor-6.jpg' },
+  { src: `${CDN}/v1782909930/cardio-monitor-1_yvnbtd.png` },
+  { src: `${CDN}/v1782909944/cardio-monitor-2_v7rjaj.jpg` },
+  { src: `${CDN}/v1782909985/cardio-monitor-3_vdatjn.jpg` },
+  { src: `${CDN}/v1782909986/cardio-monitor-4_lbtur9.jpg` },
+  { src: `${CDN}/v1782910014/cardio-monitor-5_myyw3j.jpg` },
+  { src: `${CDN}/v1782909957/cardio-monitor-6_qbw1hz.jpg` },
 ];
 
 export default function CardioCarousel() {
