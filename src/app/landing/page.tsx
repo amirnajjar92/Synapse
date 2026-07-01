@@ -1,238 +1,697 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 import { signIn } from 'next-auth/react';
-import SynapseFitLogo from '@/components/SynapseFitLogo';
+import ScreenshotCollage from '@/components/ScreenshotCollage';
+import CardioCarousel from '@/components/CardioCarousel';
+import MenAnatomy from '@/components/MenAnatomy';
+import WomenAnatomy from '@/components/WomenAnatomy';
 
-const FEATURES = [
-  {
-    id: 'ai-coach',
-    title: 'AI-Powered Coach',
-    desc: 'Describe your goal in plain English — "Build muscle in 8 weeks" or "Lose 10kg" — and Synapse generates a structured workout plan instantly.',
-    screenshot: '/screenshots/pages/planner.png',
-    bullets: ['Natural language plan generation', 'Multi-provider AI (OpenAI + Claude)', 'Modify plans by chatting with your coach'],
-  },
-  {
-    id: 'workout-tracker',
-    title: 'Smart Workout Tracker',
-    desc: 'Follow your plan day by day with interactive exercise lists, muscle anatomy maps, and AI-powered coaching tips.',
-    screenshot: '/screenshots/pages/workout-tracker.png',
-    bullets: ['Day-by-day navigation with exercise checkboxes', '3D muscle map highlights (front/back, men/women)', 'AI coach tips based on your progress', 'Exercise video search from YouTube'],
-  },
-  {
-    id: 'progress',
-    title: 'Progress & Analytics',
-    desc: 'Track every metric that matters. Daily check-ins, weight trends, and AI-powered analysis keep you accountable.',
-    screenshot: '/screenshots/pages/plan-progress-tracker.png',
-    bullets: ['Daily mood, sleep, energy, and soreness tracking', 'Weight trend visualization', 'AI analysis of your check-in entries', 'PDF export of full progress reports'],
-  },
-  {
-    id: 'training-studio',
-    title: 'Trainer Platform',
-    desc: 'Personal trainers manage clients, assign plans, and communicate in real-time — all from one dashboard.',
-    screenshot: '/screenshots/pages/training-studio-dashboard.png',
-    bullets: ['Client management with invitation system', 'Real-time 1-on-1 chat with Pusher', 'Push notifications for new messages', 'Plan assignment and progress oversight'],
-  },
-  {
-    id: 'health',
-    title: 'All-in-One Health',
-    desc: 'Hydration tracking, nutrition logging, Strava activity import, and smart reminders — everything in one place.',
-    screenshot: '/screenshots/pages/water-tracker.png',
-    bullets: ['Water tracker with streak history', 'Meal logging and calorie tracking', 'Strava activity import (runs, rides, swims)', 'Customizable reminder schedules'],
-  },
-  {
-    id: 'pwa',
-    title: 'Install Anywhere',
-    desc: 'Synapse is a Progressive Web App — install it on your homescreen, get push notifications, and use it offline.',
-    screenshot: '/screenshots/pages/reminders.png',
-    bullets: ['Install on iOS, Android, or Desktop', 'Push notifications for workouts and messages', 'Offline-capable with service worker', 'Dark mode, gesture-driven UI'],
-  },
-];
+/* ─────────────────────────────────────────────────────
+   SYNAPSE LANDING — Premium Ultra Edition
+   Polished UX, High-Conversion Copywriting, Clean Architecture
+───────────────────────────────────────────────────── */
 
-function ScreenshotFrame({ src, alt, className = '' }: { src: string; alt: string; className?: string }) {
-  const [loaded, setLoaded] = useState(false);
-  const [error, setError] = useState(false);
+const SIG       = '#3B82F6';
+const SIG_DIM   = 'rgba(59,130,246,0.13)';
+const SIG_GLOW  = 'rgba(59,130,246,0.07)';
+
+const LINE_PATH = 'M79.1641 129.338C118.023 132.495 183.508 129.72 251.087 110.632M425.483 6.53156L444.036 -9.14585M425.483 6.53156L430.43 -18.291M425.483 6.53156C378.731 60.9529 314.001 92.8613 251.087 110.632M210.27 344.903C210.27 245.612 231.297 123.886 251.087 110.632';
+const HORN_PATH = 'M0 284.8C48.6496 288.719 148.422 294.729 158.317 287.412C170.686 278.267 171.923 250.832 176.87 258.67C181.817 266.509 179.344 322.689 176.87 321.382C174.396 320.076 165.738 296.56 154.607 295.253C145.701 294.208 49.0618 288.72 0 284.8Z';
+
+/* ── Logo ── */
+function Logo({ size = 48 }: { size?: number }) {
+  const [on, setOn] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setOn(true), 80); return () => clearTimeout(t); }, []);
   return (
-    <div className={`relative ${className}`} style={{ width: 280, height: 580 }}>
-      <div className="absolute inset-0 rounded-[28px] border-[3px] border-zinc-700 shadow-2xl shadow-orange-500/5 overflow-hidden bg-black">
-        <div className="h-7 bg-black flex items-center justify-between px-4 text-[10px] text-white/30">
-          <span className="font-semibold">9:41</span>
-          <div className="flex items-center gap-1.5">
-            <svg width="12" height="9" viewBox="0 0 18 12" className="text-white/30"><rect x="0.5" y="0.5" width="17" height="11" rx="1.5" stroke="currentColor" fill="none"/><line x1="3.5" y1="6" x2="7.5" y2="6" stroke="currentColor" strokeWidth="0.8"/><line x1="9" y1="6" x2="13" y2="6" stroke="currentColor" strokeWidth="0.8"/></svg>
-            <svg width="10" height="9" viewBox="0 0 14 12" className="text-white/30"><path d="M1 8l4-6 4 6H1z" fill="none" stroke="currentColor"/><path d="M7 6l3-4 3 4H7z" fill="none" stroke="currentColor"/></svg>
-          </div>
-        </div>
-        {!error ? (
-          <img
-            src={src}
-            alt={alt}
-            className={`w-full transition-opacity duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`}
-            style={{ height: 'calc(100% - 28px)', objectFit: 'cover', objectPosition: 'top' }}
-            onLoad={() => setLoaded(true)}
-            onError={() => setError(true)}
-          />
-        ) : (
-          <div className="flex items-center justify-center w-full h-full" style={{ height: 'calc(100% - 28px)' }}>
-            <div className="text-center px-6">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 mx-auto mb-3 flex items-center justify-center">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FC4C02" strokeWidth="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-              </div>
-              <p className="text-white/40 text-[10px]">Run screenshots:capture</p>
-            </div>
-          </div>
-        )}
-      </div>
-      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-24 h-1 rounded-full bg-zinc-700/50" />
+    <div style={{ width: size, height: size, display: 'inline-block', flexShrink: 0 }}>
+      <svg width="100%" height="100%" viewBox="0 0 450 405" className="text-white overflow-visible" fill="none">
+        <defs>
+          <filter id="logo-g"><feGaussianBlur stdDeviation="5" result="b"/><feComposite in="SourceGraphic" in2="b" operator="over"/></filter>
+        </defs>
+        <g style={{ opacity: on ? 1 : 0, transition: 'opacity 1s ease-out .2s' }}>
+          <path d="M79 129L158 287 M251 110L176 258" stroke={SIG} strokeWidth="1" strokeOpacity=".1" strokeDasharray="3 3"/>
+          <path d="M0 284L210 344L251 110" stroke={SIG} strokeWidth="1.2" strokeOpacity=".15"/>
+          <circle cx="251" cy="110" r="4.5" fill={SIG} filter="url(#logo-g)"/>
+          <circle cx="79" cy="129" r="3.5" fill={SIG}/>
+        </g>
+        <path d={LINE_PATH} stroke="currentColor" strokeOpacity=".18" strokeWidth="11" fill="none"
+          style={{ strokeDasharray:'1000', strokeDashoffset: on ? 0 : 1000, transition:'stroke-dashoffset .95s cubic-bezier(.65,0,.35,1)' }}/>
+        <path d={LINE_PATH} stroke="currentColor" strokeWidth="7.84" fill="none"
+          style={{ strokeDasharray:'1000', strokeDashoffset: on ? 0 : 1000, transition:'stroke-dashoffset .95s cubic-bezier(.65,0,.35,1)' }}/>
+        <path d={HORN_PATH} stroke="currentColor" strokeWidth="10.45" fill="none"
+          style={{ strokeDasharray:'1000', strokeDashoffset: on ? 0 : 1000, transition:'stroke-dashoffset .85s cubic-bezier(.65,0,.35,1) .25s' }}/>
+        <g style={{ opacity: on ? 1 : 0, transform: on ? 'translateY(0)' : 'translateY(10px)', transition:'all .7s cubic-bezier(.22,1,.36,1) .4s' }}>
+          <text x="202.5" y="225" fill="currentColor" fontSize="92" fontWeight="400" letterSpacing="3"
+            fontFamily="var(--font-hanalei-fill),system-ui,sans-serif" textAnchor="middle">Synapse</text>
+          <text x="385" y="255" fill={SIG} fontSize="36" fontWeight="800" letterSpacing="12"
+            fontFamily="system-ui,sans-serif" textAnchor="end">FIT</text>
+        </g>
+      </svg>
     </div>
   );
 }
 
-export default function LandingPage() {
-  const [mounted, setMounted] = useState(false);
-  const [isSigningIn, setIsSigningIn] = useState(false);
-  const router = useRouter();
+/* ── Synapse field ── */
+function SynapseField() {
+  const nodes = [
+    {x:8,y:6},{x:22,y:18},{x:4,y:34},{x:35,y:9},{x:18,y:48},{x:48,y:28},
+    {x:62,y:12},{x:78,y:22},{x:92,y:8},{x:70,y:40},{x:88,y:46},{x:12,y:62},
+    {x:30,y:72},{x:55,y:60},{x:75,y:68},{x:95,y:60},{x:6,y:88},{x:25,y:94},
+    {x:45,y:86},{x:65,y:92},{x:85,y:88},{x:98,y:78},
+  ];
+  const links: [number,number][] = [
+    [0,1],[1,3],[2,4],[3,6],[5,6],[6,7],[7,8],[5,9],[9,10],[4,11],
+    [11,12],[12,13],[13,14],[14,15],[10,15],[11,16],[16,17],[17,18],[18,19],[19,20],[20,21],[15,21],
+  ];
+  return (
+    <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
+      <defs>
+        <filter id="nf"><feGaussianBlur stdDeviation=".7"/></filter>
+      </defs>
+      {links.map(([a,b],i) => (
+        <line key={i} x1={nodes[a].x} y1={nodes[a].y} x2={nodes[b].x} y2={nodes[b].y}
+          stroke={SIG} strokeOpacity=".05" strokeWidth=".07"/>
+      ))}
+      {nodes.map((n,i) => (
+        <circle key={i} cx={n.x} cy={n.y}
+          r={i%5===0 ? .45 : .2}
+          fill={i%5===0 ? SIG : '#fff'}
+          opacity={i%5===0 ? .4 : .13}
+          filter={i%5===0 ? 'url(#nf)' : undefined}
+          className={i%5===0 ? 'snp' : ''}
+          style={i%5===0 ? {animationDelay:`${(i*.4)%3}s`} : undefined}
+        />
+      ))}
+    </svg>
+  );
+}
 
-  useEffect(() => { setMounted(true); }, []);
+/* ── Scroll-reveal wrapper ── */
+function Reveal({
+  children, delay = 0, className = '', style: extraStyle = {},
+}: {
+  children: React.ReactNode; delay?: number; className?: string; style?: React.CSSProperties;
+}) {
+  const ref  = useRef<HTMLDivElement>(null);
+  const [vis, setVis] = useState(false);
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) setVis(true); },
+      { threshold: 0.06, rootMargin: '0px 0px -48px 0px' }
+    );
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+  return (
+    <div ref={ref} className={className} style={{
+      ...extraStyle,
+      opacity: vis ? 1 : 0,
+      transform: vis ? 'translateY(0) scale(1)' : 'translateY(32px) scale(0.98)',
+      filter: vis ? 'blur(0px)' : 'blur(4px)',
+      transition: `opacity .8s cubic-bezier(.16,1,.3,1) ${delay}s,
+                   transform .8s cubic-bezier(.16,1,.3,1) ${delay}s,
+                   filter .6s ease ${delay}s`,
+      willChange: 'opacity, transform, filter',
+    }}>
+      {children}
+    </div>
+  );
+}
 
-  const handleSignIn = useCallback(async () => {
-    setIsSigningIn(true);
-    try {
-      await signIn('google', { callbackUrl: '/planner' });
-    } catch {
-      setIsSigningIn(false);
-    }
+/* ── Anatomy Background with Scroll Effect ── */
+function AnatomyBackground() {
+  const [scrollOpacity, setScrollOpacity] = useState(1);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrolled = window.scrollY;
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollPercent = scrolled / maxScroll;
+      
+      // Fade out from 1 to 0.1 as we scroll down, fade back in when scrolling up
+      const newOpacity = Math.max(0.1, 1 - (scrollPercent * 0.9));
+      setScrollOpacity(newOpacity);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white overflow-x-hidden">
-      {/* Hero */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center px-4 overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle,rgba(252,76,2,0.06)_0%,transparent_70%)]" />
-          <div className="absolute bottom-1/4 left-1/4 w-[400px] h-[400px] rounded-full bg-[radial-gradient(circle,rgba(168,85,247,0.04)_0%,transparent_70%)]" />
-        </div>
-        <div className={`relative z-10 flex flex-col items-center text-center transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-          <div className="mb-8">
-            <SynapseFitLogo size={180} loading={false} accentInk="#FFFFFF" />
-          </div>
-          <p className="text-[#FC4C02] text-sm font-semibold tracking-[0.3em] uppercase mb-4">Plan. Track. Analyze. Adapt.</p>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4">Your AI Fitness Brain</h1>
-          <p className="text-zinc-400 text-base sm:text-lg max-w-xl mb-10 leading-relaxed">
-            Generate personalized workout plans, track every rep, get AI-powered coaching,
-            and connect with your trainer — all in one beautifully dark app.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <button onClick={handleSignIn} disabled={isSigningIn}
-              className="px-8 py-3.5 rounded-2xl bg-[#FC4C02] hover:bg-[#e04302] text-white font-semibold text-sm transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-orange-500/20">
-              {isSigningIn ? 'Signing in...' : 'Get Started Free'}
-            </button>
-            <button onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
-              className="px-8 py-3.5 rounded-2xl border border-white/10 hover:bg-white/5 text-white/80 font-medium text-sm transition-all">
-              See Features
-            </button>
-          </div>
-        </div>
-        <div className={`absolute bottom-8 transition-all duration-1000 delay-500 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" className="animate-bounce opacity-30"><polyline points="6 9 12 15 18 9"/></svg>
-        </div>
-      </section>
+    <>
+      {/* Men Front - Left Side */}
+      <div style={{
+        position: 'fixed',
+        left: '-5%',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        width: '25vw',
+        maxWidth: '300px',
+        height: 'auto',
+        opacity: scrollOpacity * 0.15,
+        transition: 'opacity 0.3s ease-out',
+        pointerEvents: 'none',
+        zIndex: 1,
+      }}>
+        <MenAnatomy
+          view="front"
+          highlights={{
+            muscles: ['chest', 'abs', 'shoulders', 'biceps', 'quads'],
+            fillColor: '#3B82F6',
+            fillOpacity: 0.4,
+            strokeColor: '#3B82F6',
+            strokeWidth: 1,
+            blurInactive: 0,
+          }}
+          defaultStrokeColor="#ffffff"
+          defaultStrokeWidth={0.3}
+          inactiveFillColor="transparent"
+        />
+      </div>
 
-      {/* How It Works */}
-      <section className="py-24 border-t border-white/5">
-        <div className="max-w-6xl mx-auto px-4 sm:px-8">
-          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-16">How It Works</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            {[
-              { step: '01', title: 'Describe Your Goal', desc: 'Type a goal like "Build muscle in 8 weeks" or "Run a 5K". Our AI generates a complete workout plan tailored to you.', icon: 'M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z' },
-              { step: '02', title: 'Track Your Progress', desc: 'Follow your plan day by day. Check off exercises, log water, track weight, and record how you feel after every session.', icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' },
-              { step: '03', title: 'Evolve With AI', desc: 'Get daily coach tips, weekly AI analysis, and modify your plan anytime. The more you use it, the smarter it gets.', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
-            ].map((item) => (
-              <div key={item.step} className="text-center">
-                <div className="w-14 h-14 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center mx-auto mb-5">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FC4C02" strokeWidth="1.5" strokeLinecap="round"><path d={item.icon}/></svg>
-                </div>
-                <div className="text-[#FC4C02] text-xs font-bold tracking-widest mb-2">{item.step}</div>
-                <h3 className="text-white font-semibold text-lg mb-2">{item.title}</h3>
-                <p className="text-zinc-400 text-sm leading-relaxed max-w-xs mx-auto">{item.desc}</p>
-              </div>
-            ))}
-          </div>
+      {/* Women Back - Right Side */}
+      <div style={{
+        position: 'fixed',
+        right: '-5%',
+        top: '50%',
+        transform: 'translateY(-50%)',
+        width: '25vw',
+        maxWidth: '300px',
+        height: 'auto',
+        opacity: scrollOpacity * 0.15,
+        transition: 'opacity 0.3s ease-out',
+        pointerEvents: 'none',
+        zIndex: 1,
+      }}>
+        <WomenAnatomy
+          view="back"
+          highlights={{
+            muscles: ['lats', 'upper-back', 'lower-back', 'glutes', 'hamstrings'],
+            fillColor: '#3B82F6',
+            fillOpacity: 0.4,
+            strokeColor: '#3B82F6',
+            strokeWidth: 1,
+            blurInactive: 0,
+          }}
+          defaultStrokeColor="#ffffff"
+          defaultStrokeWidth={0.3}
+          inactiveFillColor="transparent"
+        />
+      </div>
+    </>
+  );
+}
+
+/* ── Features Data with High-Impact Copywriting ── */
+const FEATURES = [
+  { 
+    eyebrow: 'Hyper-Personalization', 
+    title: 'An adaptive engine\nbuilt around your biomechanics.', 
+    body: 'Tell Synapse your targets. It constructs a highly precise, week-by-week protocol optimized for your available equipment, recovery rate, and performance data. Then, it dynamically evolves as you unlock raw strength.', 
+    img: '/screeenshots/planner-page.jpg' 
+  },
+  { 
+    eyebrow: 'Precision Tracking', 
+    title: 'Zero friction.\nMaximum data velocity.', 
+    body: 'Engage with real-time muscle workload visualization, instant HD form references, and contextual coaching notes precisely when you unrack. The gym floor, fully digitized.', 
+    img: '/screeenshots/workout-tracker-1.png' 
+  },
+  { 
+    eyebrow: 'Predictive Analytics', 
+    title: 'Isolate what delivers results.\nEliminate guessing.', 
+    body: 'Bridge the gap between target metrics and actual execution. Discover training biases, capture volume imbalances, and contextualize your systemic data loops—hydration, mass, and cardio trends—in a unified pane of glass.', 
+    img: '/screeenshots/sidebar-activeplans.jpg' 
+  },
+  { 
+    eyebrow: 'Human Co-Pilot', 
+    title: 'Your elite human coach,\nembedded natively.', 
+    body: 'Empower your coach to modify parameters mid-session, push real-time programmatic revisions, and audit telemetry as you perform reps. High-touch elite coaching meets high-scale intelligence.', 
+    img: '/screeenshots/ai-planner-generating.jpg' 
+  },
+];
+
+const MQ = [
+  '/screeenshots/workout-tracker-1.png',
+  '/screeenshots/planner-page.jpg',
+  '/screeenshots/ai-planner-generating.jpg',
+  '/screeenshots/sidebar-activeplans.jpg',
+  '/screeenshots/water-tracker%20.jpg',
+  '/screeenshots/events.jpg',
+];
+
+export default function LandingPage() {
+  const stickyRef = useRef<HTMLDivElement>(null);
+  const [activeIdx, setActiveIdx] = useState(0);
+
+  useEffect(() => {
+    const onScroll = () => {
+      if (!stickyRef.current) return;
+      const { top, height } = stickyRef.current.getBoundingClientRect();
+      const scrolled = -top;
+      const total    = height - window.innerHeight;
+      const p        = Math.max(0, Math.min(0.9999, scrolled / total));
+      setActiveIdx(Math.min(FEATURES.length - 1, Math.floor(p * FEATURES.length)));
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  return (
+    <div style={{ minHeight:'100vh', background:'#0a0a0a', color:'#fff', overflowX:'clip', letterSpacing: '-0.01em' }}>
+      
+      <style jsx global>{`
+        @keyframes snp {
+          0%,100% { opacity:.18; transform:scale(.75); }
+          50%      { opacity:.85; transform:scale(1.3); }
+        }
+        .snp { animation:snp 3.2s ease-in-out infinite; transform-origin:center; }
+
+        @keyframes mq  { from{transform:translateX(0)}   to{transform:translateX(-50%)} }
+        @keyframes mq2 { from{transform:translateX(-50%)} to{transform:translateX(0)}   }
+        .mq  { animation:mq  40s linear infinite; }
+        .mq2 { animation:mq2 48s linear infinite; }
+
+        @keyframes heroUp {
+          from { opacity:0; transform:translateY(24px); filter:blur(4px); }
+          to   { opacity:1; transform:translateY(0);    filter:blur(0);   }
+        }
+        .hu { opacity:0; animation:heroUp .9s cubic-bezier(.16,1,.3,1) forwards; }
+
+        @keyframes scrollCue {
+          0%,100% { transform:translateY(0); opacity:.2; }
+          50%      { transform:translateY(6px); opacity:.5; }
+        }
+        .sc { animation:scrollCue 2s ease-in-out infinite; }
+
+        html { scroll-behavior:smooth; }
+        ::-webkit-scrollbar { width:0; height:0; }
+      `}</style>
+
+      {/* Anatomy Background Layer */}
+      <AnatomyBackground />
+
+      {/* Ambient Layer */}
+      <div style={{ position:'fixed', inset:0, zIndex:0, pointerEvents:'none' }}>
+        <SynapseField/>
+        <div style={{ position:'absolute', inset:0,
+          background:`radial-gradient(ellipse 80% 50% at 50% 0%, ${SIG_GLOW} 0%, transparent 70%)` }}/>
+      </div>
+
+      {/* ════ NAV ════ */}
+      <nav style={{
+        position:'fixed', top:0, left:0, right:0, zIndex:50,
+        display:'flex', alignItems:'center', justifyContent:'space-between',
+        padding:'16px 40px',
+        background:'rgba(10,10,10,0.75)',
+        backdropFilter:'blur(20px)',
+        borderBottom:'1px solid rgba(255,255,255,0.05)',
+      }}>
+        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+          <Logo size={32}/>
+          <span style={{ fontFamily:'var(--font-hanalei-fill),system-ui', fontSize:14, fontWeight:600, letterSpacing:'.05em' }}>
+            Synapse
+          </span>
         </div>
-      </section>
-
-      {/* Features */}
-      <section id="features" className="border-t border-white/5">
-        {FEATURES.map((feature, i) => (
-          <div key={feature.id} className={`py-20 sm:py-24 ${i % 2 === 0 ? 'bg-white/[0.015]' : ''}`}>
-            <div className="max-w-6xl mx-auto px-4 sm:px-8">
-              <div className={`flex flex-col ${i % 2 === 1 ? 'lg:flex-row-reverse' : 'lg:flex-row'} items-center gap-12 lg:gap-20`}>
-                <div className="flex-shrink-0">
-                  <ScreenshotFrame src={feature.screenshot} alt={feature.title} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-white text-2xl sm:text-3xl font-bold mb-3">{feature.title}</h3>
-                  <p className="text-zinc-400 text-sm sm:text-base leading-relaxed mb-6">{feature.desc}</p>
-                  <ul className="space-y-2.5">
-                    {feature.bullets.map((b, j) => (
-                      <li key={j} className="flex items-start gap-2.5 text-zinc-300 text-sm">
-                        <svg className="mt-0.5 flex-shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FC4C02" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
-                        {b}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
-            {i < FEATURES.length - 1 && <div className="max-w-6xl mx-auto mt-20 px-4 sm:px-8"><div className="h-px bg-white/5" /></div>}
-          </div>
-        ))}
-      </section>
-
-      {/* Tech */}
-      <section className="py-24 border-t border-white/5">
-        <div className="max-w-4xl mx-auto px-4 sm:px-8 text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-4">Built With Modern Tech</h2>
-          <p className="text-zinc-400 text-sm mb-12">Full-stack React, PostgreSQL, AI, and real-time messaging</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {[
-              { label: 'Next.js 16', sub: 'React / SSR / PWA' },
-              { label: 'PostgreSQL', sub: 'Prisma / Vercel' },
-              { label: 'OpenAI + Claude', sub: 'Multi-provider AI' },
-              { label: 'Pusher', sub: 'Real-time chat' },
-              { label: 'Google OAuth', sub: 'Secure sign-in' },
-              { label: 'Strava API', sub: 'Activity import' },
-              { label: 'Web Push API', sub: 'Notifications' },
-              { label: 'Tailwind CSS', sub: 'Dark mode UI' },
-            ].map((tech) => (
-              <div key={tech.label} className="rounded-2xl bg-white/[0.03] border border-white/5 p-4">
-                <p className="text-white font-semibold text-sm">{tech.label}</p>
-                <p className="text-zinc-500 text-[11px] mt-1">{tech.sub}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-24 border-t border-white/5">
-        <div className="max-w-xl mx-auto px-4 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4">Ready to Transform Your Training?</h2>
-          <p className="text-zinc-400 text-sm mb-8 leading-relaxed">Join Synapse and experience the future of AI-powered fitness tracking.</p>
-          <button onClick={handleSignIn} disabled={isSigningIn}
-            className="px-10 py-4 rounded-2xl bg-[#FC4C02] hover:bg-[#e04302] text-white font-semibold text-base transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-orange-500/20">
-            {isSigningIn ? 'Signing in...' : 'Get Started Free'}
+        <div style={{ display:'flex', alignItems:'center', gap:28 }}>
+          <a href="#features" style={{ color:'rgba(255,255,255,0.5)', fontSize:13, textDecoration:'none', transition: 'color 0.2s' }}
+            onMouseEnter={e=>(e.currentTarget.style.color='#fff')}
+            onMouseLeave={e=>(e.currentTarget.style.color='rgba(255,255,255,0.5)')}>
+            Features
+          </a>
+          <button onClick={()=>signIn()} style={{
+            padding:'10px 24px', borderRadius:999,
+            background:'#fff', color:'#000', fontSize:13, fontWeight:600,
+            border:'none', cursor:'pointer', transition:'opacity 0.2s'
+          }}
+            onMouseEnter={e=>(e.currentTarget.style.opacity='.9')}
+            onMouseLeave={e=>(e.currentTarget.style.opacity='1')}>
+            Sign In
           </button>
         </div>
+      </nav>
+
+      {/* ════ HERO ════ */}
+      <section style={{
+        position:'relative', zIndex:10,
+        minHeight:'100vh',
+        display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+        textAlign:'center', padding:'140px 24px 80px',
+      }}>
+        <div className="hu" style={{ animationDelay:'0s' }}><Logo size={140}/></div>
+        <p className="hu" style={{ animationDelay:'.2s', fontSize:11, fontWeight:700,
+          letterSpacing:'.4em', textTransform:'uppercase', color:SIG, marginTop:16 }}>
+          Plan · Track · Analyze · Adapt
+        </p>
+        <h1 className="hu" style={{ animationDelay:'.35s',
+          fontFamily:'var(--font-hanalei-fill),system-ui',
+          fontSize:'clamp(44px,7.5vw,80px)', fontWeight:800,
+          lineHeight:1.05, letterSpacing:'-0.03em', maxWidth:840, marginTop:16,
+          background: 'linear-gradient(to bottom, #ffffff 60%, rgba(255,255,255,0.7))',
+          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
+        }}>
+          Your training intelligence.<br/>Evolved.
+        </h1>
+        <p className="hu" style={{ animationDelay:'.5s',
+          color:'rgba(255,255,255,0.5)', fontSize:16, lineHeight:1.7,
+          maxWidth:560, marginTop:24 }}>
+          Synapse transforms your raw training data into hyper-optimized performance blueprints. AI-powered planning, real-time execution tracking, and predictive analytics—all working together to unlock your full athletic potential.
+        </p>
+        <div className="hu" style={{ animationDelay:'.65s', display:'flex', gap:16, marginTop:40, flexWrap:'wrap', justifyContent:'center' }}>
+          <button onClick={()=>signIn()} style={{
+            padding:'16px 40px', borderRadius:14,
+            background:'#fff', color:'#000', fontSize:14, fontWeight:700,
+            border:'none', cursor:'pointer',
+            boxShadow:`0 0 40px ${SIG_DIM}, 0 12px 32px rgba(0,0,0,0.5)`,
+            transition:'all .2s ease-in-out',
+          }}
+            onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.opacity='.95';}}
+            onMouseLeave={e=>{e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.opacity='1';}}>
+            Begin Training Free
+          </button>
+          <a href="#features" style={{
+            padding:'16px 40px', borderRadius:14,
+            border:'1px solid rgba(255,255,255,0.15)',
+            color:'#fff', fontSize:14, fontWeight:500,
+            textDecoration:'none', transition:'all .2s',
+            background: 'rgba(255,255,255,0.02)'
+          }}
+            onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.08)';}}
+            onMouseLeave={e=>{e.currentTarget.style.background='rgba(255,255,255,0.02)';}}>
+            Explore Interface ↓
+          </a>
+        </div>
+        <p className="hu" style={{ animationDelay:'.8s',
+          color:'rgba(255,255,255,0.25)', fontSize:11, letterSpacing:'.25em',
+          textTransform:'uppercase', marginTop:32 }}>
+          Free Forever · Instant Access · Works Offline
+        </p>
+        
+        <div className="sc" style={{ position:'absolute', bottom:40, left:'50%', transform:'translateX(-50%)',
+          display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
+          <div style={{ width:1, height:48, background:'linear-gradient(to bottom, transparent, rgba(255,255,255,0.3))' }}/>
+          <svg width="12" height="7" viewBox="0 0 12 7" fill="none">
+            <path d="M1 1l5 5 5-5" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-white/5 py-8">
-        <div className="max-w-6xl mx-auto px-4 sm:px-8 flex items-center justify-center gap-3">
-          <SynapseFitLogo size={20} loading={false} accentInk="#FFFFFF" />
-          <span className="text-white/30 text-xs">Synapse — AI-Powered Fitness Tracking</span>
+      {/* ════ STICKY FEATURE SCROLL ════ */}
+      <section id="features" ref={stickyRef} style={{ position:'relative', zIndex:10, height:`${FEATURES.length * 100}vh` }}>
+        <div style={{
+          position:'sticky', top:0, height:'100vh',
+          display:'flex', alignItems:'center', justifyContent:'center',
+          padding:'0 40px',
+        }}>
+          <div style={{
+            position:'absolute', top:0, left:0, right:0, height:1,
+            background:`linear-gradient(90deg, transparent 0%, ${SIG} 40%, ${SIG} 60%, transparent 100%)`,
+            opacity:.2,
+          }}/>
+
+          <div style={{
+            width:'100%', maxWidth:1100,
+            display:'grid',
+            gridTemplateColumns:'repeat(auto-fit, minmax(320px, 1fr))',
+            gap:64, alignItems:'center',
+          }}>
+            {/* LEFT — Phone frame container */}
+            <div style={{ display:'flex', justifyContent:'center', alignItems:'center' }}>
+              <div style={{ position:'relative', width:'min(45vw, 260px)' }}>
+                <div style={{ width:'100%', aspectRatio:'402/874', visibility:'hidden' }}/>
+                {FEATURES.map((f,i) => (
+                  <div key={i} style={{
+                    position:'absolute', inset:0,
+                    opacity: activeIdx===i ? 1 : 0,
+                    transform: `scale(${activeIdx===i ? 1 : activeIdx>i ? .95 : .98}) translateY(${activeIdx===i ? 0 : activeIdx>i ? -24 : 24}px)`,
+                    transition:'opacity .5s cubic-bezier(.16,1,.3,1), transform .5s cubic-bezier(.16,1,.3,1)',
+                    pointerEvents: activeIdx===i ? 'auto' : 'none',
+                  }}>
+                    <div style={{ width:'100%', height:'100%', aspectRatio:'402/874',
+                      borderRadius:'10%', background:'#0c0c0c',
+                      border:'1px solid rgba(255,255,255,0.12)', overflow:'hidden',
+                      boxShadow:`0 32px 96px rgba(0,0,0,0.85), 0 0 64px ${SIG_GLOW}`,
+                    }}>
+                      <img src={f.img} alt={f.eyebrow} style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'top center' }}/>
+                      <div style={{ position:'absolute', bottom:'2%', left:'50%', transform:'translateX(-50%)',
+                        width:'28%', height:4, borderRadius:999, background:'rgba(255,255,255,0.25)' }}/>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* RIGHT — Text panels */}
+            <div>
+              <div style={{ display:'flex', gap:8, marginBottom:44 }}>
+                {FEATURES.map((_,i) => (
+                  <div key={i} style={{
+                    flex:1, height:3, borderRadius:999,
+                    background: i<=activeIdx ? SIG : 'rgba(255,255,255,0.1)',
+                    opacity: i===activeIdx ? 1 : i<activeIdx ? 0.6 : 0.2,
+                    transition:'all .4s ease',
+                  }}/>
+                ))}
+              </div>
+              <div style={{ position:'relative', height:280 }}>
+                {FEATURES.map((f,i) => (
+                  <div key={i} style={{
+                    position:'absolute', top:0, left:0, right:0,
+                    opacity: activeIdx===i ? 1 : 0,
+                    transform: `translateY(${activeIdx===i ? 0 : activeIdx>i ? -20 : 20}px)`,
+                    transition:'opacity .45s ease, transform .5s cubic-bezier(.16,1,.3,1)',
+                    pointerEvents: activeIdx===i ? 'auto' : 'none',
+                  }}>
+                    <p style={{ fontSize:11, fontWeight:700, letterSpacing:'.25em', textTransform:'uppercase', color:SIG, marginBottom:16 }}>
+                      {f.eyebrow}
+                    </p>
+                    <h2 style={{ fontSize:'clamp(28px,3.5vw,44px)', fontWeight:800, lineHeight:1.1, whiteSpace:'pre-line', marginBottom:20, letterSpacing: '-0.02em' }}>
+                      {f.title}
+                    </h2>
+                    <p style={{ color:'rgba(255,255,255,0.45)', fontSize:15, lineHeight:1.7, maxWidth:420 }}>
+                      {f.body}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
+      </section>
+
+      {/* ════ MARQUEE ════ */}
+      <Reveal>
+        <section style={{ position:'relative', zIndex:10, padding:'80px 0', overflow:'hidden' }}>
+          <div style={{ height:1, background:'linear-gradient(90deg,transparent,rgba(255,255,255,0.06) 30%,rgba(255,255,255,0.06) 70%,transparent)', marginBottom:24 }}/>
+          <div className="mq" style={{ display:'flex', gap:16, width:'max-content', marginBottom:16 }}>
+            {[...MQ,...MQ].map((src,i) => (
+              <div key={i} style={{ width:130, aspectRatio:'402/874', borderRadius:16, overflow:'hidden',
+                border:'1px solid rgba(255,255,255,0.08)', flexShrink:0, background:'#111' }}>
+                <img src={src} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', opacity:.65 }}/>
+              </div>
+            ))}
+          </div>
+          <div className="mq2" style={{ display:'flex', gap:16, width:'max-content' }}>
+            {[...[...MQ].reverse(),...[...MQ].reverse()].map((src,i) => (
+              <div key={i} style={{ width:130, aspectRatio:'402/874', borderRadius:16, overflow:'hidden',
+                border:'1px solid rgba(255,255,255,0.08)', flexShrink:0, background:'#111' }}>
+                <img src={src} alt="" style={{ width:'100%', height:'100%', objectFit:'cover', opacity:.5 }}/>
+              </div>
+            ))}
+          </div>
+          <div style={{ height:1, background:'linear-gradient(90deg,transparent,rgba(255,255,255,0.06) 30%,rgba(255,255,255,0.06) 70%,transparent)', marginTop:24 }}/>
+        </section>
+      </Reveal>
+
+      {/* ════ STATS ════ */}
+      <Reveal style={{ position:'relative', zIndex:10 }}>
+        <section style={{ padding:'120px 24px', maxWidth:1000, margin:'0 auto' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))', gap:48, textAlign:'center' }}>
+            {[
+              { n:'< 2', u:'min', l:'From first prompt to personalized training plan.' },
+              { n:'6',   u:'+',   l:'Deep telemetry & performance tracking metrics.' },
+              { n:'100', u:'%',   l:'Offline-first architecture. Train anywhere.' },
+              { n:'∞',   u:'',    l:'Real-time adaptive program adjustments.' },
+            ].map((s,i) => (
+              <div key={i}>
+                <div style={{ fontSize:'clamp(40px,5vw,60px)', fontWeight:800, letterSpacing:'-0.03em', lineHeight:1 }}>
+                  {s.n}<span style={{ color:SIG, fontSize:'.65em' }}>{s.u}</span>
+                </div>
+                <p style={{ color:'rgba(255,255,255,0.4)', fontSize:13, marginTop:12, lineHeight:1.6, maxWidth:200, margin:'12px auto 0' }}>{s.l}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </Reveal>
+
+      {/* ════ LIVE INTERFACE PREVIEW ════ */}
+      <Reveal style={{ position:'relative', zIndex:10 }}>
+        <section style={{ padding:'120px 24px', maxWidth:1100, margin:'0 auto' }}>
+          <div style={{ textAlign:'center', marginBottom:56 }}>
+            <p style={{ fontSize:11, fontWeight:700, letterSpacing:'.25em', textTransform:'uppercase', color:SIG, marginBottom:16 }}>
+              Live Interface
+            </p>
+            <h2 style={{ fontSize:'clamp(28px,4vw,42px)', fontWeight:800, lineHeight:1.15, marginBottom:20, letterSpacing: '-0.02em' }}>
+              Watch your training flow<br/>from plan to execution.
+            </h2>
+            <p style={{ color:'rgba(255,255,255,0.45)', fontSize:15, lineHeight:1.7, maxWidth:520, margin:'0 auto' }}>
+              Seamless transitions across every workout phase. Your fitness intelligence operating in real-time, continuously adapting to your performance data.
+            </p>
+          </div>
+          <div style={{ display:'flex', justifyContent:'center' }}>
+            <div style={{ width:'min(45vw, 260px)', aspectRatio:'402/874', borderRadius:'10%',
+              background:'#0a0a0a', border:'1px solid rgba(255,255,255,0.12)', overflow:'hidden',
+              position:'relative', flexShrink:0,
+              boxShadow:`0 40px 120px rgba(0,0,0,0.9), 0 0 80px ${SIG_GLOW}`,
+            }}>
+              <video
+                src="/videos/compressed-Sequence%2002%20(1).mp4"
+                autoPlay muted loop playsInline
+                style={{ width:'100%', height:'100%', display:'block', objectFit:'cover' }}
+              />
+              <div style={{ position:'absolute', inset:0, pointerEvents:'none',
+                background:'linear-gradient(to bottom, rgba(10,10,10,.4) 0%, transparent 15%, transparent 85%, rgba(10,10,10,.4) 100%)' }}/>
+              <div style={{ position:'absolute', bottom:'2%', left:'50%', transform:'translateX(-50%)',
+                width:'28%', height:4, borderRadius:999, background:'rgba(255,255,255,0.25)' }}/>
+            </div>
+          </div>
+        </section>
+      </Reveal>
+
+      {/* ════ SCREENSHOT COLLAGE ════ */}
+      <Reveal style={{ position:'relative', zIndex:10 }}>
+        <section style={{ padding:'100px 24px', maxWidth:1100, margin:'0 auto' }}>
+          <div style={{ textAlign:'center', marginBottom:56 }}>
+            <p style={{ fontSize:11, fontWeight:700, letterSpacing:'.25em', textTransform:'uppercase', color:SIG, marginBottom:16 }}>
+              The Full Experience
+            </p>
+            <h2 style={{ fontSize:'clamp(28px,4vw,42px)', fontWeight:800, lineHeight:1.15, letterSpacing: '-0.02em' }}>
+              Every interface layer, unified.
+            </h2>
+          </div>
+          <ScreenshotCollage/>
+        </section>
+      </Reveal>
+
+      {/* ════ NETWORK ════ */}
+      <Reveal style={{ position:'relative', zIndex:10 }}>
+        <section style={{ padding:'120px 24px 140px', maxWidth:720, margin:'0 auto', textAlign:'center' }}>
+          <p style={{ fontSize:11, fontWeight:700, letterSpacing:'.25em', textTransform:'uppercase', color:SIG, marginBottom:16 }}>
+            Connected Intelligence
+          </p>
+          <h2 style={{ fontSize:'clamp(28px,4vw,42px)', fontWeight:800, lineHeight:1.15, marginBottom:72, letterSpacing: '-0.02em' }}>
+            One intelligent system.<br/>Three synchronized nodes.
+          </h2>
+          <div style={{ position:'relative', maxWidth:440, margin:'0 auto', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+            <svg style={{ position:'absolute', inset:0, width:'100%', height:'100%' }} viewBox="0 0 380 80" preserveAspectRatio="none">
+              <line x1="50" y1="40" x2="190" y2="40" stroke={SIG} strokeOpacity=".25" strokeWidth="1" strokeDasharray="5 6"/>
+              <line x1="190" y1="40" x2="330" y2="40" stroke={SIG} strokeOpacity=".25" strokeWidth="1" strokeDasharray="5 6"/>
+              <circle cx="120" cy="40" r="4" fill={SIG} opacity=".8" className="snp"/>
+              <circle cx="260" cy="40" r="4" fill={SIG} opacity=".8" className="snp" style={{ animationDelay:'.8s' }}/>
+            </svg>
+            {[
+              { l:'Elite Coach', s:'Modifies & updates', a:false },
+              { l:'Synapse AI',  s:'Calibrates data loops', a:true  },
+              { l:'Athlete',    s:'Executes & tracks',   a:false },
+            ].map(n => (
+              <div key={n.l} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:12, position:'relative', zIndex:1 }}>
+                <div style={{
+                  width:68, height:68, borderRadius:'50%',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  border:`1px solid ${n.a ? SIG+'aa' : 'rgba(255,255,255,0.12)'}`,
+                  background: n.a ? SIG_DIM : 'rgba(255,255,255,0.04)',
+                  boxShadow: n.a ? `0 0 32px ${SIG_GLOW}` : 'none',
+                }}>
+                  <div style={{ width:12, height:12, borderRadius:'50%', background: n.a ? SIG : 'rgba(255,255,255,0.3)' }}
+                    className={n.a ? 'snp' : ''}/>
+                </div>
+                <p style={{ fontSize:13, fontWeight:600 }}>{n.l}</p>
+                <p style={{ fontSize:11, color:'rgba(255,255,255,0.35)' }}>{n.s}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </Reveal>
+
+      {/* ════ FEATURE GRID ════ */}
+      <Reveal style={{ position:'relative', zIndex:10 }}>
+        <section style={{ padding:'120px 24px 160px', maxWidth:1100, margin:'0 auto' }}>
+          <div style={{ textAlign:'center', marginBottom:64 }}>
+            <p style={{ fontSize:11, fontWeight:700, letterSpacing:'.25em', textTransform:'uppercase', color:SIG, marginBottom:16 }}>
+              Complete Ecosystem
+            </p>
+            <h2 style={{ fontSize:'clamp(28px,4vw,42px)', fontWeight:800, lineHeight:1.15, letterSpacing: '-0.02em' }}>
+              Every tool you need.<br/>Built into one platform.
+            </h2>
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))', gap:20 }}>
+            {[
+              ['Performance Analytics', 'Plan vs. Actual Tracking', 'Deep auditing of variance between scheduled workouts and executed sessions, instantly flagging optimization opportunities.'],
+              ['Biometric Integration', 'Strava & Wearable Sync', 'Automated data streams for cardio metrics, running dynamics, and vital statistics—zero manual input required.'],
+              ['Smart Hydration', 'Adaptive Volume Tracking', 'Intelligent reminders structured around your workout intensity to maintain optimal hydration levels.'],
+              ['Real-Time Sync', 'Instant Communication', 'Encrypted messaging and data synchronization with coaches, backed by reliable delivery protocols.'],
+              ['Nutrition Intelligence', 'Natural Language Logging', 'Describe your goals naturally ("lose 5kg by September") while the AI maps nutritional requirements automatically.'],
+              ['Progressive Web App', 'True Offline Capability', 'Authentic PWA architecture that runs locally, functions completely offline, and syncs when you\'re back online.']
+            ].map(([label,title,desc],i) => (
+              <Reveal key={label} delay={i * 0.05} style={{ 
+                borderRadius:24, background:'rgba(255,255,255,0.015)',
+                border:'1px solid rgba(255,255,255,0.05)', padding:'24px 28px', transition:'all .2s ease-in-out'
+              }}>
+                <p style={{ fontSize:11, fontWeight:700, letterSpacing:'.2em', textTransform:'uppercase', color:SIG, marginBottom:12 }}>
+                  {label}
+                </p>
+                <p style={{ color:'#fff', fontWeight:600, fontSize:15, marginBottom:10 }}>{title}</p>
+                <p style={{ color:'rgba(255,255,255,0.4)', fontSize:13, lineHeight:1.65 }}>{desc}</p>
+              </Reveal>
+            ))}
+          </div>
+        </section>
+      </Reveal>
+
+      {/* ════ FINAL CTA ════ */}
+      <Reveal style={{ position:'relative', zIndex:10 }}>
+        <section style={{ padding:'80px 24px 120px', maxWidth:720, margin:'0 auto', textAlign:'center' }}>
+          <h2 style={{ fontSize:'clamp(32px,5vw,52px)', fontWeight:800, lineHeight:1.12, letterSpacing: '-0.025em', marginBottom:24 }}>
+            Ready to transform<br/>your training?
+          </h2>
+          <p style={{ color:'rgba(255,255,255,0.5)', fontSize:16, lineHeight:1.7, maxWidth:480, margin:'0 auto 40px' }}>
+            Join athletes already using Synapse to maximize their performance. Start building your personalized training plan in under 2 minutes.
+          </p>
+          <button onClick={()=>signIn()} style={{
+            padding:'18px 48px', borderRadius:14,
+            background:'#fff', color:'#000', fontSize:16, fontWeight:700,
+            border:'none', cursor:'pointer',
+            boxShadow:`0 0 40px ${SIG_DIM}, 0 12px 32px rgba(0,0,0,0.5)`,
+            transition:'all .2s ease-in-out',
+          }}
+            onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.opacity='.95';}}
+            onMouseLeave={e=>{e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.opacity='1';}}>
+            Get Started Free
+          </button>
+          <p style={{ color:'rgba(255,255,255,0.25)', fontSize:12, marginTop:20 }}>
+            No payment required • Full access included
+          </p>
+        </section>
+      </Reveal>
+
+      {/* ════ FOOTER ════ */}
+      <footer style={{ 
+        position:'relative', zIndex:10, 
+        borderTop:'1px solid rgba(255,255,255,0.05)', 
+        padding:'48px 24px', 
+        textAlign:'center' 
+      }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:12, marginBottom:24 }}>
+          <Logo size={28}/>
+          <span style={{ fontFamily:'var(--font-hanalei-fill),system-ui', fontSize:13, fontWeight:600, letterSpacing:'.05em', color:'rgba(255,255,255,0.6)' }}>
+            Synapse
+          </span>
+        </div>
+        <p style={{ color:'rgba(255,255,255,0.25)', fontSize:12 }}>
+          © {new Date().getFullYear()} Synapse Fit. Elevating athletic intelligence.
+        </p>
       </footer>
+
     </div>
   );
 }

@@ -43,3 +43,7 @@ next-env.d.ts
 /public/workbox-*.js.map
 /public/worker-*.js.map
 /public/fallback-*.js
+
+# Landing page media (too large for git - host on CDN)
+public/videos/
+public/screeenshots/
