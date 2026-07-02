@@ -2,16 +2,12 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { signIn } from 'next-auth/react';
-import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import MenAnatomy from '@/components/MenAnatomy';
 import WomenAnatomy from '@/components/WomenAnatomy';
 
 // Lazy load heavy components
 const ScreenshotCollage = dynamic(() => import('@/components/ScreenshotCollage'), {
-  loading: () => <div className="h-96 animate-pulse bg-gray-800/20 rounded-xl" />,
-});
-const CardioCarousel = dynamic(() => import('@/components/CardioCarousel'), {
   loading: () => <div className="h-96 animate-pulse bg-gray-800/20 rounded-xl" />,
 });
 
@@ -374,12 +370,12 @@ export default function LandingPage() {
         </p>
         <h1 className="hu" style={{ animationDelay:'.35s',
           fontFamily:'var(--font-hanalei-fill),system-ui',
-          fontSize:'clamp(44px,7.5vw,80px)', fontWeight:800,
-          lineHeight:1.05, letterSpacing:'-0.03em', maxWidth:840, marginTop:16,
+          fontSize:'clamp(44px,7.5vw,80px)', fontWeight:700,
+          lineHeight:1.05, letterSpacing:'0.03em', maxWidth:840, marginTop:16,
           background: 'linear-gradient(to bottom, #ffffff 60%, rgba(255,255,255,0.7))',
           WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
         }}>
-          Your training intelligence.<br/>Evolved.
+          Your AI Fitness<br/>Brain.
         </h1>
         <p className="hu" style={{ animationDelay:'.5s',
           color:'rgba(255,255,255,0.5)', fontSize:16, lineHeight:1.7,
@@ -601,6 +597,173 @@ export default function LandingPage() {
             </h2>
           </div>
           <ScreenshotCollage/>
+        </section>
+      </Reveal>
+
+      {/* ════ LIVE DEMO SHOWCASE ════ */}
+      <Reveal style={{ position:'relative', zIndex:10 }}>
+        <section style={{ padding:'120px 24px', maxWidth:1400, margin:'0 auto' }}>
+          <div style={{ textAlign:'center', marginBottom:80 }}>
+            <p style={{ fontSize:11, fontWeight:700, letterSpacing:'.25em', textTransform:'uppercase', color:SIG, marginBottom:16 }}>
+              Interactive Preview
+            </p>
+            <h2 style={{ fontSize:'clamp(28px,4vw,42px)', fontWeight:800, lineHeight:1.15, marginBottom:20, letterSpacing: '-0.02em' }}>
+              Experience it live.
+            </h2>
+            <p style={{ color:'rgba(255,255,255,0.45)', fontSize:15, lineHeight:1.7, maxWidth:520, margin:'0 auto' }}>
+              Real interfaces. Real interactions. See how Synapse adapts to every training phase.
+            </p>
+          </div>
+          
+          <div style={{ 
+            display:'grid', 
+            gridTemplateColumns:'repeat(auto-fit, minmax(300px, 1fr))', 
+            gap:48,
+            justifyItems:'center',
+            maxWidth:1200,
+            margin:'0 auto',
+          }}>
+            {/* Plan Detail Demo */}
+            <div style={{ 
+              position:'relative',
+              width:'100%',
+              maxWidth:360,
+              paddingTop:32,
+            }}>
+              <div style={{ 
+                position:'absolute', 
+                top:0, 
+                left:'50%',
+                transform:'translateX(-50%)',
+                zIndex:20,
+                background:SIG,
+                padding:'6px 20px',
+                borderRadius:'12px 12px 0 0',
+                boxShadow:`0 0 20px ${SIG_GLOW}`,
+              }}>
+                <p style={{ fontSize:10, fontWeight:700, letterSpacing:'.2em', textTransform:'uppercase', color:'#000' }}>
+                  Plan Details
+                </p>
+              </div>
+              <div style={{ 
+                width:'100%',
+                aspectRatio:'402/874',
+                borderRadius:'40px',
+                overflow:'hidden',
+                border:`1px solid rgba(255,255,255,0.12)`,
+                background:'#0c0c0c',
+                boxShadow:`0 32px 96px rgba(0,0,0,0.85), 0 0 64px ${SIG_GLOW}`,
+                position:'relative',
+              }}>
+                <iframe
+                  src="/demo/plan-detail"
+                  style={{ 
+                    width:'100%', 
+                    height:'100%', 
+                    border:'none',
+                  }}
+                  title="Plan Detail Demo"
+                  loading="lazy"
+                />
+                <div style={{ position:'absolute', bottom:'2%', left:'50%', transform:'translateX(-50%)',
+                  width:'28%', height:4, borderRadius:999, background:'rgba(255,255,255,0.25)' }}/>
+              </div>
+            </div>
+
+            {/* Progress Tracker Demo */}
+            <div style={{ 
+              position:'relative',
+              width:'100%',
+              maxWidth:360,
+              paddingTop:32,
+            }}>
+              <div style={{ 
+                position:'absolute', 
+                top:0, 
+                left:'50%',
+                transform:'translateX(-50%)',
+                zIndex:20,
+                background:SIG,
+                padding:'6px 20px',
+                borderRadius:'12px 12px 0 0',
+                boxShadow:`0 0 20px ${SIG_GLOW}`,
+              }}>
+                <p style={{ fontSize:10, fontWeight:700, letterSpacing:'.2em', textTransform:'uppercase', color:'#000' }}>
+                  Progress Tracking
+                </p>
+              </div>
+              <div style={{ 
+                width:'100%',
+                aspectRatio:'402/874',
+                borderRadius:'40px',
+                overflow:'hidden',
+                border:`1px solid rgba(255,255,255,0.12)`,
+                background:'#0c0c0c',
+                boxShadow:`0 32px 96px rgba(0,0,0,0.85), 0 0 64px ${SIG_GLOW}`,
+                position:'relative',
+              }}>
+                <iframe
+                  src="/demo/plan-progress"
+                  style={{ 
+                    width:'100%', 
+                    height:'100%', 
+                    border:'none',
+                  }}
+                  title="Progress Tracker Demo"
+                  loading="lazy"
+                />
+                <div style={{ position:'absolute', bottom:'2%', left:'50%', transform:'translateX(-50%)',
+                  width:'28%', height:4, borderRadius:999, background:'rgba(255,255,255,0.25)' }}/>
+              </div>
+            </div>
+
+            {/* Monitor Demo */}
+            <div style={{ 
+              position:'relative',
+              width:'100%',
+              maxWidth:360,
+              paddingTop:32,
+            }}>
+              <div style={{ 
+                position:'absolute', 
+                top:0, 
+                left:'50%',
+                transform:'translateX(-50%)',
+                zIndex:20,
+                background:SIG,
+                padding:'6px 20px',
+                borderRadius:'12px 12px 0 0',
+                boxShadow:`0 0 20px ${SIG_GLOW}`,
+              }}>
+                <p style={{ fontSize:10, fontWeight:700, letterSpacing:'.2em', textTransform:'uppercase', color:'#000' }}>
+                  Cardio Monitor
+                </p>
+              </div>
+              <div style={{ 
+                width:'100%',
+                aspectRatio:'402/874',
+                borderRadius:'40px',
+                overflow:'hidden',
+                border:`1px solid rgba(255,255,255,0.12)`,
+                background:'#0c0c0c',
+                boxShadow:`0 32px 96px rgba(0,0,0,0.85), 0 0 64px ${SIG_GLOW}`,
+                position:'relative',
+              }}>
+                <iframe
+                  src="/demo/monitor"
+                  style={{ 
+                    width:'100%', 
+                    height:'100%', 
+                    border:'none',
+                  }}
+                  title="Monitor Demo"
+                  loading="lazy"
+                />
+                <div style={{ position:'absolute', bottom:'2%', left:'50%', transform:'translateX(-50%)',
+                  width:'28%', height:4, borderRadius:999, background:'rgba(255,255,255,0.25)' }}/>
+              </div>
+            </div>
+          </div>
         </section>
       </Reveal>
 
