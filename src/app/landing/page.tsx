@@ -276,11 +276,19 @@ export default function LandingPage() {
       const scrolled = -top;
       const total    = height - window.innerHeight;
       const p        = Math.max(0, Math.min(0.9999, scrolled / total));
-      setActiveIdx(Math.min(FEATURES.length - 1, Math.floor(p * FEATURES.length)));
+      const newIdx = Math.min(FEATURES.length - 1, Math.floor(p * FEATURES.length));
+      
+      // Debug log
+      if (newIdx !== activeIdx) {
+        console.log('Carousel advancing:', { scrolled, total, p, newIdx });
+      }
+      
+      setActiveIdx(newIdx);
     };
+    onScroll(); // Call once on mount
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  }, [activeIdx]);
 
   return (
     <div style={{ minHeight:'100vh', background:'#0a0a0a', color:'#fff', overflowX:'clip', letterSpacing: '-0.01em' }}>
@@ -308,6 +316,20 @@ export default function LandingPage() {
           50%      { transform:translateY(6px); opacity:.5; }
         }
         .sc { animation:scrollCue 2s ease-in-out infinite; }
+
+        /* Responsive iframe scaling for features carousel */
+        @media (max-width: 1200px) {
+          :root { --iframe-scale: 0.8; }
+        }
+        @media (max-width: 900px) {
+          :root { --iframe-scale: 0.65; }
+        }
+        @media (max-width: 600px) {
+          :root { --iframe-scale: 0.5; }
+        }
+        @media (min-width: 1201px) {
+          :root { --iframe-scale: 0.795; }
+        }
 
         html { scroll-behavior:smooth; }
         ::-webkit-scrollbar { width:0; height:0; }
@@ -442,7 +464,7 @@ export default function LandingPage() {
           }}>
             {/* LEFT — Phone frame container */}
             <div style={{ display:'flex', justifyContent:'center', alignItems:'center' }}>
-              <div style={{ position:'relative', width:'min(45vw, 260px)' }}>
+              <div style={{ position:'relative', width:'min(45vw, 320px)' }}>
                 <div style={{ width:'100%', aspectRatio:'402/874', visibility:'hidden' }}/>
                 {FEATURES.map((f,i) => (
                   <div key={i} style={{
@@ -453,20 +475,31 @@ export default function LandingPage() {
                     pointerEvents: activeIdx===i ? 'auto' : 'none',
                     willChange: activeIdx===i || Math.abs(activeIdx-i)<=1 ? 'opacity, transform' : 'auto',
                   }}>
-                    <div style={{ width:'100%', height:'100%', aspectRatio:'402/874',
-                      borderRadius:'40px', background:'#0c0c0c',
-                      border:'1px solid rgba(255,255,255,0.12)', overflow:'hidden',
+                    <div style={{ 
+                      width:'100%', 
+                      height:'100%', 
+                      aspectRatio:'402/874',
+                      borderRadius:'40px', 
+                      background:'#0c0c0c',
+                      border:'1px solid rgba(255,255,255,0.12)', 
+                      overflow:'hidden',
                       boxShadow:`0 32px 96px rgba(0,0,0,0.85), 0 0 64px ${SIG_GLOW}`,
                       position:'relative',
                     }}>
                       <iframe 
                         src={f.demo} 
                         title={f.eyebrow} 
-                        style={{ width:'100%', height:'100%', border:'none' }}
+                        style={{ 
+                          width:'402px', 
+                          height:'874px', 
+                          border:'none',
+                          transform: 'scale(var(--iframe-scale, 1))',
+                          transformOrigin: 'top left',
+                        }}
                         loading="lazy"
                       />
                       <div style={{ position:'absolute', bottom:'2%', left:'50%', transform:'translateX(-50%)',
-                        width:'28%', height:4, borderRadius:999, background:'rgba(255,255,255,0.25)', pointerEvents:'none' }}/>
+                        width:'28%', height:4, borderRadius:999, background:'rgba(255,255,255,0.25)', pointerEvents:'none', zIndex:10 }}/>
                     </div>
                   </div>
                 ))}
