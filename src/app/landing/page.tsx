@@ -278,17 +278,12 @@ export default function LandingPage() {
       const p        = Math.max(0, Math.min(0.9999, scrolled / total));
       const newIdx = Math.min(FEATURES.length - 1, Math.floor(p * FEATURES.length));
       
-      // Debug log
-      if (newIdx !== activeIdx) {
-        console.log('Carousel advancing:', { scrolled, total, p, newIdx });
-      }
-      
       setActiveIdx(newIdx);
     };
     onScroll(); // Call once on mount
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
-  }, [activeIdx]);
+  }, []); // Empty dependency array - only set up once
 
   return (
     <div style={{ minHeight:'100vh', background:'#0a0a0a', color:'#fff', overflowX:'clip', letterSpacing: '-0.01em' }}>
