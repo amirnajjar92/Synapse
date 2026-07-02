@@ -161,12 +161,27 @@ export default function PlannerDemo() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isTyping, setIsTyping] = useState(true);
+  const [loopCount, setLoopCount] = useState(0);
 
   const DEMO_PROMPT = "Build muscle and strength with a 4-day upper/lower split";
 
+  const resetDemo = () => {
+    setLocalPromptText('');
+    setChatMessages([]);
+    setShowChat(false);
+    setPlanGenerated(false);
+    setIsGenerating(false);
+    setIsTyping(true);
+    setLoopCount((prev) => prev + 1);
+  };
+
   useEffect(() => {
     setMounted(true);
-    
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
     // Typing effect
     let currentIndex = 0;
     const typingInterval = setInterval(() => {
@@ -184,7 +199,18 @@ export default function PlannerDemo() {
     }, 50);
 
     return () => clearInterval(typingInterval);
-  }, []);
+  }, [mounted, loopCount]);
+
+  // Loop effect - restart after 5s delay when plan is generated
+  useEffect(() => {
+    if (planGenerated) {
+      const loopTimeout = setTimeout(() => {
+        resetDemo();
+      }, 5000); // 5 seconds delay
+
+      return () => clearTimeout(loopTimeout);
+    }
+  }, [planGenerated]);
 
   const handleGoClick = async () => {
     setShowChat(true);
@@ -253,30 +279,30 @@ export default function PlannerDemo() {
 
           {planGenerated ? (
             // === POST-GENERATION ===
-            <div className="flex-1 flex flex-col overflow-hidden pt-12 sm:pt-14 pb-3">
-              <div className="flex-[1.5] min-h-0 flex items-start justify-center overflow-hidden mb-[50px]">
+            <div className="flex-1 flex flex-col overflow-hidden pt-12 sm:pt-14 pb-20">
+              <div className="flex-1 min-h-0 flex items-start justify-center overflow-y-auto">
                 <DemoGoalsSection promptText={localPromptText} isGenerating={false} planGenerated={true} />
               </div>
               {showChat && (
-                <div className="flex-[1] min-h-0 overflow-hidden">
+                <div className="flex-shrink-0 h-[120px] overflow-hidden">
                   <ChatRow 
                     targetHeight="100%" 
                     chatMessages={chatMessages} 
                   />
                 </div>
               )}
-              <div className="flex-[1] min-h-0 flex items-center justify-center overflow-hidden">
+              <div className="flex-shrink-0 h-[100px] flex items-center justify-center">
                 <ViewPlanButton isLoading={false} onClick={handleViewPlanClick} />
               </div>
             </div>
           ) : isGenerating || showChat ? (
             // === DURING GENERATION ===
             <div className="flex-1 flex flex-col overflow-hidden pt-12 sm:pt-14 pb-3">
-              <div className="flex-[1.2] min-h-0 overflow-hidden">
+              <div className="flex-1 min-h-0 overflow-y-auto">
                 <DemoGoalsSection promptText={localPromptText} isGenerating={isGenerating} planGenerated={false} />
               </div>
               {showChat && (
-                <div className="flex-[1] min-h-0 overflow-hidden">
+                <div className="flex-shrink-0 h-[140px] overflow-hidden">
                   <ChatRow 
                     targetHeight="100%" 
                     chatMessages={chatMessages} 

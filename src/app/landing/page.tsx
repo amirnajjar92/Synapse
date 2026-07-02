@@ -6,9 +6,28 @@ import dynamic from 'next/dynamic';
 import MenAnatomy from '@/components/MenAnatomy';
 import WomenAnatomy from '@/components/WomenAnatomy';
 
-// Lazy load heavy components
+// Lazy load heavy components with optimized settings
 const ScreenshotCollage = dynamic(() => import('@/components/ScreenshotCollage'), {
-  loading: () => <div className="h-96 animate-pulse bg-gray-800/20 rounded-xl" />,
+  loading: () => (
+    <div style={{ 
+      height: '600px', 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      background: 'rgba(255,255,255,0.02)',
+      borderRadius: '24px',
+    }}>
+      <div style={{ 
+        width: '48px', 
+        height: '48px', 
+        border: '3px solid rgba(59,130,246,0.2)',
+        borderTopColor: '#3B82F6',
+        borderRadius: '50%',
+        animation: 'spin 1s linear infinite',
+      }} />
+    </div>
+  ),
+  ssr: false, // Don't render on server for better performance
 });
 
 /* ─────────────────────────────────────────────────────
@@ -19,6 +38,20 @@ const ScreenshotCollage = dynamic(() => import('@/components/ScreenshotCollage')
 const SIG       = '#3B82F6';
 const SIG_DIM   = 'rgba(59,130,246,0.13)';
 const SIG_GLOW  = 'rgba(59,130,246,0.07)';
+
+// Add global styles for animations
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  `;
+  if (!document.querySelector('style[data-landing-animations]')) {
+    style.setAttribute('data-landing-animations', 'true');
+    document.head.appendChild(style);
+  }
+}
 
 const LINE_PATH = 'M79.1641 129.338C118.023 132.495 183.508 129.72 251.087 110.632M425.483 6.53156L444.036 -9.14585M425.483 6.53156L430.43 -18.291M425.483 6.53156C378.731 60.9529 314.001 92.8613 251.087 110.632M210.27 344.903C210.27 245.612 231.297 123.886 251.087 110.632';
 const HORN_PATH = 'M0 284.8C48.6496 288.719 148.422 294.729 158.317 287.412C170.686 278.267 171.923 250.832 176.87 258.67C181.817 266.509 179.344 322.689 176.87 321.382C174.396 320.076 165.738 296.56 154.607 295.253C145.701 294.208 49.0618 288.72 0 284.8Z';
@@ -91,35 +124,106 @@ function SynapseField() {
   );
 }
 
-/* ── Scroll-reveal wrapper ── */
+/* ── Scroll-reveal wrapper with directional animations ── */
 function Reveal({
-  children, delay = 0, className = '', style: extraStyle = {},
+  children, delay = 0, className = '', style: extraStyle = {}, direction = 'up'
 }: {
-  children: React.ReactNode; delay?: number; className?: string; style?: React.CSSProperties;
+  children: React.ReactNode; delay?: number; className?: string; style?: React.CSSProperties; direction?: 'up' | 'down' | 'left' | 'right' | 'fade';
 }) {
   const ref  = useRef<HTMLDivElement>(null);
   const [vis, setVis] = useState(false);
+  
   useEffect(() => {
     const obs = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) setVis(true); },
-      { threshold: 0.01, rootMargin: '200px 0px 200px 0px' } // Increased margins for earlier loading
+      ([e]) => { if (e.isIntersecting) { setVis(true); obs.disconnect(); } },
+      { threshold: 0.05, rootMargin: '50px 0px 50px 0px' }
     );
     if (ref.current) obs.observe(ref.current);
     return () => obs.disconnect();
   }, []);
+
+  const getTransform = () => {
+    if (vis) return 'translate(0, 0) scale(1)';
+    switch(direction) {
+      case 'up': return 'translate(0, 40px) scale(0.97)';
+      case 'down': return 'translate(0, -40px) scale(0.97)';
+      case 'left': return 'translate(60px, 0) scale(0.95)';
+      case 'right': return 'translate(-60px, 0) scale(0.95)';
+      case 'fade': return 'translate(0, 0) scale(0.96)';
+      default: return 'translate(0, 40px) scale(0.97)';
+    }
+  };
+  
   return (
     <div ref={ref} className={className} style={{
       ...extraStyle,
       opacity: vis ? 1 : 0,
-      transform: vis ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.99)', // Reduced movement
-      filter: vis ? 'blur(0px)' : 'blur(2px)', // Less blur
-      transition: `opacity .5s cubic-bezier(.16,1,.3,1) ${delay}s,
-                   transform .5s cubic-bezier(.16,1,.3,1) ${delay}s,
-                   filter .4s ease ${delay}s`, // Faster transitions
+      transform: getTransform(),
+      filter: vis ? 'blur(0px)' : 'blur(3px)',
+      transition: `opacity .7s cubic-bezier(.16,1,.3,1) ${delay}s,
+                   transform .8s cubic-bezier(.16,1,.3,1) ${delay}s,
+                   filter .5s ease ${delay}s`,
       willChange: 'opacity, transform',
-      contentVisibility: 'auto', // CSS containment for better performance
     }}>
       {children}
+    </div>
+  );
+}
+
+/* ── Loading Spinner Component ── */
+function LoadingSpinner({ size = 48 }: { size?: number }) {
+  return (
+    <div style={{ 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      width: '100%',
+      height: '100%',
+      minHeight: '400px',
+    }}>
+      <div style={{ 
+        width: `${size}px`, 
+        height: `${size}px`, 
+        border: `3px solid rgba(59,130,246,0.15)`,
+        borderTopColor: '#3B82F6',
+        borderRadius: '50%',
+        animation: 'spin 1s linear infinite',
+      }} />
+    </div>
+  );
+}
+
+/* ── Iframe with Loading State ── */
+function IframeWithLoader({ src, title, aspectRatio = '402/874' }: { src: string; title: string; aspectRatio?: string }) {
+  const [loaded, setLoaded] = useState(false);
+  
+  return (
+    <div style={{ 
+      width:'100%', 
+      aspectRatio,
+      borderRadius:'40px', 
+      background:'#0c0c0c',
+      border:'1px solid rgba(255,255,255,0.12)', 
+      overflow:'hidden',
+      boxShadow:`0 32px 96px rgba(0,0,0,0.85), 0 0 64px ${SIG_GLOW}`,
+      position:'relative',
+    }}>
+      {!loaded && <LoadingSpinner />}
+      <iframe 
+        src={src} 
+        title={title} 
+        style={{ 
+          width:'100%', 
+          height:'100%', 
+          border:'none',
+          opacity: loaded ? 1 : 0,
+          transition: 'opacity 0.3s ease-in-out',
+        }}
+        loading="lazy"
+        onLoad={() => setLoaded(true)}
+      />
+      <div style={{ position:'absolute', bottom:'2%', left:'50%', transform:'translateX(-50%)',
+        width:'28%', height:4, borderRadius:999, background:'rgba(255,255,255,0.25)', pointerEvents:'none', zIndex:10 }}/>
     </div>
   );
 }
@@ -265,26 +369,286 @@ const MQ = [
   `${CDN}/v1782910005/events_yqad2i.jpg`,
 ];
 
-export default function LandingPage() {
-  const stickyRef = useRef<HTMLDivElement>(null);
-  const [activeIdx, setActiveIdx] = useState(0);
+/* ── Training Studio Demo ── */
+function TrainingStudioDemo() {
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => {
-      if (!stickyRef.current) return;
-      const { top, height } = stickyRef.current.getBoundingClientRect();
-      const scrolled = -top;
-      const total    = height - window.innerHeight;
-      const p        = Math.max(0, Math.min(0.9999, scrolled / total));
-      const newIdx = Math.min(FEATURES.length - 1, Math.floor(p * FEATURES.length));
-      
-      setActiveIdx(newIdx);
-    };
-    onScroll(); // Call once on mount
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []); // Empty dependency array - only set up once
+    const mq = window.matchMedia('(max-width: 768px)');
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
+  if (isMobile) {
+    return (
+      <Reveal direction="up" delay={0.1}>
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:32, marginTop:64, padding:'0 12px' }}>
+          {/* Coach */}
+          <Reveal direction="fade" delay={0.15}>
+            <div style={{ width:'100%', maxWidth:320 }}>
+              <div style={{ display:'flex', justifyContent:'center', marginBottom:8 }}>
+                <p style={{ fontFamily:'var(--font-hanalei-fill)', fontSize:28, color:SIG, margin:0,
+                  textShadow:`0 0 20px ${SIG_GLOW}` }}>
+                  Coach
+                </p>
+              </div>
+              <div style={{ position:'relative', width:'100%', paddingTop:28 }}>
+                <div style={{ position:'absolute', top:0, left:'50%', transform:'translateX(-50%)', zIndex:20,
+                  background:SIG, padding:'4px 16px', borderRadius:'10px 10px 0 0', boxShadow:`0 0 20px ${SIG_GLOW}` }}>
+                  <p style={{ fontSize:9, fontWeight:700, letterSpacing:'.2em', textTransform:'uppercase', color:'#000' }}>
+                    Training Studio
+                  </p>
+                </div>
+                <IframeWithLoader src="/demo/training-studio" title="Training Studio Demo" />
+              </div>
+              <p style={{ fontSize:10, color:'rgba(255,255,255,0.4)', textAlign:'center', marginTop:8 }}>
+                Build plans, manage clients, track progress
+              </p>
+            </div>
+          </Reveal>
+
+          {/* Arrow */}
+          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={SIG} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="18" cy="5" r="3" />
+              <circle cx="6" cy="12" r="3" />
+              <circle cx="18" cy="19" r="3" />
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+            </svg>
+            <svg width="16" height="24" viewBox="0 0 16 24" fill="none">
+              <line x1="8" y1="0" x2="8" y2="18" stroke={SIG} strokeWidth="1.5" strokeDasharray="3 3" opacity="0.5"/>
+              <polygon points="8,24 4,18 12,18" fill={SIG} opacity="0.8"/>
+            </svg>
+            <p style={{ fontSize:9, fontWeight:700, color:SIG, letterSpacing:'.15em', margin:0 }}>SHARE PLAN</p>
+            <p style={{ fontSize:9, color:'rgba(255,255,255,0.3)', textAlign:'center', margin:0 }}>
+              Coach creates plan → Shares with client
+            </p>
+          </div>
+
+          {/* Client */}
+          <Reveal direction="fade" delay={0.25}>
+            <div style={{ width:'100%', maxWidth:320 }}>
+              <div style={{ display:'flex', justifyContent:'center', marginBottom:8 }}>
+                <p style={{ fontFamily:'var(--font-hanalei-fill)', fontSize:28, color:SIG, margin:0,
+                  textShadow:`0 0 20px ${SIG_GLOW}` }}>
+                  Clients
+                </p>
+              </div>
+              <div style={{ position:'relative', width:'100%', paddingTop:28 }}>
+                <div style={{ position:'absolute', top:0, left:'50%', transform:'translateX(-50%)', zIndex:20,
+                  background:SIG, padding:'4px 16px', borderRadius:'10px 10px 0 0', boxShadow:`0 0 20px ${SIG_GLOW}` }}>
+                  <p style={{ fontSize:9, fontWeight:700, letterSpacing:'.2em', textTransform:'uppercase', color:'#000' }}>
+                    Workout Tracker
+                  </p>
+                </div>
+                <IframeWithLoader src="/demo/workout-tracker" title="Workout Tracker Demo" />
+              </div>
+              <p style={{ fontSize:10, color:'rgba(255,255,255,0.4)', textAlign:'center', marginTop:8 }}>
+                Follow workouts, chat with coach, log results
+              </p>
+            </div>
+          </Reveal>
+        </div>
+      </Reveal>
+    );
+  }
+
+  return (
+    <Reveal direction="up" delay={0.1}>
+      <div style={{ display:'flex', justifyContent:'center', marginTop:64 }}>
+        <div style={{ position:'relative', width:'100%', maxWidth:1100,
+          display:'grid', gridTemplateColumns:'1fr auto 1fr', gap:0, alignItems:'center', padding:'0 20px' }}>
+          <Reveal direction="left" delay={0.2}>
+            <div style={{ position:'relative', width:'100%', maxWidth:360, paddingTop:32, justifySelf:'end' }}>
+              <div style={{ position:'absolute', top:'50%', right:'calc(100% + 20px)', transform:'translateY(-50%)',
+                zIndex:10, display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
+                <p style={{ fontFamily:'var(--font-hanalei-fill)', fontSize:'clamp(32px, 4vw, 48px)', color:SIG,
+                  lineHeight:1, textShadow:`0 0 20px ${SIG_GLOW}, 0 8px 32px rgba(255,255,255,0.4), 0 12px 48px rgba(255,255,255,0.2)`,
+                  margin:0 }}>Coach</p>
+                <p style={{ fontSize:10, color:'rgba(255,255,255,0.45)', lineHeight:1.5, maxWidth:120, textAlign:'center', margin:0 }}>
+                  Build plans, manage clients, track progress</p>
+              </div>
+              <div style={{ position:'absolute', top:0, left:'50%', transform:'translateX(-50%)', zIndex:20,
+                background:SIG, padding:'6px 20px', borderRadius:'12px 12px 0 0', boxShadow:`0 0 20px ${SIG_GLOW}` }}>
+                <p style={{ fontSize:10, fontWeight:700, letterSpacing:'.2em', textTransform:'uppercase', color:'#000' }}>
+                  Training Studio</p>
+              </div>
+              <IframeWithLoader src="/demo/training-studio" title="Training Studio Demo" />
+            </div>
+          </Reveal>
+          <div style={{ position:'relative', width:120, height:120, display:'flex', flexDirection:'column',
+            alignItems:'center', justifyContent:'center', gap:8 }}>
+            <svg width="120" height="60" viewBox="0 0 120 60" style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%, -50%)' }}>
+              <line x1="10" y1="30" x2="110" y2="30" stroke={SIG} strokeWidth="2" strokeDasharray="4 4" opacity="0.5"/>
+              <polygon points="110,30 100,25 100,35" fill={SIG} opacity="0.8"/>
+            </svg>
+            <div style={{ position:'relative', zIndex:10, width:56, height:56, borderRadius:'50%',
+              background:SIG_DIM, border:`2px solid ${SIG}`, display:'flex', alignItems:'center', justifyContent:'center',
+              boxShadow:`0 0 32px ${SIG_GLOW}` }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={SIG} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+              </svg>
+            </div>
+            <div style={{ position:'absolute', top:-40, left:'50%', transform:'translateX(-50%)', whiteSpace:'nowrap', textAlign:'center' }}>
+              <p style={{ fontSize:11, fontWeight:700, color:SIG, letterSpacing:'.05em' }}>SHARE PLAN</p>
+            </div>
+            <div style={{ position:'absolute', bottom:-50, left:'50%', transform:'translateX(-50%)', whiteSpace:'nowrap', textAlign:'center', maxWidth:140 }}>
+              <p style={{ fontSize:10, color:'rgba(255,255,255,0.4)', lineHeight:1.4 }}>Coach creates plan<br/>→ Shares with client</p>
+            </div>
+          </div>
+          <Reveal direction="right" delay={0.3}>
+            <div style={{ position:'relative', width:'100%', maxWidth:360, paddingTop:32, justifySelf:'start' }}>
+              <div style={{ position:'absolute', top:'50%', left:'calc(100% + 20px)', transform:'translateY(-50%)',
+                zIndex:10, display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
+                <p style={{ fontFamily:'var(--font-hanalei-fill)', fontSize:'clamp(32px, 4vw, 48px)', color:SIG,
+                  lineHeight:1, textShadow:`0 0 20px ${SIG_GLOW}, 0 8px 32px rgba(255,255,255,0.4), 0 12px 48px rgba(255,255,255,0.2)`,
+                  margin:0 }}>Clients</p>
+                <p style={{ fontSize:10, color:'rgba(255,255,255,0.45)', lineHeight:1.5, maxWidth:120, textAlign:'center', margin:0 }}>
+                  Follow workouts, chat with coach, log results</p>
+              </div>
+              <div style={{ position:'absolute', top:0, left:'50%', transform:'translateX(-50%)', zIndex:20,
+                background:SIG, padding:'6px 20px', borderRadius:'12px 12px 0 0', boxShadow:`0 0 20px ${SIG_GLOW}` }}>
+                <p style={{ fontSize:10, fontWeight:700, letterSpacing:'.2em', textTransform:'uppercase', color:'#000' }}>
+                  Workout Tracker</p>
+              </div>
+              <IframeWithLoader src="/demo/workout-tracker" title="Workout Tracker Demo" />
+            </div>
+          </Reveal>
+        </div>
+      </div>
+    </Reveal>
+  );
+}
+
+/* ── Connected Intelligence Nodes ── */
+function NetworkNodes() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 640px)');
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
+  const nodes = [
+    { l:'Elite Coach', s:'Modifies & updates', a:false, i:'M16 7a4 4 0 11-8 0 4 4 0 018 0zm-4 7a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
+    { l:'Synapse AI',  s:'Calibrates data loops', a:true },
+    { l:'Athlete',    s:'Executes & tracks',   a:false, i:'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z' },
+  ];
+
+  if (isMobile) {
+    return (
+      <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:32, maxWidth:280, margin:'0 auto' }}>
+        {nodes.map((n, idx) => (
+          <div key={n.l} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:12 }}>
+            {idx === 1 ? (
+              <div style={{
+                width:80, height:80, borderRadius:'50%',
+                display:'flex', alignItems:'center', justifyContent:'center',
+                border:`1.5px solid ${SIG}`,
+                background:'radial-gradient(circle at 40% 35%, rgba(59,130,246,0.25), transparent 70%)',
+                boxShadow:`0 0 40px ${SIG_GLOW}, inset 0 0 24px ${SIG_GLOW}`,
+              }}>
+                <svg width={36} height={36} viewBox="0 0 450 405" fill="none">
+                  <path d="M79 129L158 287 M251 110L176 258" stroke={SIG} strokeWidth="4" strokeOpacity="0.5" strokeDasharray="5 5"/>
+                  <path d="M0 284L210 344L251 110" stroke={SIG} strokeWidth="3" strokeOpacity="0.35"/>
+                  <path d="M79 129C118 132 184 130 251 111M251 111C314 93 379 61 425 7M251 111C231 124 210 246 210 345" stroke={SIG} strokeWidth="4" fill="none" strokeLinecap="round"/>
+                  <circle cx="251" cy="111" r="7" fill={SIG}/>
+                  <circle cx="79" cy="129" r="6" fill={SIG}/>
+                </svg>
+              </div>
+            ) : (
+              <>
+                <div style={{
+                  width:48, height:48, borderRadius:'50%',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  border:'1.5px solid rgba(255,255,255,0.08)',
+                  background:'rgba(255,255,255,0.02)',
+                }}>
+                  <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d={n.i!}/>
+                  </svg>
+                </div>
+                <div style={{ width:1, height:16, background:'rgba(255,255,255,0.06)' }}/>
+              </>
+            )}
+            <div style={{ textAlign:'center' }}>
+              <p style={{ fontSize:13, fontWeight:600, color:'#fff', marginBottom:2 }}>{n.l}</p>
+              <p style={{ fontSize:11, color:'rgba(255,255,255,0.3)' }}>{n.s}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ position:'relative', maxWidth:520, margin:'0 auto', display:'flex', alignItems:'flex-start', justifyContent:'space-between' }}>
+      <svg style={{ position:'absolute', inset:0, width:'100%', height:'100%', zIndex:0, overflow:'visible' }} viewBox="0 0 520 120" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor={SIG} stopOpacity="0.1"/>
+            <stop offset="50%" stopColor={SIG} stopOpacity="0.5"/>
+            <stop offset="100%" stopColor={SIG} stopOpacity="0.1"/>
+          </linearGradient>
+          <filter id="pulseGlow"><feGaussianBlur stdDeviation="6" result="b"/><feComposite in="SourceGraphic" in2="b" operator="over"/></filter>
+          <marker id="arrowR" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <path d="M0 0L8 3L0 6Z" fill={SIG} opacity="0.35"/>
+          </marker>
+          <marker id="arrowL" markerWidth="8" markerHeight="6" refX="0" refY="3" orient="auto">
+            <path d="M8 0L0 3L8 6Z" fill={SIG} opacity="0.35"/>
+          </marker>
+        </defs>
+        <line x1="105" y1="40" x2="225" y2="40" stroke={SIG} strokeOpacity="0.2" strokeWidth="1.5" markerEnd="url(#arrowR)"/>
+        <line x1="225" y1="52" x2="105" y2="52" stroke={SIG} strokeOpacity="0.15" strokeWidth="1.5" markerEnd="url(#arrowL)"/>
+        <line x1="295" y1="40" x2="415" y2="40" stroke={SIG} strokeOpacity="0.2" strokeWidth="1.5" markerEnd="url(#arrowR)"/>
+        <line x1="415" y1="52" x2="295" y2="52" stroke={SIG} strokeOpacity="0.15" strokeWidth="1.5" markerEnd="url(#arrowL)"/>
+        <circle cx="260" cy="46" r="3" fill={SIG} filter="url(#pulseGlow)">
+          <animate attributeName="r" values="3;7;3" dur="2.5s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0.5;1;0.5" dur="2.5s" repeatCount="indefinite"/>
+        </circle>
+      </svg>
+      {nodes.map((n, idx) => (
+        <div key={n.l} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:14, position:'relative', zIndex:1, paddingTop: idx === 1 ? 0 : 18 }}>
+          <div style={{
+            width: idx === 1 ? 100 : 60, height: idx === 1 ? 100 : 60, borderRadius:'50%',
+            display:'flex', alignItems:'center', justifyContent:'center',
+            border:`1.5px solid ${n.a ? SIG : 'rgba(255,255,255,0.08)'}`,
+            background: n.a ? 'radial-gradient(circle at 40% 35%, rgba(59,130,246,0.25), transparent 70%)' : 'rgba(255,255,255,0.02)',
+            boxShadow: n.a ? `0 0 48px ${SIG_GLOW}, inset 0 0 32px ${SIG_GLOW}` : 'none',
+            transition:'all .3s ease',
+          }}>
+            {idx === 1 ? (
+              <svg width={48} height={48} viewBox="0 0 450 405" fill="none">
+                <path d="M79 129L158 287 M251 110L176 258" stroke={SIG} strokeWidth="4" strokeOpacity="0.5" strokeDasharray="5 5"/>
+                <path d="M0 284L210 344L251 110" stroke={SIG} strokeWidth="3" strokeOpacity="0.35"/>
+                <path d="M79 129C118 132 184 130 251 111M251 111C314 93 379 61 425 7M251 111C231 124 210 246 210 345" stroke={SIG} strokeWidth="4" fill="none" strokeLinecap="round"/>
+                <circle cx="251" cy="111" r="7" fill={SIG}/>
+                <circle cx="79" cy="129" r="6" fill={SIG}/>
+              </svg>
+            ) : (
+              <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d={n.i!}/>
+              </svg>
+            )}
+          </div>
+          <div style={{ textAlign:'center' }}>
+            <p style={{ fontSize:14, fontWeight:600, color:'#fff', marginBottom:4 }}>{n.l}</p>
+            <p style={{ fontSize:11, color:'rgba(255,255,255,0.3)', lineHeight:1.4, maxWidth:100 }}>{n.s}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function LandingPage() {
   return (
     <div style={{ minHeight:'100vh', background:'#0a0a0a', color:'#fff', overflowX:'clip', letterSpacing: '-0.01em' }}>
       
@@ -312,23 +676,13 @@ export default function LandingPage() {
         }
         .sc { animation:scrollCue 2s ease-in-out infinite; }
 
-        /* Responsive iframe scaling for features carousel */
-        @media (max-width: 1200px) {
-          :root { --iframe-scale: 0.8; }
-        }
-        @media (max-width: 900px) {
-          :root { --iframe-scale: 0.65; }
-        }
-        @media (max-width: 600px) {
-          :root { --iframe-scale: 0.5; }
-        }
-        @media (min-width: 1201px) {
-          :root { --iframe-scale: 0.795; }
-        }
-
         html { scroll-behavior:smooth; }
         ::-webkit-scrollbar { width:0; height:0; }
       `}</style>
+
+      {/* Preconnect to improve iframe loading performance */}
+      <link rel="preconnect" href="/demo" />
+      <link rel="dns-prefetch" href="/demo" />
 
       {/* Anatomy Background Layer */}
       <AnatomyBackground />
@@ -374,7 +728,7 @@ export default function LandingPage() {
       </nav>
 
       {/* ════ HERO ════ */}
-      <section style={{
+      <section data-section="hero" style={{
         position:'relative', zIndex:10,
         minHeight:'100vh',
         display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
@@ -438,134 +792,9 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ════ STICKY FEATURE SCROLL ════ */}
-      <section id="features" ref={stickyRef} style={{ position:'relative', zIndex:10, height:`${FEATURES.length * 100}vh` }}>
-        <div style={{
-          position:'sticky', top:0, height:'100vh',
-          display:'flex', alignItems:'center', justifyContent:'center',
-          padding:'0 40px',
-        }}>
-          <div style={{
-            position:'absolute', top:0, left:0, right:0, height:1,
-            background:`linear-gradient(90deg, transparent 0%, ${SIG} 40%, ${SIG} 60%, transparent 100%)`,
-            opacity:.2,
-          }}/>
-
-          <div style={{
-            width:'100%', maxWidth:1100,
-            display:'grid',
-            gridTemplateColumns:'repeat(auto-fit, minmax(320px, 1fr))',
-            gap:64, alignItems:'center',
-          }}>
-            {/* LEFT — Phone frame container */}
-            <div style={{ display:'flex', justifyContent:'center', alignItems:'center' }}>
-              <div style={{ position:'relative', width:'min(45vw, 320px)' }}>
-                <div style={{ width:'100%', aspectRatio:'402/874', visibility:'hidden' }}/>
-                {FEATURES.map((f,i) => (
-                  <div key={i} style={{
-                    position:'absolute', inset:0,
-                    opacity: activeIdx===i ? 1 : 0,
-                    transform: `scale(${activeIdx===i ? 1 : activeIdx>i ? .95 : .98}) translateY(${activeIdx===i ? 0 : activeIdx>i ? -24 : 24}px)`,
-                    transition:'opacity .4s cubic-bezier(.16,1,.3,1), transform .4s cubic-bezier(.16,1,.3,1)',
-                    pointerEvents: activeIdx===i ? 'auto' : 'none',
-                    willChange: activeIdx===i || Math.abs(activeIdx-i)<=1 ? 'opacity, transform' : 'auto',
-                  }}>
-                    <div style={{ 
-                      width:'100%', 
-                      height:'100%', 
-                      aspectRatio:'402/874',
-                      borderRadius:'40px', 
-                      background:'#0c0c0c',
-                      border:'1px solid rgba(255,255,255,0.12)', 
-                      overflow:'hidden',
-                      boxShadow:`0 32px 96px rgba(0,0,0,0.85), 0 0 64px ${SIG_GLOW}`,
-                      position:'relative',
-                    }}>
-                      <iframe 
-                        src={f.demo} 
-                        title={f.eyebrow} 
-                        style={{ 
-                          width:'402px', 
-                          height:'874px', 
-                          border:'none',
-                          transform: 'scale(var(--iframe-scale, 1))',
-                          transformOrigin: 'top left',
-                        }}
-                        loading="lazy"
-                      />
-                      <div style={{ position:'absolute', bottom:'2%', left:'50%', transform:'translateX(-50%)',
-                        width:'28%', height:4, borderRadius:999, background:'rgba(255,255,255,0.25)', pointerEvents:'none', zIndex:10 }}/>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* RIGHT — Text panels */}
-            <div>
-              <div style={{ display:'flex', gap:8, marginBottom:44 }}>
-                {FEATURES.map((_,i) => (
-                  <div key={i} style={{
-                    flex:1, height:3, borderRadius:999,
-                    background: i<=activeIdx ? SIG : 'rgba(255,255,255,0.1)',
-                    opacity: i===activeIdx ? 1 : i<activeIdx ? 0.6 : 0.2,
-                    transition:'all .4s ease',
-                  }}/>
-                ))}
-              </div>
-              <div style={{ position:'relative', height:280 }}>
-                {FEATURES.map((f,i) => (
-                  <div key={i} style={{
-                    position:'absolute', top:0, left:0, right:0,
-                    opacity: activeIdx===i ? 1 : 0,
-                    transform: `translateY(${activeIdx===i ? 0 : activeIdx>i ? -20 : 20}px)`,
-                    transition:'opacity .45s ease, transform .5s cubic-bezier(.16,1,.3,1)',
-                    pointerEvents: activeIdx===i ? 'auto' : 'none',
-                  }}>
-                    <p style={{ fontSize:11, fontWeight:700, letterSpacing:'.25em', textTransform:'uppercase', color:SIG, marginBottom:16 }}>
-                      {f.eyebrow}
-                    </p>
-                    <h2 style={{ fontSize:'clamp(28px,3.5vw,44px)', fontWeight:800, lineHeight:1.1, whiteSpace:'pre-line', marginBottom:20, letterSpacing: '-0.02em' }}>
-                      {f.title}
-                    </h2>
-                    <p style={{ color:'rgba(255,255,255,0.45)', fontSize:15, lineHeight:1.7, maxWidth:420 }}>
-                      {f.body}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ════ MARQUEE ════ */}
-      <Reveal>
-        <section style={{ position:'relative', zIndex:10, padding:'80px 0', overflow:'hidden' }}>
-          <div style={{ height:1, background:'linear-gradient(90deg,transparent,rgba(255,255,255,0.06) 30%,rgba(255,255,255,0.06) 70%,transparent)', marginBottom:24 }}/>
-          <div className="mq" style={{ display:'flex', gap:16, width:'max-content', marginBottom:16 }}>
-            {[...MQ,...MQ].map((src,i) => (
-              <div key={i} style={{ width:130, aspectRatio:'402/874', borderRadius:16, overflow:'hidden',
-                border:'1px solid rgba(255,255,255,0.08)', flexShrink:0, background:'#111' }}>
-                <img src={src} alt="" loading="lazy" style={{ width:'100%', height:'100%', objectFit:'cover', opacity:.65 }}/>
-              </div>
-            ))}
-          </div>
-          <div className="mq2" style={{ display:'flex', gap:16, width:'max-content' }}>
-            {[...[...MQ].reverse(),...[...MQ].reverse()].map((src,i) => (
-              <div key={i} style={{ width:130, aspectRatio:'402/874', borderRadius:16, overflow:'hidden',
-                border:'1px solid rgba(255,255,255,0.08)', flexShrink:0, background:'#111' }}>
-                <img src={src} alt="" loading="lazy" style={{ width:'100%', height:'100%', objectFit:'cover', opacity:.5 }}/>
-              </div>
-            ))}
-          </div>
-          <div style={{ height:1, background:'linear-gradient(90px,transparent,rgba(255,255,255,0.06) 30%,rgba(255,255,255,0.06) 70%,transparent)', marginTop:24 }}/>
-        </section>
-      </Reveal>
-
       {/* ════ STATS ════ */}
-      <Reveal style={{ position:'relative', zIndex:10 }}>
-        <section style={{ padding:'120px 24px', maxWidth:1000, margin:'0 auto' }}>
+      <section data-section="stats" style={{ position:'relative', zIndex:10, padding:'80px 24px 60px', maxWidth:1000, margin:'0 auto' }}>
+        <Reveal direction="fade">
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))', gap:48, textAlign:'center' }}>
             {[
               { n:'< 2', u:'min', l:'From first prompt to personalized training plan.' },
@@ -573,70 +802,72 @@ export default function LandingPage() {
               { n:'100', u:'%',   l:'Offline-first architecture. Train anywhere.' },
               { n:'∞',   u:'',    l:'Real-time adaptive program adjustments.' },
             ].map((s,i) => (
-              <div key={i}>
-                <div style={{ fontSize:'clamp(40px,5vw,60px)', fontWeight:800, letterSpacing:'-0.03em', lineHeight:1 }}>
-                  {s.n}<span style={{ color:SIG, fontSize:'.65em' }}>{s.u}</span>
+              <Reveal key={i} delay={i * 0.1} direction="up">
+                <div>
+                  <div style={{ fontSize:'clamp(40px,5vw,60px)', fontWeight:800, letterSpacing:'-0.03em', lineHeight:1 }}>
+                    {s.n}<span style={{ color:SIG, fontSize:'.65em' }}>{s.u}</span>
+                  </div>
+                  <p style={{ color:'rgba(255,255,255,0.4)', fontSize:13, marginTop:12, lineHeight:1.6, maxWidth:200, margin:'12px auto 0' }}>{s.l}</p>
                 </div>
-                <p style={{ color:'rgba(255,255,255,0.4)', fontSize:13, marginTop:12, lineHeight:1.6, maxWidth:200, margin:'12px auto 0' }}>{s.l}</p>
-              </div>
+              </Reveal>
             ))}
           </div>
-        </section>
-      </Reveal>
+        </Reveal>
+      </section>
 
-      {/* ════ LIVE INTERFACE PREVIEW ════ */}
-      <Reveal style={{ position:'relative', zIndex:10 }}>
-        <section style={{ padding:'120px 24px', maxWidth:1100, margin:'0 auto' }}>
-          <div style={{ textAlign:'center', marginBottom:56 }}>
+      {/* ════ FEATURES SECTION ════ */}
+      <section id="features" style={{ position:'relative', zIndex:10, padding:'80px 24px', maxWidth:1200, margin:'0 auto' }}>
+        <Reveal direction="up">
+          <div style={{ textAlign:'center', marginBottom:80 }}>
             <p style={{ fontSize:11, fontWeight:700, letterSpacing:'.25em', textTransform:'uppercase', color:SIG, marginBottom:16 }}>
-              Live Interface
-            </p>
-            <h2 style={{ fontSize:'clamp(28px,4vw,42px)', fontWeight:800, lineHeight:1.15, marginBottom:20, letterSpacing: '-0.02em' }}>
-              Watch your training flow<br/>from plan to execution.
-            </h2>
-            <p style={{ color:'rgba(255,255,255,0.45)', fontSize:15, lineHeight:1.7, maxWidth:520, margin:'0 auto' }}>
-              Seamless transitions across every workout phase. Your fitness intelligence operating in real-time, continuously adapting to your performance data.
-            </p>
-          </div>
-          <div style={{ display:'flex', justifyContent:'center' }}>
-            <div style={{ width:'min(45vw, 260px)', aspectRatio:'402/874', borderRadius:'40px',
-              background:'#0a0a0a', border:'1px solid rgba(255,255,255,0.12)', overflow:'hidden',
-              position:'relative', flexShrink:0,
-              boxShadow:`0 40px 120px rgba(0,0,0,0.9), 0 0 80px ${SIG_GLOW}`,
-            }}>
-              <video
-                src="https://res.cloudinary.com/vj5y67l9/video/upload/q_auto,f_auto/v1782910263/compressed-Sequence_02_1_kge9tm.mp4"
-                autoPlay muted loop playsInline
-                preload="metadata"
-                style={{ width:'100%', height:'100%', display:'block', objectFit:'cover' }}
-              />
-              <div style={{ position:'absolute', inset:0, pointerEvents:'none',
-                background:'linear-gradient(to bottom, rgba(10,10,10,.4) 0%, transparent 15%, transparent 85%, rgba(10,10,10,.4) 100%)' }}/>
-              <div style={{ position:'absolute', bottom:'2%', left:'50%', transform:'translateX(-50%)',
-                width:'28%', height:4, borderRadius:999, background:'rgba(255,255,255,0.25)' }}/>
-            </div>
-          </div>
-        </section>
-      </Reveal>
-
-      {/* ════ SCREENSHOT COLLAGE ════ */}
-      <Reveal style={{ position:'relative', zIndex:10 }}>
-        <section style={{ padding:'100px 24px', maxWidth:1100, margin:'0 auto' }}>
-          <div style={{ textAlign:'center', marginBottom:56 }}>
-            <p style={{ fontSize:11, fontWeight:700, letterSpacing:'.25em', textTransform:'uppercase', color:SIG, marginBottom:16 }}>
-              The Full Experience
+              Core Features
             </p>
             <h2 style={{ fontSize:'clamp(28px,4vw,42px)', fontWeight:800, lineHeight:1.15, letterSpacing: '-0.02em' }}>
-              Every interface layer, unified.
+              Everything you need to excel.
             </h2>
           </div>
-          <ScreenshotCollage/>
-        </section>
-      </Reveal>
+        </Reveal>
+
+        {/* Feature cards - vertical layout */}
+        <div style={{ display:'flex', flexDirection:'column', gap:80 }}>
+          {FEATURES.map((f, i) => (
+            <div key={i} style={{
+              display:'grid',
+              gridTemplateColumns:'repeat(auto-fit, minmax(320px, 1fr))',
+              gap:64,
+              alignItems:'center',
+            }}>
+              {/* Phone frame */}
+              <Reveal direction={i % 2 === 0 ? 'left' : 'right'} delay={0.1}>
+                <div style={{ display:'flex', justifyContent:'center', alignItems:'center', order: i % 2 === 0 ? 1 : 2 }}>
+                  <div style={{ width:'min(100%, 360px)' }}>
+                    <IframeWithLoader src={f.demo} title={f.eyebrow} />
+                  </div>
+                </div>
+              </Reveal>
+
+              {/* Text content */}
+              <Reveal direction={i % 2 === 0 ? 'right' : 'left'} delay={0.2}>
+                <div style={{ order: i % 2 === 0 ? 2 : 1 }}>
+                  <p style={{ fontSize:11, fontWeight:700, letterSpacing:'.25em', textTransform:'uppercase', color:SIG, marginBottom:16 }}>
+                    {f.eyebrow}
+                  </p>
+                  <h2 style={{ fontSize:'clamp(28px,3.5vw,44px)', fontWeight:800, lineHeight:1.1, whiteSpace:'pre-line', marginBottom:20, letterSpacing: '-0.02em' }}>
+                    {f.title}
+                  </h2>
+                  <p style={{ color:'rgba(255,255,255,0.45)', fontSize:15, lineHeight:1.7, maxWidth:420 }}>
+                    {f.body}
+                  </p>
+                </div>
+              </Reveal>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* ════ LIVE DEMO SHOWCASE ════ */}
-      <Reveal style={{ position:'relative', zIndex:10 }}>
-        <section style={{ padding:'120px 24px', maxWidth:1400, margin:'0 auto' }}>
+      <section data-section="live-demo" style={{ position:'relative', zIndex:10, padding:'120px 24px', maxWidth:1200, margin:'0 auto' }}>
+        <Reveal direction="up">
           <div style={{ textAlign:'center', marginBottom:80 }}>
             <p style={{ fontSize:11, fontWeight:700, letterSpacing:'.25em', textTransform:'uppercase', color:SIG, marginBottom:16 }}>
               Interactive Preview
@@ -648,473 +879,299 @@ export default function LandingPage() {
               Real interfaces. Real interactions. See how Synapse adapts to every training phase.
             </p>
           </div>
+        </Reveal>
           
-          <div style={{ 
-            display:'grid', 
-            gridTemplateColumns:'repeat(auto-fit, minmax(300px, 1fr))', 
-            gap:48,
-            justifyItems:'center',
-            maxWidth:1200,
-            margin:'0 auto 64px',
-          }}>
-            {/* Plan Detail Demo */}
-            <div style={{ 
-              position:'relative',
-              width:'100%',
-              maxWidth:360,
-              paddingTop:32,
+          <div style={{ display:'flex', flexDirection:'column', gap:80 }}>
+            {/* Plan Detail Demo - Left */}
+            <div style={{
+              display:'grid',
+              gridTemplateColumns:'repeat(auto-fit, minmax(320px, 1fr))',
+              gap:64,
+              alignItems:'center',
             }}>
-              <div style={{ 
-                position:'absolute', 
-                top:0, 
-                left:'50%',
-                transform:'translateX(-50%)',
-                zIndex:20,
-                background:SIG,
-                padding:'6px 20px',
-                borderRadius:'12px 12px 0 0',
-                boxShadow:`0 0 20px ${SIG_GLOW}`,
-              }}>
-                <p style={{ fontSize:10, fontWeight:700, letterSpacing:'.2em', textTransform:'uppercase', color:'#000' }}>
-                  Plan Details
-                </p>
-              </div>
-              <div style={{ 
-                width:'100%',
-                aspectRatio:'402/874',
-                borderRadius:'40px',
-                overflow:'hidden',
-                border:`1px solid rgba(255,255,255,0.12)`,
-                background:'#0c0c0c',
-                boxShadow:`0 32px 96px rgba(0,0,0,0.85), 0 0 64px ${SIG_GLOW}`,
-                position:'relative',
-              }}>
-                <iframe
-                  src="/demo/plan-detail"
-                  style={{ 
-                    width:'100%', 
-                    height:'100%', 
-                    border:'none',
-                  }}
-                  title="Plan Detail Demo"
-                  loading="lazy"
-                />
-                <div style={{ position:'absolute', bottom:'2%', left:'50%', transform:'translateX(-50%)',
-                  width:'28%', height:4, borderRadius:999, background:'rgba(255,255,255,0.25)' }}/>
-              </div>
+              <Reveal direction="left" delay={0.1}>
+                <div style={{ display:'flex', justifyContent:'center', alignItems:'center', order: 1 }}>
+                  <div style={{ 
+                    position:'relative',
+                    width:'100%',
+                    maxWidth:360,
+                    paddingTop:32,
+                  }}>
+                    <div style={{ 
+                      position:'absolute', 
+                      top:0, 
+                      left:'50%',
+                      transform:'translateX(-50%)',
+                      zIndex:20,
+                      background:SIG,
+                      padding:'6px 20px',
+                      borderRadius:'12px 12px 0 0',
+                      boxShadow:`0 0 20px ${SIG_GLOW}`,
+                    }}>
+                      <p style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', color:'#000' }}>
+                        Plan Details
+                      </p>
+                    </div>
+                    <IframeWithLoader src="/demo/plan-detail" title="Plan Detail Demo" />
+                  </div>
+                </div>
+              </Reveal>
+
+              <Reveal direction="right" delay={0.2}>
+                <div style={{ order: 2 }}>
+                  <p style={{ fontSize:11, fontWeight:700, letterSpacing:'.25em', textTransform:'uppercase', color:SIG, marginBottom:16 }}>
+                    Plan Details
+                  </p>
+                  <h3 style={{ fontSize:'clamp(24px,3.5vw,36px)', fontWeight:800, lineHeight:1.1, marginBottom:16, letterSpacing: '-0.02em' }}>
+                    Build your perfect plan
+                  </h3>
+                  <p style={{ color:'rgba(255,255,255,0.45)', fontSize:15, lineHeight:1.7, maxWidth:420 }}>
+                    View detailed workout plans with exercise breakdown, sets, reps, and rest periods. Everything you need at a glance.
+                  </p>
+                </div>
+              </Reveal>
             </div>
 
-            {/* Progress Tracker Demo */}
-            <div style={{ 
-              position:'relative',
-              width:'100%',
-              maxWidth:360,
-              paddingTop:32,
+            {/* Progress Tracker Demo - Right */}
+            <div style={{
+              display:'grid',
+              gridTemplateColumns:'repeat(auto-fit, minmax(320px, 1fr))',
+              gap:64,
+              alignItems:'center',
             }}>
-              <div style={{ 
-                position:'absolute', 
-                top:0, 
-                left:'50%',
-                transform:'translateX(-50%)',
-                zIndex:20,
-                background:SIG,
-                padding:'6px 20px',
-                borderRadius:'12px 12px 0 0',
-                boxShadow:`0 0 20px ${SIG_GLOW}`,
-              }}>
-                <p style={{ fontSize:10, fontWeight:700, letterSpacing:'.2em', textTransform:'uppercase', color:'#000' }}>
-                  Progress Tracking
-                </p>
-              </div>
-              <div style={{ 
-                width:'100%',
-                aspectRatio:'402/874',
-                borderRadius:'40px',
-                overflow:'hidden',
-                border:`1px solid rgba(255,255,255,0.12)`,
-                background:'#0c0c0c',
-                boxShadow:`0 32px 96px rgba(0,0,0,0.85), 0 0 64px ${SIG_GLOW}`,
-                position:'relative',
-              }}>
-                <iframe
-                  src="/demo/plan-progress"
-                  style={{ 
-                    width:'100%', 
-                    height:'100%', 
-                    border:'none',
-                  }}
-                  title="Progress Tracker Demo"
-                  loading="lazy"
-                />
-                <div style={{ position:'absolute', bottom:'2%', left:'50%', transform:'translateX(-50%)',
-                  width:'28%', height:4, borderRadius:999, background:'rgba(255,255,255,0.25)' }}/>
-              </div>
+              <Reveal direction="left" delay={0.1}>
+                <div style={{ order: 2 }}>
+                  <p style={{ fontSize:11, fontWeight:700, letterSpacing:'.25em', textTransform:'uppercase', color:SIG, marginBottom:16 }}>
+                    Progress Tracking
+                  </p>
+                  <h3 style={{ fontSize:'clamp(24px,3.5vw,36px)', fontWeight:800, lineHeight:1.1, marginBottom:16, letterSpacing: '-0.02em' }}>
+                    Track your journey
+                  </h3>
+                  <p style={{ color:'rgba(255,255,255,0.45)', fontSize:15, lineHeight:1.7, maxWidth:420 }}>
+                    Monitor your progress over time with detailed analytics and visualizations. See your improvement clearly.
+                  </p>
+                </div>
+              </Reveal>
+
+              <Reveal direction="right" delay={0.2}>
+                <div style={{ display:'flex', justifyContent:'center', alignItems:'center', order: 1 }}>
+                  <div style={{ 
+                    position:'relative',
+                    width:'100%',
+                    maxWidth:360,
+                    paddingTop:32,
+                  }}>
+                    <div style={{ 
+                      position:'absolute', 
+                      top:0, 
+                      left:'50%',
+                      transform:'translateX(-50%)',
+                      zIndex:20,
+                      background:SIG,
+                      padding:'6px 20px',
+                      borderRadius:'12px 12px 0 0',
+                      boxShadow:`0 0 20px ${SIG_GLOW}`,
+                    }}>
+                      <p style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', color:'#000' }}>
+                        Progress Tracking
+                      </p>
+                    </div>
+                    <IframeWithLoader src="/demo/plan-progress" title="Progress Tracker Demo" />
+                  </div>
+                </div>
+              </Reveal>
             </div>
 
-            {/* Monitor Demo */}
-            <div style={{ 
-              position:'relative',
-              width:'100%',
-              maxWidth:360,
-              paddingTop:32,
+            {/* Monitor Demo - Left */}
+            <div style={{
+              display:'grid',
+              gridTemplateColumns:'repeat(auto-fit, minmax(320px, 1fr))',
+              gap:64,
+              alignItems:'center',
             }}>
-              <div style={{ 
-                position:'absolute', 
-                top:0, 
-                left:'50%',
-                transform:'translateX(-50%)',
-                zIndex:20,
-                background:SIG,
-                padding:'6px 20px',
-                borderRadius:'12px 12px 0 0',
-                boxShadow:`0 0 20px ${SIG_GLOW}`,
-              }}>
-                <p style={{ fontSize:10, fontWeight:700, letterSpacing:'.2em', textTransform:'uppercase', color:'#000' }}>
-                  Cardio Monitor
-                </p>
-              </div>
-              <div style={{ 
-                width:'100%',
-                aspectRatio:'402/874',
-                borderRadius:'40px',
-                overflow:'hidden',
-                border:`1px solid rgba(255,255,255,0.12)`,
-                background:'#0c0c0c',
-                boxShadow:`0 32px 96px rgba(0,0,0,0.85), 0 0 64px ${SIG_GLOW}`,
-                position:'relative',
-              }}>
-                <iframe
-                  src="/demo/monitor"
-                  style={{ 
-                    width:'100%', 
-                    height:'100%', 
-                    border:'none',
-                  }}
-                  title="Monitor Demo"
-                  loading="lazy"
-                />
-                <div style={{ position:'absolute', bottom:'2%', left:'50%', transform:'translateX(-50%)',
-                  width:'28%', height:4, borderRadius:999, background:'rgba(255,255,255,0.25)' }}/>
-              </div>
+              <Reveal direction="left" delay={0.1}>
+                <div style={{ display:'flex', justifyContent:'center', alignItems:'center', order: 1 }}>
+                  <div style={{ 
+                    position:'relative',
+                    width:'100%',
+                    maxWidth:360,
+                    paddingTop:32,
+                  }}>
+                    <div style={{ 
+                      position:'absolute', 
+                      top:0, 
+                      left:'50%',
+                      transform:'translateX(-50%)',
+                      zIndex:20,
+                      background:SIG,
+                      padding:'6px 20px',
+                      borderRadius:'12px 12px 0 0',
+                      boxShadow:`0 0 20px ${SIG_GLOW}`,
+                    }}>
+                      <p style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', color:'#000' }}>
+                        Cardio Monitor
+                      </p>
+                    </div>
+                    <IframeWithLoader src="/demo/monitor" title="Monitor Demo" />
+                  </div>
+                </div>
+              </Reveal>
+
+              <Reveal direction="right" delay={0.2}>
+                <div style={{ order: 2 }}>
+                  <p style={{ fontSize:11, fontWeight:700, letterSpacing:'.25em', textTransform:'uppercase', color:SIG, marginBottom:16 }}>
+                    Cardio Monitor
+                  </p>
+                  <h3 style={{ fontSize:'clamp(24px,3.5vw,36px)', fontWeight:800, lineHeight:1.1, marginBottom:16, letterSpacing: '-0.02em' }}>
+                    Cardio insights
+                  </h3>
+                  <p style={{ color:'rgba(255,255,255,0.45)', fontSize:15, lineHeight:1.7, maxWidth:420 }}>
+                    Track cardio sessions, heart rate zones, and performance metrics. Optimize your cardiovascular training.
+                  </p>
+                </div>
+              </Reveal>
+            </div>
+
+            {/* Water Tracker Demo - Right */}
+            <div style={{
+              display:'grid',
+              gridTemplateColumns:'repeat(auto-fit, minmax(320px, 1fr))',
+              gap:64,
+              alignItems:'center',
+            }}>
+              <Reveal direction="left" delay={0.1}>
+                <div style={{ order: 2 }}>
+                  <p style={{ fontSize:11, fontWeight:700, letterSpacing:'.25em', textTransform:'uppercase', color:SIG, marginBottom:16 }}>
+                    Water Tracker
+                  </p>
+                  <h3 style={{ fontSize:'clamp(24px,3.5vw,36px)', fontWeight:800, lineHeight:1.1, marginBottom:16, letterSpacing: '-0.02em' }}>
+                    Stay hydrated
+                  </h3>
+                  <p style={{ color:'rgba(255,255,255,0.45)', fontSize:15, lineHeight:1.7, maxWidth:420 }}>
+                    Monitor daily water intake with smart reminders. Maintain optimal hydration for peak performance.
+                  </p>
+                </div>
+              </Reveal>
+
+              <Reveal direction="right" delay={0.2}>
+                <div style={{ display:'flex', justifyContent:'center', alignItems:'center', order: 1 }}>
+                  <div style={{ 
+                    position:'relative',
+                    width:'100%',
+                    maxWidth:360,
+                    paddingTop:32,
+                  }}>
+                    <div style={{ 
+                      position:'absolute', 
+                      top:0, 
+                      left:'50%',
+                      transform:'translateX(-50%)',
+                      zIndex:20,
+                      background:SIG,
+                      padding:'6px 20px',
+                      borderRadius:'12px 12px 0 0',
+                      boxShadow:`0 0 20px ${SIG_GLOW}`,
+                    }}>
+                      <p style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', color:'#000' }}>
+                        Water Tracker
+                      </p>
+                    </div>
+                    <IframeWithLoader src="/demo/water-tracker" title="Water Tracker Demo" />
+                  </div>
+                </div>
+              </Reveal>
+            </div>
+
+            {/* Entertain Demo - Left */}
+            <div style={{
+              display:'grid',
+              gridTemplateColumns:'repeat(auto-fit, minmax(320px, 1fr))',
+              gap:64,
+              alignItems:'center',
+            }}>
+              <Reveal direction="left" delay={0.1}>
+                <div style={{ display:'flex', justifyContent:'center', alignItems:'center', order: 1 }}>
+                  <div style={{ 
+                    position:'relative',
+                    width:'100%',
+                    maxWidth:360,
+                    paddingTop:32,
+                  }}>
+                    <div style={{ 
+                      position:'absolute', 
+                      top:0, 
+                      left:'50%',
+                      transform:'translateX(-50%)',
+                      zIndex:20,
+                      background:SIG,
+                      padding:'6px 20px',
+                      borderRadius:'12px 12px 0 0',
+                      boxShadow:`0 0 20px ${SIG_GLOW}`,
+                    }}>
+                      <p style={{ fontSize:10, fontWeight:700, textTransform:'uppercase', color:'#000' }}>
+                        Entertain
+                      </p>
+                    </div>
+                    <IframeWithLoader src="/demo/entertain" title="Entertain Demo" />
+                  </div>
+                </div>
+              </Reveal>
+
+              <Reveal direction="right" delay={0.2}>
+                <div style={{ order: 2 }}>
+                  <p style={{ fontSize:11, fontWeight:700, letterSpacing:'.25em', textTransform:'uppercase', color:SIG, marginBottom:16 }}>
+                    Entertain
+                  </p>
+                  <h3 style={{ fontSize:'clamp(24px,3.5vw,36px)', fontWeight:800, lineHeight:1.1, marginBottom:16, letterSpacing: '-0.02em' }}>
+                    Discover & engage
+                  </h3>
+                  <p style={{ color:'rgba(255,255,255,0.45)', fontSize:15, lineHeight:1.7, maxWidth:420 }}>
+                    Explore fitness news, events, workout videos, and curated playlists. Stay motivated with fresh content tailored to your goals.
+                  </p>
+                </div>
+              </Reveal>
             </div>
           </div>
 
           {/* Training Studio Demo - Full Width */}
-          <div style={{ 
-            display:'flex',
-            justifyContent:'center',
-            marginTop:80,
-          }}>
-            {/* Container for both demos side by side with arrow */}
-            <div style={{ 
-              position:'relative',
-              width:'100%',
-              maxWidth:1100,
-              display:'grid',
-              gridTemplateColumns:'1fr auto 1fr',
-              gap:0,
-              alignItems:'center',
-              padding:'0 20px',
-            }}>
-              {/* Training Studio Demo - Left */}
-              <div style={{ 
-                position:'relative',
-                width:'100%',
-                maxWidth:360,
-                paddingTop:32,
-                justifySelf:'end',
-              }}>
-                {/* Coach Label */}
-                <div style={{ 
-                  position:'absolute', 
-                  top:'50%', 
-                  right:'calc(100% + 20px)',
-                  transform:'translateY(-50%)',
-                  zIndex:10,
-                  display:'flex',
-                  flexDirection:'column',
-                  alignItems:'center',
-                  gap:8,
-                }}>
-                  <p style={{ 
-                    fontFamily:'var(--font-hanalei-fill)', 
-                    fontSize:'clamp(32px, 4vw, 48px)', 
-                    color:SIG,
-                    lineHeight:1,
-                    textShadow:`0 0 20px ${SIG_GLOW}, 0 8px 32px rgba(255,255,255,0.4), 0 12px 48px rgba(255,255,255,0.2)`,
-                    margin:0,
-                  }}>
-                    Coach
-                  </p>
-                  <p style={{ 
-                    fontSize:10, 
-                    color:'rgba(255,255,255,0.45)', 
-                    lineHeight:1.5,
-                    maxWidth:120,
-                    textAlign:'center',
-                    margin:0,
-                  }}>
-                    Build plans, manage clients, track progress
-                  </p>
-                </div>
+          <TrainingStudioDemo/>
+      </section>
 
-                <div style={{ 
-                  position:'absolute', 
-                  top:0, 
-                  left:'50%',
-                  transform:'translateX(-50%)',
-                  zIndex:20,
-                  background:SIG,
-                  padding:'6px 20px',
-                  borderRadius:'12px 12px 0 0',
-                  boxShadow:`0 0 20px ${SIG_GLOW}`,
-                }}>
-                  <p style={{ fontSize:10, fontWeight:700, letterSpacing:'.2em', textTransform:'uppercase', color:'#000' }}>
-                    Training Studio
-                  </p>
-                </div>
-                <div style={{ 
-                  width:'100%',
-                  aspectRatio:'402/874',
-                  borderRadius:'40px',
-                  overflow:'hidden',
-                  border:`1px solid rgba(255,255,255,0.12)`,
-                  background:'#0c0c0c',
-                  boxShadow:`0 32px 96px rgba(0,0,0,0.85), 0 0 64px ${SIG_GLOW}`,
-                  position:'relative',
-                }}>
-                  <iframe
-                    src="/demo/training-studio"
-                    style={{ 
-                      width:'100%', 
-                      height:'100%', 
-                      border:'none',
-                    }}
-                    title="Training Studio Demo"
-                    loading="lazy"
-                  />
-                  <div style={{ position:'absolute', bottom:'2%', left:'50%', transform:'translateX(-50%)',
-                    width:'28%', height:4, borderRadius:999, background:'rgba(255,255,255,0.25)' }}/>
-                </div>
-              </div>
-
-              {/* Arrow with Share Icon - Center */}
-              <div style={{ 
-                position:'relative',
-                width:120,
-                height:120,
-                display:'flex',
-                flexDirection:'column',
-                alignItems:'center',
-                justifyContent:'center',
-                gap:8,
-              }}>
-                {/* Arrow SVG */}
-                <svg 
-                  width="120" 
-                  height="60" 
-                  viewBox="0 0 120 60" 
-                  style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%, -50%)' }}
-                >
-                  {/* Dashed line */}
-                  <line 
-                    x1="10" 
-                    y1="30" 
-                    x2="110" 
-                    y2="30" 
-                    stroke={SIG} 
-                    strokeWidth="2" 
-                    strokeDasharray="4 4"
-                    opacity="0.5"
-                  />
-                  {/* Arrow head */}
-                  <polygon 
-                    points="110,30 100,25 100,35" 
-                    fill={SIG}
-                    opacity="0.8"
-                  />
-                </svg>
-
-                {/* Share Icon */}
-                <div style={{ 
-                  position:'relative',
-                  zIndex:10,
-                  width:56,
-                  height:56,
-                  borderRadius:'50%',
-                  background:SIG_DIM,
-                  border:`2px solid ${SIG}`,
-                  display:'flex',
-                  alignItems:'center',
-                  justifyContent:'center',
-                  boxShadow:`0 0 32px ${SIG_GLOW}`,
-                }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={SIG} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="18" cy="5" r="3" />
-                    <circle cx="6" cy="12" r="3" />
-                    <circle cx="18" cy="19" r="3" />
-                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-                  </svg>
-                </div>
-
-                {/* Text labels */}
-                <div style={{ 
-                  position:'absolute',
-                  top:-40,
-                  left:'50%',
-                  transform:'translateX(-50%)',
-                  whiteSpace:'nowrap',
-                  textAlign:'center',
-                }}>
-                  <p style={{ fontSize:11, fontWeight:700, color:SIG, letterSpacing:'.05em' }}>
-                    SHARE PLAN
-                  </p>
-                </div>
-                <div style={{ 
-                  position:'absolute',
-                  bottom:-50,
-                  left:'50%',
-                  transform:'translateX(-50%)',
-                  whiteSpace:'nowrap',
-                  textAlign:'center',
-                  maxWidth:140,
-                }}>
-                  <p style={{ fontSize:10, color:'rgba(255,255,255,0.4)', lineHeight:1.4 }}>
-                    Coach creates plan<br/>→ Shares with client
-                  </p>
-                </div>
-              </div>
-
-              {/* Workout Tracker Demo - Right */}
-              <div style={{ 
-                position:'relative',
-                width:'100%',
-                maxWidth:360,
-                paddingTop:32,
-                justifySelf:'start',
-              }}>
-                {/* Clients Label */}
-                <div style={{ 
-                  position:'absolute', 
-                  top:'50%', 
-                  left:'calc(100% + 20px)',
-                  transform:'translateY(-50%)',
-                  zIndex:10,
-                  display:'flex',
-                  flexDirection:'column',
-                  alignItems:'center',
-                  gap:8,
-                }}>
-                  <p style={{ 
-                    fontFamily:'var(--font-hanalei-fill)', 
-                    fontSize:'clamp(32px, 4vw, 48px)', 
-                    color:SIG,
-                    lineHeight:1,
-                    textShadow:`0 0 20px ${SIG_GLOW}, 0 8px 32px rgba(255,255,255,0.4), 0 12px 48px rgba(255,255,255,0.2)`,
-                    margin:0,
-                  }}>
-                    Clients
-                  </p>
-                  <p style={{ 
-                    fontSize:10, 
-                    color:'rgba(255,255,255,0.45)', 
-                    lineHeight:1.5,
-                    maxWidth:120,
-                    textAlign:'center',
-                    margin:0,
-                  }}>
-                    Follow workouts, chat with coach, log results
-                  </p>
-                </div>
-
-                <div style={{ 
-                  position:'absolute', 
-                  top:0, 
-                  left:'50%',
-                  transform:'translateX(-50%)',
-                  zIndex:20,
-                  background:SIG,
-                  padding:'6px 20px',
-                  borderRadius:'12px 12px 0 0',
-                  boxShadow:`0 0 20px ${SIG_GLOW}`,
-                }}>
-                  <p style={{ fontSize:10, fontWeight:700, letterSpacing:'.2em', textTransform:'uppercase', color:'#000' }}>
-                    Workout Tracker
-                  </p>
-                </div>
-                <div style={{ 
-                  width:'100%',
-                  aspectRatio:'402/874',
-                  borderRadius:'40px',
-                  overflow:'hidden',
-                  border:`1px solid rgba(255,255,255,0.12)`,
-                  background:'#0c0c0c',
-                  boxShadow:`0 32px 96px rgba(0,0,0,0.85), 0 0 64px ${SIG_GLOW}`,
-                  position:'relative',
-                }}>
-                  <iframe
-                    src="/demo/workout-tracker"
-                    style={{ 
-                      width:'100%', 
-                      height:'100%', 
-                      border:'none',
-                    }}
-                    title="Workout Tracker Demo"
-                    loading="lazy"
-                  />
-                  <div style={{ position:'absolute', bottom:'2%', left:'50%', transform:'translateX(-50%)',
-                    width:'28%', height:4, borderRadius:999, background:'rgba(255,255,255,0.25)' }}/>
-                </div>
-              </div>
-            </div>
+      {/* ════ SCREENSHOT COLLAGE ════ */}
+      <section data-section="screenshots" style={{ position:'relative', zIndex:10, padding:'60px 24px', maxWidth:1100, margin:'0 auto' }}>
+        <Reveal direction="up">
+          <div style={{ textAlign:'center', marginBottom:56 }}>
+            <p style={{ fontSize:11, fontWeight:700, letterSpacing:'.25em', textTransform:'uppercase', color:SIG, marginBottom:16 }}>
+              The Full Experience
+            </p>
+            <h2 style={{ fontSize:'clamp(28px,4vw,42px)', fontWeight:800, lineHeight:1.15, letterSpacing: '-0.02em' }}>
+              Every interface layer, unified.
+            </h2>
           </div>
-        </section>
-      </Reveal>
+        </Reveal>
+        <Reveal direction="fade" delay={0.2}>
+          <ScreenshotCollage/>
+        </Reveal>
+      </section>
 
       {/* ════ NETWORK ════ */}
-      <Reveal style={{ position:'relative', zIndex:10 }}>
-        <section style={{ padding:'120px 24px 140px', maxWidth:720, margin:'0 auto', textAlign:'center' }}>
+      <section data-section="network" style={{ position:'relative', zIndex:10, padding:'80px 24px 100px', maxWidth:800, margin:'0 auto', textAlign:'center', overflow:'visible' }}>
+        <Reveal direction="up">
           <p style={{ fontSize:11, fontWeight:700, letterSpacing:'.25em', textTransform:'uppercase', color:SIG, marginBottom:16 }}>
             Connected Intelligence
           </p>
-          <h2 style={{ fontSize:'clamp(28px,4vw,42px)', fontWeight:800, lineHeight:1.15, marginBottom:72, letterSpacing: '-0.02em' }}>
+          <h2 style={{ fontSize:'clamp(28px,4vw,42px)', fontWeight:800, lineHeight:1.15, marginBottom:80, letterSpacing: '-0.02em' }}>
             One intelligent system.<br/>Three synchronized nodes.
           </h2>
-          <div style={{ position:'relative', maxWidth:440, margin:'0 auto', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-            <svg style={{ position:'absolute', inset:0, width:'100%', height:'100%' }} viewBox="0 0 380 80" preserveAspectRatio="none">
-              <line x1="50" y1="40" x2="190" y2="40" stroke={SIG} strokeOpacity=".25" strokeWidth="1" strokeDasharray="5 6"/>
-              <line x1="190" y1="40" x2="330" y2="40" stroke={SIG} strokeOpacity=".25" strokeWidth="1" strokeDasharray="5 6"/>
-              <circle cx="120" cy="40" r="4" fill={SIG} opacity=".8" className="snp"/>
-              <circle cx="260" cy="40" r="4" fill={SIG} opacity=".8" className="snp" style={{ animationDelay:'.8s' }}/>
-            </svg>
-            {[
-              { l:'Elite Coach', s:'Modifies & updates', a:false },
-              { l:'Synapse AI',  s:'Calibrates data loops', a:true  },
-              { l:'Athlete',    s:'Executes & tracks',   a:false },
-            ].map(n => (
-              <div key={n.l} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:12, position:'relative', zIndex:1 }}>
-                <div style={{
-                  width:68, height:68, borderRadius:'50%',
-                  display:'flex', alignItems:'center', justifyContent:'center',
-                  border:`1px solid ${n.a ? SIG+'aa' : 'rgba(255,255,255,0.12)'}`,
-                  background: n.a ? SIG_DIM : 'rgba(255,255,255,0.04)',
-                  boxShadow: n.a ? `0 0 32px ${SIG_GLOW}` : 'none',
-                }}>
-                  <div style={{ width:12, height:12, borderRadius:'50%', background: n.a ? SIG : 'rgba(255,255,255,0.3)' }}
-                    className={n.a ? 'snp' : ''}/>
-                </div>
-                <p style={{ fontSize:13, fontWeight:600 }}>{n.l}</p>
-                <p style={{ fontSize:11, color:'rgba(255,255,255,0.35)' }}>{n.s}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-      </Reveal>
+        </Reveal>
+        <Reveal direction="fade" delay={0.2}>
+          <NetworkNodes/>
+        </Reveal>
+      </section>
 
       {/* ════ FEATURE GRID ════ */}
-      <Reveal style={{ position:'relative', zIndex:10 }}>
-        <section style={{ padding:'120px 24px 160px', maxWidth:1100, margin:'0 auto' }}>
+      <section data-section="feature-grid" style={{ position:'relative', zIndex:10, padding:'80px 24px 120px', maxWidth:1100, margin:'0 auto' }}>
+        <Reveal direction="up">
           <div style={{ textAlign:'center', marginBottom:64 }}>
             <p style={{ fontSize:11, fontWeight:700, letterSpacing:'.25em', textTransform:'uppercase', color:SIG, marginBottom:16 }}>
               Complete Ecosystem
@@ -1123,6 +1180,7 @@ export default function LandingPage() {
               Every tool you need.<br/>Built into one platform.
             </h2>
           </div>
+        </Reveal>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))', gap:20 }}>
             {[
               ['Performance Analytics', 'Plan vs. Actual Tracking', 'Deep auditing of variance between scheduled workouts and executed sessions, instantly flagging optimization opportunities.'],
@@ -1145,11 +1203,140 @@ export default function LandingPage() {
             ))}
           </div>
         </section>
-      </Reveal>
+
+      {/* ════ STRAVA SYNC ════ */}
+      <section data-section="strava" style={{ position:'relative', zIndex:10, padding:'60px 24px', maxWidth:900, margin:'0 auto' }}>
+        <Reveal direction="up">
+          <div style={{
+            borderRadius:20,
+            background:'linear-gradient(135deg, rgba(252,76,2,0.06) 0%, rgba(252,76,2,0.01) 100%)',
+            border:'1px solid rgba(252,76,2,0.1)',
+            padding:'clamp(20px,3vw,40px)',
+            display:'flex',
+            alignItems:'center',
+            gap:'clamp(16px,3vw,32px)',
+            flexWrap:'wrap',
+            justifyContent:'center',
+          }}>
+            <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4, flexShrink:0 }}>
+              <svg width="20" height="28" viewBox="0 0 42 59" fill="#fc5200">
+                <path d="M29.2706 43.5683L24.1528 33.4854H16.5283L29.2706 58.4349L41.9999 33.4854H34.3754L29.2706 43.5683Z"/>
+                <path d="M17.1812 19.9467L24.1529 33.4852H34.3755L17.1812 0L0 33.4852H10.2356L17.1812 19.9467Z"/>
+              </svg>
+              <svg width="60" height="12" viewBox="0 0 485 95" fill="#fc5200">
+                <path fillRule="evenodd" clipRule="evenodd" d="M258.505 90.4524L258.502 90.4484H284.108L299.838 58.8214L315.567 90.4484H346.682L299.835 -0.000610352L255.366 85.8686L238.292 60.9384C248.834 55.8544 255.405 47.0494 255.405 34.4014V34.1524C255.405 25.2254 252.678 18.7764 247.469 13.5674C241.392 7.49139 231.596 3.64739 216.22 3.64739H173.809V90.4524H202.827V65.6504H209.027L225.396 90.4524H258.505ZM437.447 -0.000610352L390.606 90.4484H421.721L437.45 58.8214L453.18 90.4484H484.294L437.447 -0.000610352ZM368.669 94.0074L415.51 3.55839H384.396L368.666 35.1854L352.936 3.55839H321.822L368.669 94.0074ZM215.352 44.9414C222.295 44.9414 226.512 41.8414 226.512 36.5094V36.2604C226.512 30.6804 222.171 27.9524 215.476 27.9524H202.827V44.9414H215.352ZM111.753 28.2004H86.2089V3.64739H166.316V28.2004H140.772V90.4524H111.753V28.2004ZM15.5019 58.9544L-9.15527e-05 77.4314C11.0369 87.1054 26.9099 92.0644 44.5179 92.0644C67.8319 92.0644 82.8369 80.9034 82.8369 62.6734V62.4264C82.8369 44.9414 67.9559 38.4924 45.7589 34.4014C36.5819 32.6634 34.2259 31.1774 34.2259 28.8204V28.5724C34.2259 26.4644 36.2109 24.9764 40.5499 24.9764C48.6099 24.9764 58.4079 27.5804 66.5909 33.5324L80.7289 13.9404C70.6839 6.00339 58.2839 2.03439 41.5429 2.03439C17.6079 2.03439 4.71191 14.8084 4.71191 31.3004V31.5494C4.71191 49.9014 21.8259 55.4834 41.2939 59.4494C50.5949 61.3104 53.3219 62.6734 53.3219 65.1544V65.4034C53.3219 67.7584 51.0909 69.1214 45.8819 69.1214C35.7139 69.1214 24.9259 66.1474 15.5019 58.9544Z"/>
+              </svg>
+            </div>
+            <div style={{ flex:1 }}>
+              <p style={{ fontSize:13, fontWeight:600, color:'#fff', marginBottom:4 }}>
+                Sync your smart watch data via Strava
+              </p>
+              <p style={{ fontSize:12, color:'rgba(255,255,255,0.4)', lineHeight:1.6 }}>
+                Link Strava to auto-import runs, rides, swims, and gym sessions from your Apple Watch, Garmin, Fitbit — heart rate, pace, distance, and calories mapped to your training timeline.
+              </p>
+            </div>
+            <div style={{
+              display:'flex', alignItems:'center', gap:8, flexShrink:0,
+              padding:'8px 16px', borderRadius:10,
+              background:'rgba(252,76,2,0.08)',
+              border:'1px solid rgba(252,76,2,0.12)',
+            }}>
+              <div style={{ width:6, height:6, borderRadius:'50%', background:'#22c55e', boxShadow:'0 0 6px rgba(34,197,94,0.5)' }}/>
+              <span style={{ fontSize:11, color:'rgba(255,255,255,0.5)' }}>
+                Connected
+              </span>
+            </div>
+          </div>
+        </Reveal>
+      </section>
+
+      {/* ════ PWA INSTALL ════ */}
+      <section data-section="pwa-install" style={{ position:'relative', zIndex:10, padding:'60px 24px', maxWidth:900, margin:'0 auto' }}>
+        <Reveal direction="up">
+          <div style={{ textAlign:'center', marginBottom:24 }}>
+            <span style={{
+              display:'inline-block',
+              padding:'6px 20px',
+              borderRadius:999,
+              background:SIG_DIM,
+              border:`1px solid ${SIG}44`,
+              fontFamily:'var(--font-hanalei-fill),system-ui',
+              fontSize:'clamp(18px,2.5vw,26px)',
+              color:'#fff',
+              letterSpacing:'.08em',
+            }}>
+              PWA Easy Install
+            </span>
+          </div>
+          <div style={{
+            borderRadius:20,
+            background:'rgba(255,255,255,0.015)',
+            border:'1px solid rgba(255,255,255,0.06)',
+            padding:'clamp(24px,3vw,40px)',
+            display:'flex',
+            alignItems:'center',
+            gap:'clamp(16px,3vw,32px)',
+            flexWrap:'wrap',
+            justifyContent:'center',
+            textAlign:'center',
+          }}>
+            <div style={{
+              width:56,
+              height:56,
+              borderRadius:16,
+              background:SIG_DIM,
+              border:`1px solid ${SIG}33`,
+              display:'flex',
+              alignItems:'center',
+              justifyContent:'center',
+              flexShrink:0,
+            }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={SIG} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2v8l4-4m-4 4l-4-4"/>
+                <rect x="4" y="14" width="16" height="8" rx="2"/>
+                <line x1="12" y1="14" x2="12" y2="18"/>
+              </svg>
+            </div>
+            <div style={{ flex:1, minWidth:200 }}>
+              <p style={{ fontSize:14, fontWeight:600, color:'#fff', marginBottom:4 }}>
+                Install on any device — works offline
+              </p>
+              <p style={{ fontSize:12, color:'rgba(255,255,255,0.4)', lineHeight:1.6, maxWidth:500, margin:'0 auto' }}>
+                Add Synapse to your home screen for a native-like experience. Fully functional offline — train anywhere, sync when connected.
+              </p>
+            </div>
+            <div style={{ display:'flex', gap:12, flexShrink:0, flexWrap:'wrap', justifyContent:'center', alignItems:'center' }}>
+              {['iOS Safari', 'Android', 'Desktop'].map(label => (
+                <div key={label} style={{
+                  padding:'4px 12px', borderRadius:6,
+                  background: SIG_DIM,
+                  border:`1px solid ${SIG}44`,
+                  fontFamily:'var(--font-hanalei-fill),system-ui',
+                  fontSize:12, color:SIG,
+                  letterSpacing:'.05em',
+                }}>
+                  {label}
+                </div>
+              ))}
+              <button style={{
+                padding:'8px 20px', borderRadius:8,
+                background:SIG, color:'#000', fontSize:12, fontWeight:700,
+                border:'none', cursor:'pointer',
+                fontFamily:'system-ui,sans-serif',
+                transition:'all .2s ease-in-out',
+                boxShadow:`0 0 24px ${SIG_DIM}`,
+              }}
+                onMouseEnter={e=>{e.currentTarget.style.opacity='.85'; e.currentTarget.style.transform='translateY(-1px)'}}
+                onMouseLeave={e=>{e.currentTarget.style.opacity='1'; e.currentTarget.style.transform='translateY(0)'}}>
+                Install Now
+              </button>
+            </div>
+          </div>
+        </Reveal>
+      </section>
 
       {/* ════ FINAL CTA ════ */}
-      <Reveal style={{ position:'relative', zIndex:10 }}>
-        <section style={{ padding:'80px 24px 120px', maxWidth:720, margin:'0 auto', textAlign:'center' }}>
+      <section data-section="cta" style={{ position:'relative', zIndex:10, padding:'80px 24px 120px', maxWidth:720, margin:'0 auto', textAlign:'center' }}>
           <h2 style={{ fontSize:'clamp(32px,5vw,52px)', fontWeight:800, lineHeight:1.12, letterSpacing: '-0.025em', marginBottom:24 }}>
             Ready to transform<br/>your training?
           </h2>
@@ -1171,7 +1358,6 @@ export default function LandingPage() {
             No payment required • Full access included
           </p>
         </section>
-      </Reveal>
 
       {/* ════ FOOTER ════ */}
       <footer style={{ 
