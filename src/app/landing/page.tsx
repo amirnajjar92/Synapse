@@ -234,25 +234,25 @@ const FEATURES = [
     eyebrow: 'Hyper-Personalization', 
     title: 'An adaptive engine\nbuilt around your biomechanics.', 
     body: 'Tell Synapse your targets. It constructs a highly precise, week-by-week protocol optimized for your available equipment, recovery rate, and performance data. Then, it dynamically evolves as you unlock raw strength.', 
-    img: optimizeImage(`${CDN}/v1782909959/planner-page_o8qws3.jpg`, 800)
+    demo: '/demo/planner'
   },
   { 
     eyebrow: 'Precision Tracking', 
     title: 'Zero friction.\nMaximum data velocity.', 
     body: 'Engage with real-time muscle workload visualization, instant HD form references, and contextual coaching notes precisely when you unrack. The gym floor, fully digitized.', 
-    img: optimizeImage(`${CDN}/v1782909972/workout-tracker-1_pqlbtp.png`, 800)
+    demo: '/demo/workout-tracker'
   },
   { 
     eyebrow: 'Predictive Analytics', 
     title: 'Isolate what delivers results.\nEliminate guessing.', 
     body: 'Bridge the gap between target metrics and actual execution. Discover training biases, capture volume imbalances, and contextualize your systemic data loops—hydration, mass, and cardio trends—in a unified pane of glass.', 
-    img: optimizeImage(`${CDN}/v1782909997/sidebar-activeplans_mdzu8i.jpg`, 800)
+    demo: '/demo/monitor'
   },
   { 
     eyebrow: 'Human Co-Pilot', 
     title: 'Your elite human coach,\nembedded natively.', 
     body: 'Empower your coach to modify parameters mid-session, push real-time programmatic revisions, and audit telemetry as you perform reps. High-touch elite coaching meets high-scale intelligence.', 
-    img: optimizeImage(`${CDN}/v1782909941/ai-planner-generating_rj2naj.jpg`, 800)
+    demo: '/demo/training-studio'
   },
 ];
 
@@ -457,10 +457,16 @@ export default function LandingPage() {
                       borderRadius:'40px', background:'#0c0c0c',
                       border:'1px solid rgba(255,255,255,0.12)', overflow:'hidden',
                       boxShadow:`0 32px 96px rgba(0,0,0,0.85), 0 0 64px ${SIG_GLOW}`,
+                      position:'relative',
                     }}>
-                      <img src={f.img} alt={f.eyebrow} style={{ width:'100%', height:'100%', objectFit:'cover', objectPosition:'top center' }}/>
+                      <iframe 
+                        src={f.demo} 
+                        title={f.eyebrow} 
+                        style={{ width:'100%', height:'100%', border:'none' }}
+                        loading="lazy"
+                      />
                       <div style={{ position:'absolute', bottom:'2%', left:'50%', transform:'translateX(-50%)',
-                        width:'28%', height:4, borderRadius:999, background:'rgba(255,255,255,0.25)' }}/>
+                        width:'28%', height:4, borderRadius:999, background:'rgba(255,255,255,0.25)', pointerEvents:'none' }}/>
                     </div>
                   </div>
                 ))}
