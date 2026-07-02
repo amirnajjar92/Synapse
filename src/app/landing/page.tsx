@@ -621,7 +621,7 @@ export default function LandingPage() {
             gap:48,
             justifyItems:'center',
             maxWidth:1200,
-            margin:'0 auto',
+            margin:'0 auto 64px',
           }}>
             {/* Plan Detail Demo */}
             <div style={{ 
@@ -761,6 +761,277 @@ export default function LandingPage() {
                 />
                 <div style={{ position:'absolute', bottom:'2%', left:'50%', transform:'translateX(-50%)',
                   width:'28%', height:4, borderRadius:999, background:'rgba(255,255,255,0.25)' }}/>
+              </div>
+            </div>
+          </div>
+
+          {/* Training Studio Demo - Full Width */}
+          <div style={{ 
+            display:'flex',
+            justifyContent:'center',
+            marginTop:80,
+          }}>
+            {/* Container for both demos side by side with arrow */}
+            <div style={{ 
+              position:'relative',
+              width:'100%',
+              maxWidth:1100,
+              display:'grid',
+              gridTemplateColumns:'1fr auto 1fr',
+              gap:0,
+              alignItems:'center',
+              padding:'0 20px',
+            }}>
+              {/* Training Studio Demo - Left */}
+              <div style={{ 
+                position:'relative',
+                width:'100%',
+                maxWidth:360,
+                paddingTop:32,
+                justifySelf:'end',
+              }}>
+                {/* Coach Label */}
+                <div style={{ 
+                  position:'absolute', 
+                  top:'50%', 
+                  right:'calc(100% + 20px)',
+                  transform:'translateY(-50%)',
+                  zIndex:10,
+                  display:'flex',
+                  flexDirection:'column',
+                  alignItems:'center',
+                  gap:8,
+                }}>
+                  <p style={{ 
+                    fontFamily:'var(--font-hanalei-fill)', 
+                    fontSize:'clamp(32px, 4vw, 48px)', 
+                    color:SIG,
+                    lineHeight:1,
+                    textShadow:`0 0 20px ${SIG_GLOW}, 0 8px 32px rgba(255,255,255,0.4), 0 12px 48px rgba(255,255,255,0.2)`,
+                    margin:0,
+                  }}>
+                    Coach
+                  </p>
+                  <p style={{ 
+                    fontSize:10, 
+                    color:'rgba(255,255,255,0.45)', 
+                    lineHeight:1.5,
+                    maxWidth:120,
+                    textAlign:'center',
+                    margin:0,
+                  }}>
+                    Build plans, manage clients, track progress
+                  </p>
+                </div>
+
+                <div style={{ 
+                  position:'absolute', 
+                  top:0, 
+                  left:'50%',
+                  transform:'translateX(-50%)',
+                  zIndex:20,
+                  background:SIG,
+                  padding:'6px 20px',
+                  borderRadius:'12px 12px 0 0',
+                  boxShadow:`0 0 20px ${SIG_GLOW}`,
+                }}>
+                  <p style={{ fontSize:10, fontWeight:700, letterSpacing:'.2em', textTransform:'uppercase', color:'#000' }}>
+                    Training Studio
+                  </p>
+                </div>
+                <div style={{ 
+                  width:'100%',
+                  aspectRatio:'402/874',
+                  borderRadius:'40px',
+                  overflow:'hidden',
+                  border:`1px solid rgba(255,255,255,0.12)`,
+                  background:'#0c0c0c',
+                  boxShadow:`0 32px 96px rgba(0,0,0,0.85), 0 0 64px ${SIG_GLOW}`,
+                  position:'relative',
+                }}>
+                  <iframe
+                    src="/demo/training-studio"
+                    style={{ 
+                      width:'100%', 
+                      height:'100%', 
+                      border:'none',
+                    }}
+                    title="Training Studio Demo"
+                    loading="lazy"
+                  />
+                  <div style={{ position:'absolute', bottom:'2%', left:'50%', transform:'translateX(-50%)',
+                    width:'28%', height:4, borderRadius:999, background:'rgba(255,255,255,0.25)' }}/>
+                </div>
+              </div>
+
+              {/* Arrow with Share Icon - Center */}
+              <div style={{ 
+                position:'relative',
+                width:120,
+                height:120,
+                display:'flex',
+                flexDirection:'column',
+                alignItems:'center',
+                justifyContent:'center',
+                gap:8,
+              }}>
+                {/* Arrow SVG */}
+                <svg 
+                  width="120" 
+                  height="60" 
+                  viewBox="0 0 120 60" 
+                  style={{ position:'absolute', top:'50%', left:'50%', transform:'translate(-50%, -50%)' }}
+                >
+                  {/* Dashed line */}
+                  <line 
+                    x1="10" 
+                    y1="30" 
+                    x2="110" 
+                    y2="30" 
+                    stroke={SIG} 
+                    strokeWidth="2" 
+                    strokeDasharray="4 4"
+                    opacity="0.5"
+                  />
+                  {/* Arrow head */}
+                  <polygon 
+                    points="110,30 100,25 100,35" 
+                    fill={SIG}
+                    opacity="0.8"
+                  />
+                </svg>
+
+                {/* Share Icon */}
+                <div style={{ 
+                  position:'relative',
+                  zIndex:10,
+                  width:56,
+                  height:56,
+                  borderRadius:'50%',
+                  background:SIG_DIM,
+                  border:`2px solid ${SIG}`,
+                  display:'flex',
+                  alignItems:'center',
+                  justifyContent:'center',
+                  boxShadow:`0 0 32px ${SIG_GLOW}`,
+                }}>
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={SIG} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="18" cy="5" r="3" />
+                    <circle cx="6" cy="12" r="3" />
+                    <circle cx="18" cy="19" r="3" />
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                  </svg>
+                </div>
+
+                {/* Text labels */}
+                <div style={{ 
+                  position:'absolute',
+                  top:-40,
+                  left:'50%',
+                  transform:'translateX(-50%)',
+                  whiteSpace:'nowrap',
+                  textAlign:'center',
+                }}>
+                  <p style={{ fontSize:11, fontWeight:700, color:SIG, letterSpacing:'.05em' }}>
+                    SHARE PLAN
+                  </p>
+                </div>
+                <div style={{ 
+                  position:'absolute',
+                  bottom:-50,
+                  left:'50%',
+                  transform:'translateX(-50%)',
+                  whiteSpace:'nowrap',
+                  textAlign:'center',
+                  maxWidth:140,
+                }}>
+                  <p style={{ fontSize:10, color:'rgba(255,255,255,0.4)', lineHeight:1.4 }}>
+                    Coach creates plan<br/>→ Shares with client
+                  </p>
+                </div>
+              </div>
+
+              {/* Workout Tracker Demo - Right */}
+              <div style={{ 
+                position:'relative',
+                width:'100%',
+                maxWidth:360,
+                paddingTop:32,
+                justifySelf:'start',
+              }}>
+                {/* Clients Label */}
+                <div style={{ 
+                  position:'absolute', 
+                  top:'50%', 
+                  left:'calc(100% + 20px)',
+                  transform:'translateY(-50%)',
+                  zIndex:10,
+                  display:'flex',
+                  flexDirection:'column',
+                  alignItems:'center',
+                  gap:8,
+                }}>
+                  <p style={{ 
+                    fontFamily:'var(--font-hanalei-fill)', 
+                    fontSize:'clamp(32px, 4vw, 48px)', 
+                    color:SIG,
+                    lineHeight:1,
+                    textShadow:`0 0 20px ${SIG_GLOW}, 0 8px 32px rgba(255,255,255,0.4), 0 12px 48px rgba(255,255,255,0.2)`,
+                    margin:0,
+                  }}>
+                    Clients
+                  </p>
+                  <p style={{ 
+                    fontSize:10, 
+                    color:'rgba(255,255,255,0.45)', 
+                    lineHeight:1.5,
+                    maxWidth:120,
+                    textAlign:'center',
+                    margin:0,
+                  }}>
+                    Follow workouts, chat with coach, log results
+                  </p>
+                </div>
+
+                <div style={{ 
+                  position:'absolute', 
+                  top:0, 
+                  left:'50%',
+                  transform:'translateX(-50%)',
+                  zIndex:20,
+                  background:SIG,
+                  padding:'6px 20px',
+                  borderRadius:'12px 12px 0 0',
+                  boxShadow:`0 0 20px ${SIG_GLOW}`,
+                }}>
+                  <p style={{ fontSize:10, fontWeight:700, letterSpacing:'.2em', textTransform:'uppercase', color:'#000' }}>
+                    Workout Tracker
+                  </p>
+                </div>
+                <div style={{ 
+                  width:'100%',
+                  aspectRatio:'402/874',
+                  borderRadius:'40px',
+                  overflow:'hidden',
+                  border:`1px solid rgba(255,255,255,0.12)`,
+                  background:'#0c0c0c',
+                  boxShadow:`0 32px 96px rgba(0,0,0,0.85), 0 0 64px ${SIG_GLOW}`,
+                  position:'relative',
+                }}>
+                  <iframe
+                    src="/demo/workout-tracker"
+                    style={{ 
+                      width:'100%', 
+                      height:'100%', 
+                      border:'none',
+                    }}
+                    title="Workout Tracker Demo"
+                    loading="lazy"
+                  />
+                  <div style={{ position:'absolute', bottom:'2%', left:'50%', transform:'translateX(-50%)',
+                    width:'28%', height:4, borderRadius:999, background:'rgba(255,255,255,0.25)' }}/>
+                </div>
               </div>
             </div>
           </div>
