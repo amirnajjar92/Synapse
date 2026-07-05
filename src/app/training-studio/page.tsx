@@ -1418,133 +1418,129 @@ export default function TrainingStudio() {
                                 )}
                               </div>
                             </div>
-                            <div className="flex items-center gap-1 flex-shrink-0">
-                              {/* Show Approved Participants Button */}
-                              {event.engagements.filter(e => e.status === 'APPROVED').length > 0 && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    const approvedList = event.engagements.filter(e => e.status === 'APPROVED');
-                                    alert(`Approved Participants (${approvedList.length}):\n${approvedList.map(e =>
-                                      `• ${e.user?.name || e.user?.email || 'Guest'}${e.guestPhone ? ` · ${e.guestPhone}` : ''}${e.guestLinks ? ` · ${e.guestLinks}` : ''}`
-                                    ).join('\n')}`);
-                                  }}
-                                  className="p-1.5 text-white/40 hover:text-green-400 transition-all opacity-0 group-hover:opacity-100"
-                                  aria-label="Show approved participants"
-                                  title="Show approved participants"
-                                >
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-                                    <circle cx="9" cy="7" r="4" />
-                                    <path d="M23 21v-2a4 4 0 00-3-3.87" />
-                                    <path d="M16 3.13a4 4 0 010 7.75" />
-                                  </svg>
-                                </button>
-                              )}
-                              {/* Repeat/Clone Event Button */}
+                          </div>
+                          {/* Card footer - always visible icons */}
+                          <div className="flex items-center gap-1.5 mt-2.5 pt-2.5 border-t border-white/5">
+                            {/* Approved Participants */}
+                            {event.engagements.filter(e => e.status === 'APPROVED').length > 0 && (
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  const clonePayload = {
-                                    title: `${event.title} (Copy)`, // Optionally prefix with "Copy"
-                                    description: event.description,
-                                    date: event.date,
-                                    location: event.location,
-                                    locationLat: event.locationLat,
-                                    locationLng: event.locationLng,
-                                    maxParticipants: event.maxParticipants,
-                                    hostedBy: event.hostedBy,
-                                    coverImage: event.coverImage,
-                                    sponsors: event.sponsors,
-                                    instagramLink: (event as any).instagramLink,
-                                    facebookLink: (event as any).facebookLink,
-                                    twitterLink: (event as any).twitterLink,
-                                    websiteLink: (event as any).websiteLink,
-                                  };
-                                  setNewEventTitle(clonePayload.title || '');
-                                  setNewEventDescription(clonePayload.description || '');
-                                  setNewEventDate(clonePayload.date);
-                                  setNewEventTime('');
-                                  setNewEventLocation(clonePayload.location || '');
-                                  setNewEventLocationLat(clonePayload.locationLat);
-                                  setNewEventLocationLng(clonePayload.locationLng);
-                                  setNewEventMaxParticipants(clonePayload.maxParticipants?.toString() || '');
-                                  setNewEventHostedBy(clonePayload.hostedBy || '');
-                                  setNewEventCoverImage(clonePayload.coverImage || '');
-                                  setNewEventSponsors(clonePayload.sponsors ? JSON.parse(clonePayload.sponsors) : []);
-                                  setNewEventInstagramLink((clonePayload as any).instagramLink || '');
-                                  setNewEventFacebookLink((clonePayload as any).facebookLink || '');
-                                  setNewEventTwitterLink((clonePayload as any).twitterLink || '');
-                                  setNewEventWebsiteLink((clonePayload as any).websiteLink || '');
-                                  setNewEventTitle(clonePayload.title || '');
-                                  setNewEventDescription(clonePayload.description || '');
-                                  setNewEventDate(clonePayload.date);
-                                  setShowEventForm(true);
+                                  const approvedList = event.engagements.filter(e => e.status === 'APPROVED');
+                                  alert(`Approved Participants (${approvedList.length}):\n${approvedList.map(e =>
+                                    `• ${e.user?.name || e.user?.email || 'Guest'}${e.guestPhone ? ` · ${e.guestPhone}` : ''}${e.guestLinks ? ` · ${e.guestLinks}` : ''}`
+                                  ).join('\n')}`);
                                 }}
-                                className="p-1.5 text-white/40 hover:text-[#FC4C02] transition-all opacity-0 group-hover:opacity-100"
-                                aria-label="Clone event"
-                                title="Clone event to create new one"
+                                className="px-2 py-1 text-white/40 hover:text-green-400 transition-colors"
+                                title="Show approved participants"
                               >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M4 16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-3l-4-4-4 4h3c1.1 0 2 .9 2 2z" />
-                                  <path d="M12 16v6c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V10c0-1.1.9-2 2-2" />
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                                  <circle cx="9" cy="7" r="4" />
+                                  <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                                  <path d="M16 3.13a4 4 0 010 7.75" />
                                 </svg>
                               </button>
-                              {/* Edit Button */}
+                            )}
+                            {/* Clone */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const clonePayload = {
+                                  title: `${event.title} (Copy)`,
+                                  description: event.description,
+                                  date: event.date,
+                                  location: event.location,
+                                  locationLat: event.locationLat,
+                                  locationLng: event.locationLng,
+                                  maxParticipants: event.maxParticipants,
+                                  hostedBy: event.hostedBy,
+                                  coverImage: event.coverImage,
+                                  sponsors: event.sponsors,
+                                  instagramLink: (event as any).instagramLink,
+                                  facebookLink: (event as any).facebookLink,
+                                  twitterLink: (event as any).twitterLink,
+                                  websiteLink: (event as any).websiteLink,
+                                };
+                                setNewEventTitle(clonePayload.title || '');
+                                setNewEventDescription(clonePayload.description || '');
+                                setNewEventDate(clonePayload.date);
+                                setNewEventTime('');
+                                setNewEventLocation(clonePayload.location || '');
+                                setNewEventLocationLat(clonePayload.locationLat);
+                                setNewEventLocationLng(clonePayload.locationLng);
+                                setNewEventMaxParticipants(clonePayload.maxParticipants?.toString() || '');
+                                setNewEventHostedBy(clonePayload.hostedBy || '');
+                                setNewEventCoverImage(clonePayload.coverImage || '');
+                                setNewEventSponsors(clonePayload.sponsors ? JSON.parse(clonePayload.sponsors) : []);
+                                setNewEventInstagramLink((clonePayload as any).instagramLink || '');
+                                setNewEventFacebookLink((clonePayload as any).facebookLink || '');
+                                setNewEventTwitterLink((clonePayload as any).twitterLink || '');
+                                setNewEventWebsiteLink((clonePayload as any).websiteLink || '');
+                                setShowEventForm(true);
+                              }}
+                              className="px-2 py-1 text-white/40 hover:text-[#FC4C02] transition-colors"
+                              title="Clone event"
+                            >
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M4 16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-3l-4-4-4 4h3c1.1 0 2 .9 2 2z" />
+                                <path d="M12 16v6c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V10c0-1.1.9-2 2-2" />
+                              </svg>
+                            </button>
+                            {/* Edit */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditEvent(event);
+                              }}
+                              className="px-2 py-1 text-white/40 hover:text-blue-400 transition-colors"
+                              title="Edit event"
+                            >
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                              </svg>
+                            </button>
+                            {/* Delete */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteEvent(event.id);
+                              }}
+                              className="px-2 py-1 text-white/40 hover:text-red-400 transition-colors"
+                              title="Delete event"
+                            >
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="3 6 5 6 21 6" />
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                              </svg>
+                            </button>
+                            {/* Share */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleShareEvent(event.id);
+                              }}
+                              className="px-2 py-1 text-white/40 hover:text-[#FC4C02] transition-colors"
+                              title="Share event"
+                            >
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                              </svg>
+                            </button>
+                            {/* Manage */}
+                            {event.status === 'ACTIVE' && !isPast && (
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleEditEvent(event);
+                                  setShowEventDetail(showEventDetail === event.id ? null : event.id);
                                 }}
-                                className="p-1.5 text-white/40 hover:text-blue-400 transition-all opacity-0 group-hover:opacity-100"
-                                aria-label="Edit event"
+                                className="px-2 py-1 text-white/40 hover:text-white transition-colors text-[11px] font-medium"
                               >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                                </svg>
+                                {showEventDetail === event.id ? 'Less' : 'Manage'}
                               </button>
-                              {/* Delete Button */}
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteEvent(event.id);
-                                }}
-                                className="p-1.5 text-white/40 hover:text-red-400 transition-all opacity-0 group-hover:opacity-100"
-                                aria-label="Delete event"
-                              >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <polyline points="3 6 5 6 21 6" />
-                                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                                </svg>
-                              </button>
-                              {/* Share Button */}
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleShareEvent(event.id);
-                                }}
-                                className="p-1.5 text-white/40 hover:text-[#FC4C02] transition-all opacity-0 group-hover:opacity-100"
-                                aria-label="Share event"
-                              >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
-                                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-                                </svg>
-                              </button>
-                              {/* Manage Button */}
-                              {event.status === 'ACTIVE' && !isPast && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setShowEventDetail(showEventDetail === event.id ? null : event.id);
-                                  }}
-                                  className="text-white/30 hover:text-white text-[10px] transition-colors"
-                                >
-                                  {showEventDetail === event.id ? 'Less' : 'Manage'}
-                                </button>
-                              )}
-                            </div>
+                            )}
                           </div>
                           {showEventDetail === event.id && (
                             <div className="mt-3 pt-3 border-t border-white/5 space-y-2">
