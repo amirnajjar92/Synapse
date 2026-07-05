@@ -29,6 +29,9 @@ interface SportEvent {
   locationLat: number | null;
   locationLng: number | null;
   maxParticipants: number | null;
+  hostedBy: string | null;
+  coverImage: string | null;
+  sponsors: string | null;
   status: 'ACTIVE' | 'CANCELLED' | 'COMPLETED';
   creator: UserInfo;
   engagements: EventEngagement[];
@@ -254,6 +257,18 @@ export default function SportEventPage() {
             )}
           </div>
 
+          {event.coverImage && (
+            <div className="relative w-full h-40 sm:h-48 overflow-hidden">
+              <img
+                src={event.coverImage}
+                alt={event.title}
+                className="w-full h-full object-cover"
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+            </div>
+          )}
+
           <div className="px-4 pb-4 space-y-4">
             <div className="bg-white/5 rounded-2xl p-5 border border-white/5">
               <div className="flex items-start gap-2 mb-3">
@@ -313,10 +328,51 @@ export default function SportEventPage() {
                     </svg>
                   </div>
                   <p className="text-white/60 text-xs">
-                    Hosted by <span className="text-white font-medium">{event.creator.name || event.creator.email}</span>
+                    Created by <span className="text-white font-medium">{event.creator.name || event.creator.email}</span>
                   </p>
                 </div>
+
+                {event.hostedBy && (
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                        <polyline points="9 22 9 12 15 12 15 22" />
+                      </svg>
+                    </div>
+                    <p className="text-white text-xs">
+                      Hosted by <span className="text-white font-medium">{event.hostedBy}</span>
+                    </p>
+                  </div>
+                )}
               </div>
+              {event.sponsors && (
+                <div className="mt-4 pt-4 border-t border-white/10">
+                  <p className="text-white/40 text-[10px] uppercase tracking-wider font-medium mb-3">Sponsored By</p>
+                  <div className="flex flex-wrap gap-3">
+                    {(() => {
+                      try {
+                        const list = JSON.parse(event.sponsors);
+                        return Array.isArray(list) && list.map((s: { name: string; logo?: string }, i: number) => (
+                          <div key={i} className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-1.5 border border-white/5">
+                            {s.logo && (
+                              <img
+                                src={s.logo}
+                                alt={s.name}
+                                className="w-5 h-5 object-contain rounded"
+                                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                              />
+                            )}
+                            <span className="text-white/70 text-xs font-medium">{s.name}</span>
+                          </div>
+                        ));
+                      } catch {
+                        return <span className="text-white/40 text-xs">{event.sponsors}</span>;
+                      }
+                    })()}
+                  </div>
+                </div>
+              )}
             </div>
 
             {event.status === 'ACTIVE' && !isPast && (

@@ -26,7 +26,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const { title, description, date, location, locationLat, locationLng, maxParticipants, status, userEmail } = await request.json()
+    const { title, description, date, location, locationLat, locationLng, maxParticipants, hostedBy, coverImage, sponsors, status, userEmail } = await request.json()
     if (!userEmail) {
       return NextResponse.json({ error: 'userEmail is required' }, { status: 400 })
     }
@@ -51,6 +51,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         ...(locationLat !== undefined && { locationLat: locationLat ? parseFloat(locationLat) : null }),
         ...(locationLng !== undefined && { locationLng: locationLng ? parseFloat(locationLng) : null }),
         ...(maxParticipants !== undefined && { maxParticipants: maxParticipants ? parseInt(maxParticipants) : null }),
+        ...(hostedBy !== undefined && { hostedBy }),
+        ...(coverImage !== undefined && { coverImage }),
+        ...(sponsors !== undefined && { sponsors: typeof sponsors === 'string' ? sponsors : JSON.stringify(sponsors) }),
         ...(status !== undefined && { status }),
       },
       include: {

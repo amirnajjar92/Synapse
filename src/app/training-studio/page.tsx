@@ -67,6 +67,9 @@ interface SportEvent {
   locationLat: number | null;
   locationLng: number | null;
   maxParticipants: number | null;
+  hostedBy: string | null;
+  coverImage: string | null;
+  sponsors: string | null;
   status: 'ACTIVE' | 'CANCELLED' | 'COMPLETED';
   creator: { id: string; name: string; email: string };
   engagements: {
@@ -129,6 +132,9 @@ export default function TrainingStudio() {
   const [newEventLocationLat, setNewEventLocationLat] = useState<number | null>(null);
   const [newEventLocationLng, setNewEventLocationLng] = useState<number | null>(null);
   const [newEventMaxParticipants, setNewEventMaxParticipants] = useState('');
+  const [newEventHostedBy, setNewEventHostedBy] = useState('');
+  const [newEventCoverImage, setNewEventCoverImage] = useState('');
+  const [newEventSponsors, setNewEventSponsors] = useState('');
   const [isCreatingEvent, setIsCreatingEvent] = useState(false);
   const [showEventDetail, setShowEventDetail] = useState<string | null>(null);
 
@@ -628,6 +634,9 @@ export default function TrainingStudio() {
           locationLat: newEventLocationLat?.toString() || undefined,
           locationLng: newEventLocationLng?.toString() || undefined,
           maxParticipants: newEventMaxParticipants.trim() || undefined,
+          hostedBy: newEventHostedBy.trim() || undefined,
+          coverImage: newEventCoverImage.trim() || undefined,
+          sponsors: newEventSponsors.trim() || undefined,
         }),
       });
       if (res.ok) {
@@ -642,13 +651,16 @@ export default function TrainingStudio() {
         setNewEventLocationLat(null);
         setNewEventLocationLng(null);
         setNewEventMaxParticipants('');
+        setNewEventHostedBy('');
+        setNewEventCoverImage('');
+        setNewEventSponsors('');
       }
     } catch (error) {
       console.error('Error creating event:', error);
     } finally {
       setIsCreatingEvent(false);
     }
-  }, [userEmail, newEventTitle, newEventDescription, newEventDate, newEventTime, newEventLocation, newEventMaxParticipants]);
+  }, [userEmail, newEventTitle, newEventDescription, newEventDate, newEventTime, newEventLocation, newEventMaxParticipants, newEventHostedBy, newEventCoverImage, newEventSponsors]);
 
   const handleCancelEvent = useCallback(async (eventId: string) => {
     if (!userEmail) return;
@@ -1648,6 +1660,36 @@ export default function TrainingStudio() {
                   onChange={e => setNewEventMaxParticipants(e.target.value)}
                   placeholder="Leave empty for unlimited"
                   className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-white/20"
+                />
+              </div>
+              <div>
+                <label className="text-white/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Hosted By</label>
+                <input
+                  type="text"
+                  value={newEventHostedBy}
+                  onChange={e => setNewEventHostedBy(e.target.value)}
+                  placeholder="e.g. Local Sports Club"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-white/20"
+                />
+              </div>
+              <div>
+                <label className="text-white/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Cover Image URL</label>
+                <input
+                  type="url"
+                  value={newEventCoverImage}
+                  onChange={e => setNewEventCoverImage(e.target.value)}
+                  placeholder="https://example.com/cover.jpg"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-white/20"
+                />
+              </div>
+              <div>
+                <label className="text-white/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Sponsors (JSON: name + logo URL)</label>
+                <textarea
+                  value={newEventSponsors}
+                  onChange={e => setNewEventSponsors(e.target.value)}
+                  placeholder='[{"name":"Nike","logo":"https://..."},{"name":"Gymshark","logo":"https://..."}]'
+                  rows={2}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white text-xs placeholder-white/30 outline-none focus:border-white/20 resize-none"
                 />
               </div>
               <div className="flex gap-2 pt-2">

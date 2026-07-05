@@ -48,7 +48,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const { title, description, date, location, locationLat, locationLng, maxParticipants, userEmail } = await request.json()
+    const { title, description, date, location, locationLat, locationLng, maxParticipants, hostedBy, coverImage, sponsors, userEmail } = await request.json()
     if (!userEmail || !title || !date) {
       return NextResponse.json({ error: 'userEmail, title, and date are required' }, { status: 400 })
     }
@@ -64,6 +64,9 @@ export async function POST(request: Request) {
         locationLat: locationLat ? parseFloat(locationLat) : null,
         locationLng: locationLng ? parseFloat(locationLng) : null,
         maxParticipants: maxParticipants ? parseInt(maxParticipants) : null,
+        hostedBy: hostedBy || null,
+        coverImage: coverImage || null,
+        sponsors: sponsors ? (typeof sponsors === 'string' ? sponsors : JSON.stringify(sponsors)) : null,
       },
       include: {
         creator: { select: { id: true, name: true, email: true } },
