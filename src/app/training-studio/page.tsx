@@ -7,6 +7,7 @@ import PromptBoxOpenAI from '@/components/PromptBoxOpenAI';
 import BurgerMenuButton from '@/components/BurgerMenuButton';
 import FloatingNavBar from '@/components/FloatingNavBar';
 import MuscleMapDisplay from '@/components/MuscleMapDisplay';
+import LocationPicker from '@/components/LocationPicker';
 import { MOCK_CLIENTS, MOCK_MESSAGES_BY_CLIENT, MOCK_PLAN } from '@/lib/screenshot-data';
 
 interface Client {
@@ -55,7 +56,25 @@ const Spinner = ({ size = 32 }: { size?: number }) => (
   </div>
 );
 
-type Tab = 'dashboard' | 'builder' | 'repository' | 'messages';
+type Tab = 'dashboard' | 'builder' | 'repository' | 'messages' | 'events';
+
+interface SportEvent {
+  id: string;
+  title: string;
+  description: string | null;
+  date: string;
+  location: string | null;
+  locationLat: number | null;
+  locationLng: number | null;
+  maxParticipants: number | null;
+  status: 'ACTIVE' | 'CANCELLED' | 'COMPLETED';
+  creator: { id: string; name: string; email: string };
+  engagements: {
+    id: string;
+    status: 'PENDING' | 'APPROVED' | 'DECLINED';
+    user: { id: string; name: string; email: string };
+  }[];
+}
 
 export default function TrainingStudio() {
   const router = useRouter();
@@ -97,6 +116,21 @@ export default function TrainingStudio() {
 
   const [plans, setPlans] = useState<Plan[]>([]);
   const [isLoadingPlans, setIsLoadingPlans] = useState(true);
+
+  // Sport Events state
+  const [events, setEvents] = useState<SportEvent[]>([]);
+  const [isLoadingEvents, setIsLoadingEvents] = useState(true);
+  const [showEventForm, setShowEventForm] = useState(false);
+  const [newEventTitle, setNewEventTitle] = useState('');
+  const [newEventDescription, setNewEventDescription] = useState('');
+  const [newEventDate, setNewEventDate] = useState('');
+  const [newEventTime, setNewEventTime] = useState('');
+  const [newEventLocation, setNewEventLocation] = useState('');
+  const [newEventLocationLat, setNewEventLocationLat] = useState<number | null>(null);
+  const [newEventLocationLng, setNewEventLocationLng] = useState<number | null>(null);
+  const [newEventMaxParticipants, setNewEventMaxParticipants] = useState('');
+  const [isCreatingEvent, setIsCreatingEvent] = useState(false);
+  const [showEventDetail, setShowEventDetail] = useState<string | null>(null);
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
@@ -557,6 +591,131 @@ export default function TrainingStudio() {
     }
   }, [userEmail, planTitle, planDays, builderPrompt]);
 
+  const fetchEvents = useCallback(async (email: string) => {
+    if (!email) return;
+    try {
+      setIsLoadingEvents(true);
+      const res = await fetch(`/api/sport-events?userEmail=${encodeURIComponent(email)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setEvents(data.events || []);
+      }
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    } finally {
+      setIsLoadingEvents(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (userEmail) fetchEvents(userEmail);
+  }, [userEmail, fetchEvents]);
+
+  const handleCreateEvent = useCallback(async () => {
+    if (!userEmail || !newEventTitle.trim() || !newEventDate.trim()) return;
+    setIsCreatingEvent(true);
+    try {
+      const dateTime = new Date(`${newEventDate}T${newEventTime || '12:00'}`).toISOString();
+      const res = await fetch('/api/sport-events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userEmail,
+          title: newEventTitle.trim(),
+          description: newEventDescription.trim() || undefined,
+          date: dateTime,
+          location: newEventLocation.trim() || undefined,
+          locationLat: newEventLocationLat?.toString() || undefined,
+          locationLng: newEventLocationLng?.toString() || undefined,
+          maxParticipants: newEventMaxParticipants.trim() || undefined,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setEvents(prev => [data.event, ...prev]);
+        setShowEventForm(false);
+        setNewEventTitle('');
+        setNewEventDescription('');
+        setNewEventDate('');
+        setNewEventTime('');
+        setNewEventLocation('');
+        setNewEventLocationLat(null);
+        setNewEventLocationLng(null);
+        setNewEventMaxParticipants('');
+      }
+    } catch (error) {
+      console.error('Error creating event:', error);
+    } finally {
+      setIsCreatingEvent(false);
+    }
+  }, [userEmail, newEventTitle, newEventDescription, newEventDate, newEventTime, newEventLocation, newEventMaxParticipants]);
+
+  const handleCancelEvent = useCallback(async (eventId: string) => {
+    if (!userEmail) return;
+    try {
+      const res = await fetch(`/api/sport-events/${eventId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userEmail, status: 'CANCELLED' }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setEvents(prev => prev.map(e => e.id === eventId ? data.event : e));
+      }
+    } catch (error) {
+      console.error('Error cancelling event:', error);
+    }
+  }, [userEmail]);
+
+  const handleApproveEngagement = useCallback(async (eventId: string, engagementId: string) => {
+    if (!userEmail) return;
+    try {
+      const res = await fetch(`/api/sport-events/${eventId}/engage`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userEmail, engagementId, status: 'APPROVED', isApproval: true }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setEvents(prev => prev.map(e => ({
+          ...e,
+          engagements: e.engagements.map(eng => eng.id === engagementId ? data.engagement : eng),
+        })));
+      }
+    } catch (error) {
+      console.error('Error approving engagement:', error);
+    }
+  }, [userEmail]);
+
+  const handleDeclineEngagement = useCallback(async (eventId: string, engagementId: string) => {
+    if (!userEmail) return;
+    try {
+      const res = await fetch(`/api/sport-events/${eventId}/engage`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userEmail, engagementId, status: 'DECLINED', isApproval: true }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setEvents(prev => prev.map(e => ({
+          ...e,
+          engagements: e.engagements.map(eng => eng.id === engagementId ? data.engagement : eng),
+        })));
+      }
+    } catch (error) {
+      console.error('Error declining engagement:', error);
+    }
+  }, [userEmail]);
+
+  const handleShareEvent = useCallback(async (eventId: string) => {
+    const url = `${window.location.origin}/sport-events/${eventId}`;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      console.log('Share URL:', url);
+    }
+  }, []);
+
   if (!isSignedIn) {
     return (
       <div className="w-full h-screen bg-[#151515] flex items-center justify-center p-2 sm:p-4 relative">
@@ -627,6 +786,7 @@ export default function TrainingStudio() {
                 { id: 'builder' as Tab, label: 'Build Plan', icon: 'M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z' },
                 { id: 'repository' as Tab, label: 'Repository', icon: 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6M9 14h1M15 14h1M9 19h1M15 19h1' },
                 { id: 'messages' as Tab, label: 'Messages', icon: 'M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z' },
+                { id: 'events' as Tab, label: 'Events', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
               ].map(tab => {
                 const isActive = activeTab === tab.id;
                 const unreadCount = Object.keys(unreadCounts).length;
@@ -1059,6 +1219,208 @@ export default function TrainingStudio() {
               </div>
             )}
 
+            {activeTab === 'events' && (
+              <div className="h-full flex flex-col">
+                <div className="flex items-center justify-between mb-3 flex-shrink-0">
+                  <h2 className="text-white font-semibold text-sm">Sport Events</h2>
+                  <button
+                    onClick={() => setShowEventForm(true)}
+                    className="px-2.5 py-1 bg-[#FC4C02] hover:bg-[#FC4C02]/80 text-white text-[11px] font-medium rounded-lg transition-all flex items-center gap-1"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="12" y1="5" x2="12" y2="19" />
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    New Event
+                  </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto space-y-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent pr-1">
+                  {isLoadingEvents ? (
+                    <div className="flex-1 flex items-center justify-center">
+                      <Spinner size={36} />
+                    </div>
+                  ) : events.length === 0 ? (
+                    <div className="flex-1 flex flex-col items-center justify-center text-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                          <line x1="16" y1="2" x2="16" y2="6" />
+                          <line x1="8" y1="2" x2="8" y2="6" />
+                          <line x1="3" y1="10" x2="21" y2="10" />
+                        </svg>
+                      </div>
+                      <p className="text-gray-400 text-xs">No events yet</p>
+                      <button
+                        onClick={() => setShowEventForm(true)}
+                        className="px-4 py-2 rounded-full bg-white text-black text-xs font-medium hover:opacity-90 transition-opacity"
+                      >
+                        Create Your First Event
+                      </button>
+                    </div>
+                  ) : (
+                    events.map(event => {
+                      const eventDate = new Date(event.date);
+                      const isPast = eventDate < new Date();
+                      const pendingEngagements = event.engagements.filter(e => e.status === 'PENDING');
+                      const approvedCount = event.engagements.filter(e => e.status === 'APPROVED').length;
+                      const totalEngaged = event.engagements.filter(e => e.status !== 'DECLINED').length;
+                      return (
+                        <div
+                          key={event.id}
+                          className="bg-white/5 rounded-xl p-3.5 hover:bg-white/10 transition-all cursor-pointer border border-white/5 group"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 border ${
+                              event.status === 'CANCELLED' ? 'bg-red-500/20 border-red-500/20' :
+                              isPast ? 'bg-blue-500/20 border-blue-500/20' :
+                              'bg-[#FC4C02]/30 border-[#FC4C02]/20'
+                            }`}>
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-70">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 16 16 12 12 8" />
+                                <line x1="8" y1="12" x2="16" y2="12" />
+                              </svg>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-0.5">
+                                <h3 className="text-white font-semibold text-sm truncate">{event.title}</h3>
+                                {event.status === 'CANCELLED' && (
+                                  <span className="px-1.5 py-0.5 bg-red-500/20 text-red-400 text-[8px] font-medium rounded-full">Cancelled</span>
+                                )}
+                                {isPast && event.status === 'ACTIVE' && (
+                                  <span className="px-1.5 py-0.5 bg-blue-500/20 text-blue-400 text-[8px] font-medium rounded-full">Past</span>
+                                )}
+                              </div>
+                              <p className="text-white/40 text-[11px] leading-relaxed">
+                                {eventDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                {event.location && ` · ${event.location}`}
+                              </p>
+                              {event.description && (
+                                <p className="text-white/30 text-[10px] mt-0.5 line-clamp-1">{event.description}</p>
+                              )}
+                              <div className="flex items-center gap-2 mt-1.5">
+                                <span className="text-white/30 text-[10px]">{totalEngaged} participant{totalEngaged !== 1 ? 's' : ''}</span>
+                                {pendingEngagements.length > 0 && (
+                                  <span className="text-yellow-400/60 text-[10px]">{pendingEngagements.length} pending</span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleShareEvent(event.id);
+                                }}
+                                className="p-1.5 text-white/40 hover:text-[#FC4C02] transition-all opacity-0 group-hover:opacity-100"
+                                aria-label="Share event"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+                                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                                </svg>
+                              </button>
+                              {event.status === 'ACTIVE' && !isPast && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowEventDetail(showEventDetail === event.id ? null : event.id);
+                                  }}
+                                  className="text-white/30 hover:text-white text-[10px] transition-colors"
+                                >
+                                  {showEventDetail === event.id ? 'Less' : 'Manage'}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                          {showEventDetail === event.id && (
+                            <div className="mt-3 pt-3 border-t border-white/5 space-y-2">
+                              {event.locationLat && event.locationLng && (
+                                <div className="mb-2">
+                                  <h4 className="text-white/50 text-[10px] font-medium uppercase tracking-wider mb-1.5">Location</h4>
+                                  <div
+                                    className="w-full h-32 rounded-lg overflow-hidden border border-white/10"
+                                    ref={el => {
+                                      if (!el || event.locationLat === null || event.locationLng === null) return;
+                                      import('leaflet').then(L => {
+                                        import('leaflet/dist/leaflet.css');
+                                        delete (L.default.Icon.Default.prototype as any)._getIconUrl;
+                                        L.default.Icon.Default.mergeOptions({
+                                          iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+                                          iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+                                          shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+                                        });
+                                        const map = L.default.map(el, {
+                                          center: [event.locationLat!, event.locationLng!],
+                                          zoom: 14,
+                                          zoomControl: false,
+                                          dragging: false,
+                                          scrollWheelZoom: false,
+                                        });
+                                        L.default.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                                          attribution: '&copy; OpenStreetMap',
+                                          maxZoom: 19,
+                                        }).addTo(map);
+                                        L.default.marker([event.locationLat!, event.locationLng!]).addTo(map);
+                                        setTimeout(() => map.invalidateSize(), 200);
+                                      });
+                                    }}
+                                  />
+                                </div>
+                              )}
+                              <h4 className="text-white/50 text-[10px] font-medium uppercase tracking-wider">Engagements</h4>
+                              {event.engagements.length === 0 ? (
+                                <p className="text-white/30 text-[10px]">No one has joined yet.</p>
+                              ) : (
+                                event.engagements.map(eng => (
+                                  <div key={eng.id} className="flex items-center gap-2">
+                                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#FC4C02]/30 to-orange-500/30 flex items-center justify-center text-[7px] font-bold text-white flex-shrink-0 border border-white/10">
+                                      {eng.user.name?.charAt(0) || eng.user.email.charAt(0).toUpperCase()}
+                                    </div>
+                                    <span className="text-white/60 text-[11px] flex-1 truncate">{eng.user.name || eng.user.email}</span>
+                                    {eng.status === 'PENDING' && (
+                                      <div className="flex gap-1">
+                                        <button
+                                          onClick={() => handleApproveEngagement(event.id, eng.id)}
+                                          className="px-2 py-0.5 bg-green-500/20 text-green-400 text-[9px] rounded hover:bg-green-500/30 transition-colors"
+                                        >
+                                          Approve
+                                        </button>
+                                        <button
+                                          onClick={() => handleDeclineEngagement(event.id, eng.id)}
+                                          className="px-2 py-0.5 bg-red-500/20 text-red-400 text-[9px] rounded hover:bg-red-500/30 transition-colors"
+                                        >
+                                          Decline
+                                        </button>
+                                      </div>
+                                    )}
+                                    {eng.status === 'APPROVED' && (
+                                      <span className="text-green-400/60 text-[9px]">Approved</span>
+                                    )}
+                                    {eng.status === 'DECLINED' && (
+                                      <span className="text-red-400/60 text-[9px]">Declined</span>
+                                    )}
+                                  </div>
+                                ))
+                              )}
+                              {event.status === 'ACTIVE' && !isPast && (
+                                <button
+                                  onClick={() => handleCancelEvent(event.id)}
+                                  className="w-full py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-[10px] rounded-lg transition-colors mt-2"
+                                >
+                                  Cancel Event
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            )}
+
             {activeTab === 'messages' && (
               <div className="h-full flex flex-col">
                 {/* Client selector pills */}
@@ -1203,6 +1565,104 @@ export default function TrainingStudio() {
                   className="flex-1 py-2.5 bg-[#FC4C02] hover:bg-[#FC4C02]/80 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-all"
                 >
                   {isInviting ? 'Sending...' : 'Send Invitation'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* New Event Modal */}
+      {showEventForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}>
+          <div className="w-full max-w-md bg-black border border-white/10 rounded-2xl overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-white/10">
+              <h3 className="text-white font-semibold text-sm">Create Sport Event</h3>
+              <button
+                onClick={() => setShowEventForm(false)}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
+              <div>
+                <label className="text-white/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Title *</label>
+                <input
+                  type="text"
+                  value={newEventTitle}
+                  onChange={e => setNewEventTitle(e.target.value)}
+                  placeholder="e.g. Weekend Football Match"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-white/20"
+                />
+              </div>
+              <div>
+                <label className="text-white/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Description</label>
+                <textarea
+                  value={newEventDescription}
+                  onChange={e => setNewEventDescription(e.target.value)}
+                  placeholder="Describe the event..."
+                  rows={3}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-white/20 resize-none"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-white/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Date *</label>
+                  <input
+                    type="date"
+                    value={newEventDate}
+                    onChange={e => setNewEventDate(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm outline-none focus:border-white/20 [color-scheme:dark]"
+                  />
+                </div>
+                <div>
+                  <label className="text-white/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Time</label>
+                  <input
+                    type="time"
+                    value={newEventTime}
+                    onChange={e => setNewEventTime(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm outline-none focus:border-white/20 [color-scheme:dark]"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="text-white/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Location</label>
+                <LocationPicker
+                  onLocationChange={(lat, lng, addr) => {
+                    setNewEventLocation(addr);
+                    setNewEventLocationLat(lat);
+                    setNewEventLocationLng(lng);
+                  }}
+                />
+              </div>
+              <div>
+                <label className="text-white/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Max Participants</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={newEventMaxParticipants}
+                  onChange={e => setNewEventMaxParticipants(e.target.value)}
+                  placeholder="Leave empty for unlimited"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-white/20"
+                />
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={() => setShowEventForm(false)}
+                  className="flex-1 py-2.5 bg-white/10 hover:bg-white/20 text-white text-sm rounded-lg transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateEvent}
+                  disabled={!newEventTitle.trim() || !newEventDate.trim() || isCreatingEvent}
+                  className="flex-1 py-2.5 bg-[#FC4C02] hover:bg-[#FC4C02]/80 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-all"
+                >
+                  {isCreatingEvent ? 'Creating...' : 'Create Event'}
                 </button>
               </div>
             </div>
