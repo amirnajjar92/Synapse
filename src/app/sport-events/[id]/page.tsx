@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import MapDisplay from '@/components/MapDisplay';
-import LogoAnimation from '@/components/LogoAnimation';
+import SynapseFitLogo from '@/components/SynapseFitLogo';
 
 interface UserInfo {
   id: string;
@@ -205,7 +205,9 @@ export default function SportEventPage() {
 
   if (loading || showLogo) {
     return (
-      <LogoAnimation onComplete={() => setShowLogo(false)} />
+      <div className="w-full min-h-screen bg-[#151515] flex items-center justify-center">
+        <SynapseFitLogo size={180} loading={true} onAnimationComplete={() => setShowLogo(false)} />
+      </div>
     );
   }
 
@@ -268,14 +270,61 @@ export default function SportEventPage() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
               {event.status === 'ACTIVE' && !isPast && (
                 <div className="absolute bottom-3 right-3 z-[1]">
-                  {!isSignedIn ? (
-                    <button
-                      onClick={() => { setIsSigningIn(true); signIn('google', { callbackUrl: window.location.href }); }}
-                      disabled={isSigningIn}
-                      className="px-5 py-2.5 bg-[#FC4C02] text-white font-semibold text-sm rounded-xl hover:opacity-90 transition-all disabled:opacity-50 shadow-lg"
-                    >
-                      {isSigningIn ? '...' : 'Join'}
-                    </button>
+                  {!isSignedIn && !showGuestForm ? (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => { setIsSigningIn(true); signIn('google', { callbackUrl: window.location.href }); }}
+                        disabled={isSigningIn}
+                        className="px-4 py-2 bg-[#FC4C02] text-white font-semibold text-xs rounded-lg hover:opacity-90 transition-all disabled:opacity-50 shadow-lg"
+                      >
+                        {isSigningIn ? '...' : 'Sign in to join'}
+                      </button>
+                      <button
+                        onClick={() => setShowGuestForm(true)}
+                        className="px-4 py-2 bg-white/20 text-white font-semibold text-xs rounded-lg hover:bg-white/30 transition-all shadow-lg backdrop-blur-sm"
+                      >
+                        Join as Guest
+                      </button>
+                    </div>
+                  ) : showGuestForm && !isSignedIn ? (
+                    <div className="bg-black/80 backdrop-blur-md rounded-xl p-3 w-64 space-y-2 shadow-xl border border-white/10">
+                      <input
+                        type="email"
+                        value={guestEmail}
+                        onChange={e => setGuestEmail(e.target.value)}
+                        placeholder="Email *"
+                        className="w-full px-3 py-1.5 bg-white/10 border border-white/10 rounded-lg text-white text-xs placeholder:text-white/40 focus:outline-none focus:border-[#FC4C02]/50"
+                      />
+                      <input
+                        type="tel"
+                        value={guestPhone}
+                        onChange={e => setGuestPhone(e.target.value)}
+                        placeholder="Phone (optional)"
+                        className="w-full px-3 py-1.5 bg-white/10 border border-white/10 rounded-lg text-white text-xs placeholder:text-white/40 focus:outline-none focus:border-[#FC4C02]/50"
+                      />
+                      <input
+                        type="url"
+                        value={guestLinks}
+                        onChange={e => setGuestLinks(e.target.value)}
+                        placeholder="Social link (optional)"
+                        className="w-full px-3 py-1.5 bg-white/10 border border-white/10 rounded-lg text-white text-xs placeholder:text-white/40 focus:outline-none focus:border-[#FC4C02]/50"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => { setShowGuestForm(false); setGuestEmail(''); setGuestPhone(''); setGuestLinks(''); }}
+                          className="flex-1 py-1.5 bg-white/10 text-white text-xs rounded-lg hover:bg-white/20 transition-all"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleGuestJoin}
+                          disabled={!guestEmail || isJoiningGuest}
+                          className="flex-1 py-1.5 bg-[#FC4C02] text-white font-semibold text-xs rounded-lg hover:opacity-90 transition-all disabled:opacity-50"
+                        >
+                          {isJoiningGuest ? '...' : 'Join'}
+                        </button>
+                      </div>
+                    </div>
                   ) : !isEngaged ? (
                     <button
                       onClick={handleEngage}
@@ -285,9 +334,9 @@ export default function SportEventPage() {
                       {isFull ? 'Event Full' : 'Join'}
                     </button>
                   ) : myEngagement?.status === 'PENDING' ? (
-                    <span className="px-4 py-2 bg-yellow-500/20 text-yellow-400 text-xs font-medium rounded-xl shadow-lg">Pending</span>
+                    <span className="px-4 py-2 bg-yellow-500/20 text-yellow-400 text-xs font-medium rounded-xl shadow-lg backdrop-blur-sm">Pending</span>
                   ) : myEngagement?.status === 'APPROVED' ? (
-                    <span className="px-4 py-2 bg-green-500/20 text-green-400 text-xs font-medium rounded-xl shadow-lg">Joined</span>
+                    <span className="px-4 py-2 bg-green-500/20 text-green-400 text-xs font-medium rounded-xl shadow-lg backdrop-blur-sm">Joined</span>
                   ) : null}
                 </div>
               )}
