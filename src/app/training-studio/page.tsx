@@ -829,7 +829,7 @@ export default function TrainingStudio() {
     return (
       <div className="w-full h-screen bg-[#151515] flex items-center justify-center p-2 sm:p-4 relative">
         <div className="w-full max-w-[402px] h-full max-h-[874px] bg-black rounded-[40px] overflow-hidden shadow-2xl relative flex flex-col">
-          <MuscleMapDisplay />
+          <MuscleMapDisplay showToggle={false} />
           <div className="absolute inset-0 z-50 flex items-center justify-center p-4" style={{ backdropFilter: 'blur(10px)', backgroundColor: 'rgba(0,0,0,0.7)' }}>
             <div className="w-full max-w-md bg-black border border-white/10 rounded-2xl overflow-hidden">
               <div className="text-center p-8 pb-6 border-b border-white/10">
@@ -864,7 +864,7 @@ export default function TrainingStudio() {
   return (
     <div className="w-full h-screen bg-[#151515] flex items-center justify-center p-2 sm:p-4 relative">
       <div className="w-full max-w-[402px] h-full max-h-[874px] bg-black rounded-[40px] overflow-hidden shadow-2xl relative flex flex-col">
-        <MuscleMapDisplay />
+        <MuscleMapDisplay showToggle={false} />
         <div className="absolute inset-0 z-10 flex flex-col" style={{ backgroundColor: '#0b0b0b4D' }}>
           <div className="absolute top-4 left-4 z-20">
             <BurgerMenuButton />

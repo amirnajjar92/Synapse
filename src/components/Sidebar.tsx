@@ -37,6 +37,7 @@ export default function Sidebar() {
   const [currentTheme, setCurrentTheme] = useState('dark');
   const [isAdmin, setIsAdmin] = useState(false);
   const [unreadChatCount, setUnreadChatCount] = useState(0);
+  const [pendingEventCount, setPendingEventCount] = useState(0);
   // Strava integration (disabled for now)
   // const [isStravaConnected, setIsStravaConnected] = useState(false);
   // const [isSyncing, setIsSyncing] = useState(false);
@@ -120,6 +121,23 @@ export default function Sidebar() {
       window.removeEventListener('storage', updateCount);
     };
   }, []);
+
+  // Fetch pending event engagement count
+  useEffect(() => {
+    if (!user?.email) return;
+    const fetchPending = async () => {
+      try {
+        const res = await fetch(`/api/sport-events/pending-count?userEmail=${encodeURIComponent(user!.email!)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setPendingEventCount(data.count || 0);
+        }
+      } catch {}
+    };
+    fetchPending();
+    const interval = setInterval(fetchPending, 10000);
+    return () => clearInterval(interval);
+  }, [user?.email]);
 
   const handleThemeChange = (themeId: string) => {
     setCurrentTheme(themeId);
@@ -371,9 +389,9 @@ export default function Sidebar() {
                   <path d="M2 17l10 5 10-5" />
                   <path d="M2 12l10 5 10-5" />
                 </svg>
-                {unreadChatCount > 0 && (
+                {unreadChatCount + pendingEventCount > 0 && (
                   <span className="absolute -top-1.5 -right-2 w-3.5 h-3.5 rounded-full bg-[#FC4C02] text-white text-[8px] font-bold flex items-center justify-center leading-none">
-                    {unreadChatCount > 9 ? '9+' : unreadChatCount}
+                    {unreadChatCount + pendingEventCount > 9 ? '9+' : unreadChatCount + pendingEventCount}
                   </span>
                 )}
               </div>
