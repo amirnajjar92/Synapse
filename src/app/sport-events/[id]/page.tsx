@@ -266,6 +266,31 @@ export default function SportEventPage() {
                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+              {event.status === 'ACTIVE' && !isPast && (
+                <div className="absolute bottom-3 right-3 z-[1]">
+                  {!isSignedIn ? (
+                    <button
+                      onClick={() => { setIsSigningIn(true); signIn('google', { callbackUrl: window.location.href }); }}
+                      disabled={isSigningIn}
+                      className="px-5 py-2.5 bg-[#FC4C02] text-white font-semibold text-sm rounded-xl hover:opacity-90 transition-all disabled:opacity-50 shadow-lg"
+                    >
+                      {isSigningIn ? '...' : 'Join'}
+                    </button>
+                  ) : !isEngaged ? (
+                    <button
+                      onClick={handleEngage}
+                      disabled={isFull}
+                      className="px-5 py-2.5 bg-[#FC4C02] text-white font-semibold text-sm rounded-xl hover:opacity-90 transition-all disabled:opacity-50 shadow-lg"
+                    >
+                      {isFull ? 'Event Full' : 'Join'}
+                    </button>
+                  ) : myEngagement?.status === 'PENDING' ? (
+                    <span className="px-4 py-2 bg-yellow-500/20 text-yellow-400 text-xs font-medium rounded-xl shadow-lg">Pending</span>
+                  ) : myEngagement?.status === 'APPROVED' ? (
+                    <span className="px-4 py-2 bg-green-500/20 text-green-400 text-xs font-medium rounded-xl shadow-lg">Joined</span>
+                  ) : null}
+                </div>
+              )}
             </div>
           )}
 
@@ -437,67 +462,10 @@ export default function SportEventPage() {
               )}
             </div>
 
-            {event.status === 'ACTIVE' && !isPast && (
+
+            {/* Join button at bottom - only when no cover image */}
+            {!event.coverImage && event.status === 'ACTIVE' && !isPast && (
               <div className="bg-white/5 rounded-2xl p-5 border border-white/5">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-white font-semibold text-sm">Participants</h3>
-                  <span className="text-white/40 text-xs">
-                    {totalEngaged}{event.maxParticipants ? ` / ${event.maxParticipants}` : ''} joined
-                  </span>
-                </div>
-
-                {isFull && !isEngaged && (
-                  <p className="text-yellow-400 text-xs mb-3">This event is full!</p>
-                )}
-
-                <div className="space-y-2 mb-4">
-                  {event.engagements.filter(e => e.status !== 'DECLINED').map(e => (
-                    <div key={e.id} className="flex items-center gap-2 flex-wrap">
-                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#FC4C02]/30 to-orange-500/30 flex items-center justify-center text-[8px] font-bold text-white flex-shrink-0 border border-white/10">
-                        {(e.user?.name || e.guestEmail || '?').charAt(0).toUpperCase()}
-                      </div>
-                      <span className="text-white/70 text-xs">
-                        {e.user?.name || e.guestEmail || 'Guest'}
-                      </span>
-                      {e.guestPhone && (
-                        <span className="text-white/40 text-[10px]">· {e.guestPhone}</span>
-                      )}
-                      {e.guestLinks && (
-                        <a href={e.guestLinks.startsWith('http') ? e.guestLinks : `https://${e.guestLinks}`}
-                           target="_blank" rel="noopener noreferrer"
-                           className="text-[#FC4C02]/60 text-[10px] hover:text-[#FC4C02] truncate max-w-[120px]">
-                          {e.guestLinks}
-                        </a>
-                      )}
-                      {e.status === 'PENDING' && isCreator && (
-                        <div className="flex gap-1 ml-auto">
-                          <button
-                            onClick={() => handleApproveDecline(e.id, 'APPROVED')}
-                            className="px-2 py-0.5 bg-green-500/20 text-green-400 text-[9px] rounded-full hover:bg-green-500/30 transition-colors"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => handleApproveDecline(e.id, 'DECLINED')}
-                            className="px-2 py-0.5 bg-red-500/20 text-red-400 text-[9px] rounded-full hover:bg-red-500/30 transition-colors"
-                          >
-                            Decline
-                          </button>
-                        </div>
-                      )}
-                      {e.status === 'PENDING' && !isCreator && (
-                        <span className="text-yellow-400/60 text-[9px] ml-auto">Pending</span>
-                      )}
-                      {e.status === 'APPROVED' && (
-                        <span className="text-green-400/60 text-[9px] ml-auto">✓</span>
-                      )}
-                    </div>
-                  ))}
-                  {event.engagements.filter(e => e.status !== 'DECLINED').length === 0 && (
-                    <p className="text-white/30 text-xs text-center py-2">No participants yet. Be the first!</p>
-                  )}
-                </div>
-
                 {!isSignedIn && !showGuestForm ? (
                   <div className="space-y-2">
                     <button
