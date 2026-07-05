@@ -430,15 +430,19 @@ model SportEvent {
 model EventEngagement {
   id        String             @id @default(cuid())
   eventId   String
-  userId    String
+  userId    String?
   status    EngagementStatus   @default(PENDING)
+  guestEmail   String?
+  guestPhone   String?
+  guestLinks   String?
   createdAt DateTime           @default(now())
   updatedAt DateTime           @updatedAt
 
   event     SportEvent         @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([eventId, userId])
+  @@unique([eventId, guestEmail])
   @@index([userId])
 }
 

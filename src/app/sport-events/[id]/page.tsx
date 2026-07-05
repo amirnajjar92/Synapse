@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
-import MuscleMapDisplay from '@/components/MuscleMapDisplay';
 import MapDisplay from '@/components/MapDisplay';
 
 interface UserInfo {
@@ -15,7 +14,10 @@ interface UserInfo {
 interface EventEngagement {
   id: string;
   status: 'PENDING' | 'APPROVED' | 'DECLINED';
-  user: UserInfo;
+  user: UserInfo | null;
+  guestEmail: string | null;
+  guestPhone: string | null;
+  guestLinks: string | null;
 }
 
 interface SportEvent {
@@ -55,6 +57,13 @@ export default function SportEventPage() {
   const [myEngagement, setMyEngagement] = useState<EventEngagement | null>(null);
   const [copied, setCopied] = useState(false);
 
+  // Guest form state
+  const [showGuestForm, setShowGuestForm] = useState(false);
+  const [guestEmail, setGuestEmail] = useState('');
+  const [guestPhone, setGuestPhone] = useState('');
+  const [guestLinks, setGuestLinks] = useState('');
+  const [isJoiningGuest, setIsJoiningGuest] = useState(false);
+
   useEffect(() => {
     const load = async () => {
       try {
@@ -84,7 +93,7 @@ export default function SportEventPage() {
 
   useEffect(() => {
     if (!event || !userEmail) return;
-    const engagement = event.engagements.find(e => e.user.email === userEmail);
+    const engagement = event.engagements.find(e => e.user?.email === userEmail);
     if (engagement) {
       setMyEngagement(engagement);
       setIsEngaged(engagement.status !== 'DECLINED');
@@ -102,7 +111,7 @@ export default function SportEventPage() {
         setMyEngagement(null);
         setEvent(prev => prev ? {
           ...prev,
-          engagements: prev.engagements.filter(e => e.user.email !== userEmail),
+          engagements: prev.engagements.filter(e => e.user?.email !== userEmail),
         } : null);
       }
     } else {
@@ -117,9 +126,57 @@ export default function SportEventPage() {
         setIsEngaged(true);
         setEvent(prev => prev ? {
           ...prev,
-          engagements: [...prev.engagements.filter(e => e.user.email !== userEmail), data.engagement],
+          engagements: [...prev.engagements.filter(e => e.user?.email !== userEmail), data.engagement],
         } : null);
       }
+    }
+  };
+
+  const handleGuestJoin = async () => {
+    if (!guestEmail) return;
+    setIsJoiningGuest(true);
+    try {
+      const res = await fetch(`/api/sport-events/${eventId}/engage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ guestEmail, guestPhone, guestLinks }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setEvent(prev => prev ? {
+          ...prev,
+          engagements: [...prev.engagements, data.engagement],
+        } : null);
+        setShowGuestForm(false);
+        setGuestEmail('');
+        setGuestPhone('');
+        setGuestLinks('');
+      }
+    } catch (e) {
+      console.error('Error joining as guest:', e);
+    } finally {
+      setIsJoiningGuest(false);
+    }
+  };
+
+  const handleApproveDecline = async (engagementId: string, newStatus: 'APPROVED' | 'DECLINED') => {
+    if (!userEmail) return;
+    try {
+      const res = await fetch(`/api/sport-events/${eventId}/engage`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userEmail, engagementId, status: newStatus, isApproval: true }),
+      });
+      if (res.ok) {
+        setEvent(prev => prev ? {
+          ...prev,
+          engagements: prev.engagements.map(e =>
+            e.id === engagementId ? { ...e, status: newStatus } : e
+          ),
+        } : null);
+      }
+    } catch (e) {
+      console.error('Error updating engagement:', e);
     }
   };
 
@@ -166,9 +223,8 @@ export default function SportEventPage() {
   return (
     <div className="w-full min-h-screen bg-[#151515] flex items-center justify-center p-2 sm:p-4">
       <div className="w-full max-w-[402px] bg-black rounded-[40px] overflow-hidden shadow-2xl relative">
-        <MuscleMapDisplay />
         <div className="relative z-10" style={{ backgroundColor: '#0b0b0b4D' }}>
-          <div className="px-5 pt-16 pb-4">
+          <div className="px-5 pt-6 pb-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FC4C02] to-orange-500 flex items-center justify-center flex-shrink-0">
@@ -278,13 +334,44 @@ export default function SportEventPage() {
 
                 <div className="space-y-2 mb-4">
                   {event.engagements.filter(e => e.status !== 'DECLINED').map(e => (
-                    <div key={e.id} className="flex items-center gap-2">
+                    <div key={e.id} className="flex items-center gap-2 flex-wrap">
                       <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#FC4C02]/30 to-orange-500/30 flex items-center justify-center text-[8px] font-bold text-white flex-shrink-0 border border-white/10">
-                        {e.user.name?.charAt(0) || e.user.email.charAt(0).toUpperCase()}
+                        {(e.user?.name || e.guestEmail || '?').charAt(0).toUpperCase()}
                       </div>
-                      <span className="text-white/70 text-xs">{e.user.name || e.user.email}</span>
+                      <span className="text-white/70 text-xs">
+                        {e.user?.name || e.guestEmail || 'Guest'}
+                      </span>
+                      {e.guestPhone && (
+                        <span className="text-white/40 text-[10px]">· {e.guestPhone}</span>
+                      )}
+                      {e.guestLinks && (
+                        <a href={e.guestLinks.startsWith('http') ? e.guestLinks : `https://${e.guestLinks}`}
+                           target="_blank" rel="noopener noreferrer"
+                           className="text-[#FC4C02]/60 text-[10px] hover:text-[#FC4C02] truncate max-w-[120px]">
+                          {e.guestLinks}
+                        </a>
+                      )}
                       {e.status === 'PENDING' && isCreator && (
-                        <span className="text-yellow-400/60 text-[9px] ml-auto">Pending approval</span>
+                        <div className="flex gap-1 ml-auto">
+                          <button
+                            onClick={() => handleApproveDecline(e.id, 'APPROVED')}
+                            className="px-2 py-0.5 bg-green-500/20 text-green-400 text-[9px] rounded-full hover:bg-green-500/30 transition-colors"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => handleApproveDecline(e.id, 'DECLINED')}
+                            className="px-2 py-0.5 bg-red-500/20 text-red-400 text-[9px] rounded-full hover:bg-red-500/30 transition-colors"
+                          >
+                            Decline
+                          </button>
+                        </div>
+                      )}
+                      {e.status === 'PENDING' && !isCreator && (
+                        <span className="text-yellow-400/60 text-[9px] ml-auto">Pending</span>
+                      )}
+                      {e.status === 'APPROVED' && (
+                        <span className="text-green-400/60 text-[9px] ml-auto">✓</span>
                       )}
                     </div>
                   ))}
@@ -293,14 +380,70 @@ export default function SportEventPage() {
                   )}
                 </div>
 
-                {!isSignedIn ? (
-                  <button
-                    onClick={() => { setIsSigningIn(true); signIn('google', { callbackUrl: window.location.href }); }}
-                    disabled={isSigningIn}
-                    className="w-full py-2.5 bg-white text-black font-semibold text-sm rounded-xl hover:bg-white/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                  >
-                    {isSigningIn ? <Spinner size={16} /> : 'Sign in to join'}
-                  </button>
+                {!isSignedIn && !showGuestForm ? (
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => { setIsSigningIn(true); signIn('google', { callbackUrl: window.location.href }); }}
+                      disabled={isSigningIn}
+                      className="w-full py-2.5 bg-white text-black font-semibold text-sm rounded-xl hover:bg-white/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      {isSigningIn ? <Spinner size={16} /> : 'Sign in to join'}
+                    </button>
+                    <button
+                      onClick={() => setShowGuestForm(true)}
+                      className="w-full py-2.5 bg-white/10 text-white font-semibold text-sm rounded-xl hover:bg-white/20 transition-all"
+                    >
+                      Join as Guest
+                    </button>
+                  </div>
+                ) : showGuestForm && !isSignedIn ? (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-white/60 text-xs mb-1 block">Email *</label>
+                      <input
+                        type="email"
+                        value={guestEmail}
+                        onChange={e => setGuestEmail(e.target.value)}
+                        placeholder="your@email.com"
+                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[#FC4C02]/50"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-white/60 text-xs mb-1 block">Phone (optional)</label>
+                      <input
+                        type="tel"
+                        value={guestPhone}
+                        onChange={e => setGuestPhone(e.target.value)}
+                        placeholder="+1 (555) 123-4567"
+                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[#FC4C02]/50"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-white/60 text-xs mb-1 block">Social link (optional)</label>
+                      <input
+                        type="url"
+                        value={guestLinks}
+                        onChange={e => setGuestLinks(e.target.value)}
+                        placeholder="instagram.com/username"
+                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[#FC4C02]/50"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setShowGuestForm(false)}
+                        className="flex-1 py-2.5 bg-white/10 text-white text-sm rounded-xl hover:bg-white/20 transition-all"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleGuestJoin}
+                        disabled={!guestEmail || isJoiningGuest}
+                        className="flex-1 py-2.5 bg-[#FC4C02] text-white font-semibold text-sm rounded-xl hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                      >
+                        {isJoiningGuest ? <Spinner size={16} /> : 'Join'}
+                      </button>
+                    </div>
+                  </div>
                 ) : !isEngaged ? (
                   <button
                     onClick={handleEngage}
