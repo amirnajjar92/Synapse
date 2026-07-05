@@ -373,6 +373,68 @@ export default function SportEventPage() {
                   </div>
                 </div>
               )}
+              {/* Social Media Links */}
+              {((event as any).instagramLink || (event as any).facebookLink || (event as any).twitterLink || (event as any).websiteLink) && (
+                <div className="mt-4 pt-4 border-t border-white/10">
+                  <p className="text-white/40 text-[10px] uppercase tracking-wider font-medium mb-3">Connect</p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {(event as any).instagramLink && (
+                      <a
+                        href={(event as any).instagramLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all flex items-center gap-2 group"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-white/60 group-hover:text-[#E4405F] transition-colors">
+                          <path d="M12 2c2.717 0 3.056.01 4.122.06 1.065.05 1.79.217 2.428.465.66.254 1.216.598 1.772 1.153a4.908 4.908 0 0 1 1.153 1.772c.247.637.415 1.363.465 2.428.047 1.066.06 1.405.06 4.122 0 2.717-.01 3.056-.06 4.122-.05 1.065-.218 1.79-.465 2.428a4.883 4.883 0 0 1-1.153 1.772 4.915 4.915 0 0 1-1.772 1.153c-.637.247-1.363.415-2.428.465-1.066.047-1.405.06-4.122.06-2.717 0-3.056-.01-4.122-.06-1.065-.05-1.79-.218-2.428-.465a4.89 4.89 0 0 1-1.772-1.153 4.904 4.904 0 0 1-1.153-1.772c-.248-.637-.415-1.363-.465-2.428C2.013 15.056 2 14.717 2 12c0-2.717.01-3.056.06-4.122.05-1.066.217-1.79.465-2.428a4.88 4.88 0 0 1 1.153-1.772A4.897 4.897 0 0 1 5.45 2.525c.638-.248 1.362-.415 2.428-.465C8.944 2.013 9.283 2 12 2zm0 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm6.5-.25a1.25 1.25 0 0 0-2.5 0 1.25 1.25 0 0 0 2.5 0zM12 9a3 3 0 1 1 0 6 3 3 0 0 1 0-6z"/>
+                        </svg>
+                        <span className="text-white/60 group-hover:text-white text-xs font-medium transition-colors">Instagram</span>
+                      </a>
+                    )}
+                    {(event as any).facebookLink && (
+                      <a
+                        href={(event as any).facebookLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all flex items-center gap-2 group"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-white/60 group-hover:text-[#1877F2] transition-colors">
+                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                        </svg>
+                        <span className="text-white/60 group-hover:text-white text-xs font-medium transition-colors">Facebook</span>
+                      </a>
+                    )}
+                    {(event as any).twitterLink && (
+                      <a
+                        href={(event as any).twitterLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all flex items-center gap-2 group"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-white/60 group-hover:text-[#1DA1F2] transition-colors">
+                          <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                        </svg>
+                        <span className="text-white/60 group-hover:text-white text-xs font-medium transition-colors">Twitter</span>
+                      </a>
+                    )}
+                    {(event as any).websiteLink && (
+                      <a
+                        href={(event as any).websiteLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all flex items-center gap-2 group"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/60 group-hover:text-white transition-colors">
+                          <circle cx="12" cy="12" r="10" />
+                          <line x1="2" y1="12" x2="22" y2="12" />
+                          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                        </svg>
+                        <span className="text-white/60 group-hover:text-white text-xs font-medium transition-colors">Website</span>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {event.status === 'ACTIVE' && !isPast && (

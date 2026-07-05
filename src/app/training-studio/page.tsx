@@ -8,6 +8,7 @@ import BurgerMenuButton from '@/components/BurgerMenuButton';
 import FloatingNavBar from '@/components/FloatingNavBar';
 import MuscleMapDisplay from '@/components/MuscleMapDisplay';
 import LocationPicker from '@/components/LocationPicker';
+import EventPreview from '@/components/EventPreview';
 import { MOCK_CLIENTS, MOCK_MESSAGES_BY_CLIENT, MOCK_PLAN } from '@/lib/screenshot-data';
 
 interface Client {
@@ -124,6 +125,7 @@ export default function TrainingStudio() {
   const [events, setEvents] = useState<SportEvent[]>([]);
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
   const [showEventForm, setShowEventForm] = useState(false);
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [newEventTitle, setNewEventTitle] = useState('');
   const [newEventDescription, setNewEventDescription] = useState('');
   const [newEventDate, setNewEventDate] = useState('');
@@ -135,8 +137,15 @@ export default function TrainingStudio() {
   const [newEventHostedBy, setNewEventHostedBy] = useState('');
   const [newEventCoverImage, setNewEventCoverImage] = useState('');
   const [newEventSponsors, setNewEventSponsors] = useState<{ name: string; logo: string }[]>([]);
+  const [newEventInstagramLink, setNewEventInstagramLink] = useState('');
+  const [newEventFacebookLink, setNewEventFacebookLink] = useState('');
+  const [newEventTwitterLink, setNewEventTwitterLink] = useState('');
+  const [newEventWebsiteLink, setNewEventWebsiteLink] = useState('');
   const [isCreatingEvent, setIsCreatingEvent] = useState(false);
   const [showEventDetail, setShowEventDetail] = useState<string | null>(null);
+  const [showEventPreview, setShowEventPreview] = useState(false);
+  const [previewEventData, setPreviewEventData] = useState<any>(null);
+  const [selectedEventForView, setSelectedEventForView] = useState<SportEvent | null>(null);
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
@@ -622,45 +631,130 @@ export default function TrainingStudio() {
     setIsCreatingEvent(true);
     try {
       const dateTime = new Date(`${newEventDate}T${newEventTime || '12:00'}`).toISOString();
-      const res = await fetch('/api/sport-events', {
-        method: 'POST',
+      const payload = {
+        userEmail,
+        title: newEventTitle.trim(),
+        description: newEventDescription.trim() || undefined,
+        date: dateTime,
+        location: newEventLocation.trim() || undefined,
+        locationLat: newEventLocationLat?.toString() || undefined,
+        locationLng: newEventLocationLng?.toString() || undefined,
+        maxParticipants: newEventMaxParticipants.trim() || undefined,
+        hostedBy: newEventHostedBy.trim() || undefined,
+        coverImage: newEventCoverImage.trim() || undefined,
+        sponsors: newEventSponsors.length > 0 ? JSON.stringify(newEventSponsors) : undefined,
+        instagramLink: newEventInstagramLink.trim() || undefined,
+        facebookLink: newEventFacebookLink.trim() || undefined,
+        twitterLink: newEventTwitterLink.trim() || undefined,
+        websiteLink: newEventWebsiteLink.trim() || undefined,
+      };
+
+      const url = editingEventId ? `/api/sport-events/${editingEventId}` : '/api/sport-events';
+      const method = editingEventId ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userEmail,
-          title: newEventTitle.trim(),
-          description: newEventDescription.trim() || undefined,
-          date: dateTime,
-          location: newEventLocation.trim() || undefined,
-          locationLat: newEventLocationLat?.toString() || undefined,
-          locationLng: newEventLocationLng?.toString() || undefined,
-          maxParticipants: newEventMaxParticipants.trim() || undefined,
-          hostedBy: newEventHostedBy.trim() || undefined,
-          coverImage: newEventCoverImage.trim() || undefined,
-          sponsors: newEventSponsors.length > 0 ? JSON.stringify(newEventSponsors) : undefined,
-        }),
+        body: JSON.stringify(payload),
       });
+
       if (res.ok) {
         const data = await res.json();
-        setEvents(prev => [data.event, ...prev]);
-        setShowEventForm(false);
-        setNewEventTitle('');
-        setNewEventDescription('');
-        setNewEventDate('');
-        setNewEventTime('');
-        setNewEventLocation('');
-        setNewEventLocationLat(null);
-        setNewEventLocationLng(null);
-        setNewEventMaxParticipants('');
-        setNewEventHostedBy('');
-        setNewEventCoverImage('');
-        setNewEventSponsors([]);
+        if (editingEventId) {
+          setEvents(prev => prev.map(e => e.id === editingEventId ? data.event : e));
+        } else {
+          setEvents(prev => [data.event, ...prev]);
+        }
+        handleCloseEventForm();
       }
     } catch (error) {
-      console.error('Error creating event:', error);
+      console.error('Error saving event:', error);
     } finally {
       setIsCreatingEvent(false);
+      setShowEventPreview(false);
     }
-  }, [userEmail, newEventTitle, newEventDescription, newEventDate, newEventTime, newEventLocation, newEventMaxParticipants, newEventHostedBy, newEventCoverImage, newEventSponsors]);
+  }, [userEmail, editingEventId, newEventTitle, newEventDescription, newEventDate, newEventTime, newEventLocation, newEventLocationLat, newEventLocationLng, newEventMaxParticipants, newEventHostedBy, newEventCoverImage, newEventSponsors, newEventInstagramLink, newEventFacebookLink, newEventTwitterLink, newEventWebsiteLink]);
+
+  const handleCloseEventForm = () => {
+    setShowEventForm(false);
+    setEditingEventId(null);
+    setNewEventTitle('');
+    setNewEventDescription('');
+    setNewEventDate('');
+    setNewEventTime('');
+    setNewEventLocation('');
+    setNewEventLocationLat(null);
+    setNewEventLocationLng(null);
+    setNewEventMaxParticipants('');
+    setNewEventHostedBy('');
+    setNewEventCoverImage('');
+    setNewEventSponsors([]);
+    setNewEventInstagramLink('');
+    setNewEventFacebookLink('');
+    setNewEventTwitterLink('');
+    setNewEventWebsiteLink('');
+  };
+
+  const handleEditEvent = (event: SportEvent) => {
+    setEditingEventId(event.id);
+    setNewEventTitle(event.title);
+    setNewEventDescription(event.description || '');
+    const eventDate = new Date(event.date);
+    setNewEventDate(eventDate.toISOString().split('T')[0]);
+    setNewEventTime(eventDate.toTimeString().slice(0, 5));
+    setNewEventLocation(event.location || '');
+    setNewEventLocationLat(event.locationLat);
+    setNewEventLocationLng(event.locationLng);
+    setNewEventMaxParticipants(event.maxParticipants?.toString() || '');
+    setNewEventHostedBy(event.hostedBy || '');
+    setNewEventCoverImage(event.coverImage || '');
+    try {
+      setNewEventSponsors(event.sponsors ? JSON.parse(event.sponsors) : []);
+    } catch {
+      setNewEventSponsors([]);
+    }
+    setNewEventInstagramLink((event as any).instagramLink || '');
+    setNewEventFacebookLink((event as any).facebookLink || '');
+    setNewEventTwitterLink((event as any).twitterLink || '');
+    setNewEventWebsiteLink((event as any).websiteLink || '');
+    setShowEventForm(true);
+  };
+
+  const handleDeleteEvent = useCallback(async (eventId: string) => {
+    if (!userEmail || !confirm('Are you sure you want to delete this event?')) return;
+    try {
+      const res = await fetch(`/api/sport-events/${eventId}?userEmail=${encodeURIComponent(userEmail)}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        setEvents(prev => prev.filter(e => e.id !== eventId));
+        setShowEventDetail(null);
+      }
+    } catch (error) {
+      console.error('Error deleting event:', error);
+    }
+  }, [userEmail]);
+
+  const handlePreviewEvent = () => {
+    const dateTime = new Date(`${newEventDate}T${newEventTime || '12:00'}`).toISOString();
+    setPreviewEventData({
+      title: newEventTitle.trim(),
+      description: newEventDescription.trim() || null,
+      date: dateTime,
+      location: newEventLocation.trim() || null,
+      locationLat: newEventLocationLat,
+      locationLng: newEventLocationLng,
+      maxParticipants: newEventMaxParticipants.trim() || null,
+      hostedBy: newEventHostedBy.trim() || null,
+      coverImage: newEventCoverImage.trim() || null,
+      sponsors: newEventSponsors.length > 0 ? newEventSponsors : [],
+      instagramLink: newEventInstagramLink.trim() || null,
+      facebookLink: newEventFacebookLink.trim() || null,
+      twitterLink: newEventTwitterLink.trim() || null,
+      websiteLink: newEventWebsiteLink.trim() || null,
+    });
+    setShowEventPreview(true);
+  };
 
   const handleCancelEvent = useCallback(async (eventId: string) => {
     if (!userEmail) return;
@@ -1280,9 +1374,12 @@ export default function TrainingStudio() {
                       return (
                         <div
                           key={event.id}
-                          className="bg-white/5 rounded-xl p-3.5 hover:bg-white/10 transition-all cursor-pointer border border-white/5 group"
+                          className="bg-white/5 rounded-xl p-3.5 hover:bg-white/10 transition-all border border-white/5 group"
                         >
-                          <div className="flex items-start gap-3">
+                          <div 
+                            className="flex items-start gap-3 cursor-pointer"
+                            onClick={() => setSelectedEventForView(event)}
+                          >
                             <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 border ${
                               event.status === 'CANCELLED' ? 'bg-red-500/20 border-red-500/20' :
                               isPast ? 'bg-blue-500/20 border-blue-500/20' :
@@ -1318,7 +1415,36 @@ export default function TrainingStudio() {
                                 )}
                               </div>
                             </div>
-                            <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              {/* Edit Button */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditEvent(event);
+                                }}
+                                className="p-1.5 text-white/40 hover:text-blue-400 transition-all opacity-0 group-hover:opacity-100"
+                                aria-label="Edit event"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                </svg>
+                              </button>
+                              {/* Delete Button */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteEvent(event.id);
+                                }}
+                                className="p-1.5 text-white/40 hover:text-red-400 transition-all opacity-0 group-hover:opacity-100"
+                                aria-label="Delete event"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="3 6 5 6 21 6" />
+                                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                </svg>
+                              </button>
+                              {/* Share Button */}
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -1332,6 +1458,7 @@ export default function TrainingStudio() {
                                   <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
                                 </svg>
                               </button>
+                              {/* Manage Button */}
                               {event.status === 'ACTIVE' && !isPast && (
                                 <button
                                   onClick={(e) => {
@@ -1589,9 +1716,9 @@ export default function TrainingStudio() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}>
           <div className="w-full max-w-md bg-black border border-white/10 rounded-2xl overflow-hidden">
             <div className="flex items-center justify-between p-4 border-b border-white/10">
-              <h3 className="text-white font-semibold text-sm">Create Sport Event</h3>
+              <h3 className="text-white font-semibold text-sm">{editingEventId ? 'Edit' : 'Create'} Sport Event</h3>
               <button
-                onClick={() => setShowEventForm(false)}
+                onClick={handleCloseEventForm}
                 className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1600,7 +1727,7 @@ export default function TrainingStudio() {
                 </svg>
               </button>
             </div>
-            <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
+            <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
               <div>
                 <label className="text-white/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Title *</label>
                 <input
@@ -1644,6 +1771,8 @@ export default function TrainingStudio() {
               <div>
                 <label className="text-white/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Location</label>
                 <LocationPicker
+                  defaultLat={newEventLocationLat || undefined}
+                  defaultLng={newEventLocationLng || undefined}
                   onLocationChange={(lat, lng, addr) => {
                     setNewEventLocation(addr);
                     setNewEventLocationLat(lat);
@@ -1682,6 +1811,42 @@ export default function TrainingStudio() {
                   className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-white/20"
                 />
               </div>
+
+              {/* Social Media Links */}
+              <div className="pt-2 border-t border-white/10">
+                <label className="text-white/50 text-[10px] font-medium uppercase tracking-wider mb-2 block">Social Media & Links</label>
+                <div className="space-y-2">
+                  <input
+                    type="url"
+                    value={newEventInstagramLink}
+                    onChange={e => setNewEventInstagramLink(e.target.value)}
+                    placeholder="Instagram URL"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-white/30 outline-none focus:border-white/20"
+                  />
+                  <input
+                    type="url"
+                    value={newEventFacebookLink}
+                    onChange={e => setNewEventFacebookLink(e.target.value)}
+                    placeholder="Facebook URL"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-white/30 outline-none focus:border-white/20"
+                  />
+                  <input
+                    type="url"
+                    value={newEventTwitterLink}
+                    onChange={e => setNewEventTwitterLink(e.target.value)}
+                    placeholder="Twitter/X URL"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-white/30 outline-none focus:border-white/20"
+                  />
+                  <input
+                    type="url"
+                    value={newEventWebsiteLink}
+                    onChange={e => setNewEventWebsiteLink(e.target.value)}
+                    placeholder="Website URL"
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-white/30 outline-none focus:border-white/20"
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="text-white/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Sponsors</label>
                 <div className="space-y-2">
@@ -1731,17 +1896,24 @@ export default function TrainingStudio() {
               </div>
               <div className="flex gap-2 pt-2">
                 <button
-                  onClick={() => setShowEventForm(false)}
+                  onClick={handleCloseEventForm}
                   className="flex-1 py-2.5 bg-white/10 hover:bg-white/20 text-white text-sm rounded-lg transition-all"
                 >
                   Cancel
+                </button>
+                <button
+                  onClick={handlePreviewEvent}
+                  disabled={!newEventTitle.trim() || !newEventDate.trim()}
+                  className="flex-1 py-2.5 bg-white/10 hover:bg-white/20 disabled:opacity-50 text-white text-sm rounded-lg transition-all"
+                >
+                  Preview
                 </button>
                 <button
                   onClick={handleCreateEvent}
                   disabled={!newEventTitle.trim() || !newEventDate.trim() || isCreatingEvent}
                   className="flex-1 py-2.5 bg-[#FC4C02] hover:bg-[#FC4C02]/80 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-all"
                 >
-                  {isCreatingEvent ? 'Creating...' : 'Create Event'}
+                  {isCreatingEvent ? (editingEventId ? 'Saving...' : 'Creating...') : (editingEventId ? 'Save' : 'Create')}
                 </button>
               </div>
             </div>
@@ -1797,6 +1969,31 @@ export default function TrainingStudio() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Event Preview Modal */}
+      {showEventPreview && previewEventData && (
+        <EventPreview
+          event={previewEventData}
+          onClose={() => setShowEventPreview(false)}
+          onConfirm={handleCreateEvent}
+          isCreating={isCreatingEvent}
+        />
+      )}
+
+      {/* Event View Modal (when clicking on event card) */}
+      {selectedEventForView && (
+        <EventPreview
+          event={{
+            ...selectedEventForView,
+            sponsors: selectedEventForView.sponsors ? JSON.parse(selectedEventForView.sponsors) : [],
+            instagramLink: (selectedEventForView as any).instagramLink || null,
+            facebookLink: (selectedEventForView as any).facebookLink || null,
+            twitterLink: (selectedEventForView as any).twitterLink || null,
+            websiteLink: (selectedEventForView as any).websiteLink || null,
+          }}
+          onClose={() => setSelectedEventForView(null)}
+        />
       )}
     </div>
   );
