@@ -1482,9 +1482,9 @@ export default function TrainingStudio() {
                               className="px-2 py-1 text-white/40 hover:text-[#FC4C02] transition-colors"
                               title="Clone event"
                             >
-                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M4 16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-3l-4-4-4 4h3c1.1 0 2 .9 2 2z" />
-                                <path d="M12 16v6c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V10c0-1.1.9-2 2-2" />
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="23 4 23 10 17 10" />
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
                               </svg>
                             </button>
                             {/* Edit */}
