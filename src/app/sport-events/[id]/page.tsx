@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import MapDisplay from '@/components/MapDisplay';
+import LogoAnimation from '@/components/LogoAnimation';
 
 interface UserInfo {
   id: string;
@@ -52,6 +53,7 @@ export default function SportEventPage() {
 
   const [event, setEvent] = useState<SportEvent | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showLogo, setShowLogo] = useState(true);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
   const [isSignedIn, setIsSignedIn] = useState(false);
@@ -201,47 +203,9 @@ export default function SportEventPage() {
     });
   };
 
-  if (loading) {
+  if (loading || showLogo) {
     return (
-      <div className="w-full min-h-screen bg-[#151515] flex items-center justify-center p-2 sm:p-4">
-        <div className="w-full max-w-[402px] bg-black rounded-[40px] overflow-hidden shadow-2xl relative">
-          <div className="relative z-10" style={{ backgroundColor: '#0b0b0b4D' }}>
-            <div className="px-5 pt-6 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-white/5 animate-pulse" />
-                <div className="flex-1">
-                  <div className="h-4 w-28 bg-white/10 rounded animate-pulse mb-1" />
-                </div>
-              </div>
-            </div>
-            <div className="w-full h-40 sm:h-48 bg-white/5 animate-pulse" />
-            <div className="px-4 pb-4 space-y-4">
-              <div className="bg-white/5 rounded-2xl p-5 border border-white/5">
-                <div className="h-6 w-48 bg-white/10 rounded animate-pulse mb-3" />
-                <div className="h-3 w-full bg-white/5 rounded animate-pulse mb-2" />
-                <div className="h-3 w-3/4 bg-white/5 rounded animate-pulse mb-4" />
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-white/5 animate-pulse" />
-                    <div className="h-3 w-40 bg-white/5 rounded animate-pulse" />
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-white/5 animate-pulse" />
-                    <div className="h-3 w-32 bg-white/5 rounded animate-pulse" />
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-white/5 animate-pulse" />
-                    <div className="h-3 w-36 bg-white/5 rounded animate-pulse" />
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white/5 rounded-2xl p-5 border border-white/5">
-                <div className="h-10 w-full bg-white/10 rounded-xl animate-pulse" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <LogoAnimation onComplete={() => setShowLogo(false)} />
     );
   }
 
