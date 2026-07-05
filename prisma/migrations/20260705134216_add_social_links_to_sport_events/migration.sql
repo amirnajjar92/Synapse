@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "SportEvent" ADD COLUMN IF NOT EXISTS "instagramLink" TEXT,
+ADD COLUMN IF NOT EXISTS "facebookLink" TEXT,
+ADD COLUMN IF NOT EXISTS "twitterLink" TEXT,
+ADD COLUMN IF NOT EXISTS "websiteLink" TEXT;

@@ -76,7 +76,10 @@ interface SportEvent {
   engagements: {
     id: string;
     status: 'PENDING' | 'APPROVED' | 'DECLINED';
-    user: { id: string; name: string; email: string };
+    user: { id: string; name: string; email: string } | null;
+    guestEmail: string | null;
+    guestPhone: string | null;
+    guestLinks: string | null;
   }[];
 }
 
@@ -1416,6 +1419,77 @@ export default function TrainingStudio() {
                               </div>
                             </div>
                             <div className="flex items-center gap-1 flex-shrink-0">
+                              {/* Show Approved Participants Button */}
+                              {event.engagements.filter(e => e.status === 'APPROVED').length > 0 && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const approvedList = event.engagements.filter(e => e.status === 'APPROVED');
+                                    alert(`Approved Participants (${approvedList.length}):\n${approvedList.map(e =>
+                                      `• ${e.user?.name || e.user?.email || 'Guest'}${e.guestPhone ? ` · ${e.guestPhone}` : ''}${e.guestLinks ? ` · ${e.guestLinks}` : ''}`
+                                    ).join('\n')}`);
+                                  }}
+                                  className="p-1.5 text-white/40 hover:text-green-400 transition-all opacity-0 group-hover:opacity-100"
+                                  aria-label="Show approved participants"
+                                  title="Show approved participants"
+                                >
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                                    <circle cx="9" cy="7" r="4" />
+                                    <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                                    <path d="M16 3.13a4 4 0 010 7.75" />
+                                  </svg>
+                                </button>
+                              )}
+                              {/* Repeat/Clone Event Button */}
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const clonePayload = {
+                                    title: `${event.title} (Copy)`, // Optionally prefix with "Copy"
+                                    description: event.description,
+                                    date: event.date,
+                                    location: event.location,
+                                    locationLat: event.locationLat,
+                                    locationLng: event.locationLng,
+                                    maxParticipants: event.maxParticipants,
+                                    hostedBy: event.hostedBy,
+                                    coverImage: event.coverImage,
+                                    sponsors: event.sponsors,
+                                    instagramLink: (event as any).instagramLink,
+                                    facebookLink: (event as any).facebookLink,
+                                    twitterLink: (event as any).twitterLink,
+                                    websiteLink: (event as any).websiteLink,
+                                  };
+                                  setNewEventTitle(clonePayload.title || '');
+                                  setNewEventDescription(clonePayload.description || '');
+                                  setNewEventDate(clonePayload.date);
+                                  setNewEventTime('');
+                                  setNewEventLocation(clonePayload.location || '');
+                                  setNewEventLocationLat(clonePayload.locationLat);
+                                  setNewEventLocationLng(clonePayload.locationLng);
+                                  setNewEventMaxParticipants(clonePayload.maxParticipants?.toString() || '');
+                                  setNewEventHostedBy(clonePayload.hostedBy || '');
+                                  setNewEventCoverImage(clonePayload.coverImage || '');
+                                  setNewEventSponsors(clonePayload.sponsors ? JSON.parse(clonePayload.sponsors) : []);
+                                  setNewEventInstagramLink((clonePayload as any).instagramLink || '');
+                                  setNewEventFacebookLink((clonePayload as any).facebookLink || '');
+                                  setNewEventTwitterLink((clonePayload as any).twitterLink || '');
+                                  setNewEventWebsiteLink((clonePayload as any).websiteLink || '');
+                                  setNewEventTitle(clonePayload.title || '');
+                                  setNewEventDescription(clonePayload.description || '');
+                                  setNewEventDate(clonePayload.date);
+                                  setShowEventForm(true);
+                                }}
+                                className="p-1.5 text-white/40 hover:text-[#FC4C02] transition-all opacity-0 group-hover:opacity-100"
+                                aria-label="Clone event"
+                                title="Clone event to create new one"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M4 16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-3l-4-4-4 4h3c1.1 0 2 .9 2 2z" />
+                                  <path d="M12 16v6c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V10c0-1.1.9-2 2-2" />
+                                </svg>
+                              </button>
                               {/* Edit Button */}
                               <button
                                 onClick={(e) => {
@@ -1514,9 +1588,9 @@ export default function TrainingStudio() {
                                 event.engagements.map(eng => (
                                   <div key={eng.id} className="flex items-center gap-2">
                                     <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#FC4C02]/30 to-orange-500/30 flex items-center justify-center text-[7px] font-bold text-white flex-shrink-0 border border-white/10">
-                                      {eng.user.name?.charAt(0) || eng.user.email.charAt(0).toUpperCase()}
+                                      {(eng.user?.name?.charAt(0) || eng.user?.email?.charAt(0) || eng.guestEmail?.charAt(0) || 'G').toUpperCase()}
                                     </div>
-                                    <span className="text-white/60 text-[11px] flex-1 truncate">{eng.user.name || eng.user.email}</span>
+                                    <span className="text-white/60 text-[11px] flex-1 truncate">{eng.user?.name || eng.user?.email || eng.guestEmail || 'Guest'}</span>
                                     {eng.status === 'PENDING' && (
                                       <div className="flex gap-1">
                                         <button

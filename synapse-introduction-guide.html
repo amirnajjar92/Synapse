@@ -1,0 +1,608 @@
+**✅ اینجا نسخه کامل و آپدیت‌شده فایل HTML هست:**
+
+```html
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Synapse — App Introduction Guide</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;900&display=swap');
+
+    :root {
+      --bg: #0a0a0a;
+      --surface: #151515;
+      --card: #1a1a1a;
+      --accent: #3B82F6;
+      --accent-dim: rgba(59,130,246,0.15);
+      --text: #ffffff;
+      --text-secondary: rgba(255,255,255,0.7);
+      --text-muted: rgba(255,255,255,0.4);
+      --border: rgba(255,255,255,0.08);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Vazirmatn', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.8;
+      font-size: 15px;
+    }
+
+    @media print {
+      body { background: #fff; color: #111; }
+      .page { box-shadow: none !important; border: none !important; margin: 0 !important; padding: 40px !important; }
+      .no-print { display: none !important; }
+      .section { break-inside: avoid; }
+      h1, h2, h3 { color: #111 !important; }
+      p, li { color: #333 !important; }
+      .accent { color: var(--accent) !important; }
+      .card-print { background: #f5f5f5 !important; border: 1px solid #ddd !important; }
+    }
+
+    .page {
+      max-width: 800px;
+      margin: 40px auto;
+      background: var(--surface);
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+    }
+
+    .hero {
+      background: linear-gradient(135deg, var(--bg) 0%, #111 100%);
+      padding: 60px 48px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 50% 80%, var(--accent-dim) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--accent-dim);
+      padding: 6px 16px;
+      border-radius: 100px;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .hero h1 {
+      font-size: 42px;
+      font-weight: 900;
+      line-height: 1.2;
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    .hero h1 .accent { color: var(--accent); }
+
+    .hero p {
+      font-size: 16px;
+      color: var(--text-secondary);
+      max-width: 500px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .content { padding: 48px; }
+
+    .section {
+      margin-bottom: 48px;
+    }
+
+    .section-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .section h2 {
+      font-size: 26px;
+      font-weight: 900;
+      margin-bottom: 16px;
+      line-height: 1.3;
+    }
+
+    .section h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      margin-top: 20px;
+    }
+
+    .section p {
+      color: var(--text-secondary);
+      line-height: 1.9;
+      margin-bottom: 12px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+
+    .persian-text {
+      font-size: 17px;
+      line-height: 2.1;
+      color: var(--text);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 16px;
+      direction: rtl;
+      text-align: right;
+    }
+
+    .persian-text p {
+      margin-bottom: 12px;
+      color: var(--text);
+    }
+
+    .persian-text .highlight {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 32px 0;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .feature-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .feature-card .icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+      font-size: 18px;
+    }
+
+    .feature-card h5 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .feature-card p {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .aha-box {
+      background: linear-gradient(135deg, var(--accent-dim), rgba(59,130,246,0.05));
+      border: 1px solid rgba(59,130,246,0.2);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+
+    .aha-box h4 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .aha-box ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .aha-box li {
+      padding: 6px 0;
+      padding-right: 20px;
+      position: relative;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .aha-box li::before {
+      content: '→';
+      position: absolute;
+      right: 0;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 32px;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .toc {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 32px;
+    }
+
+    .toc h3 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--accent);
+    }
+
+    .toc ol {
+      padding-right: 20px;
+    }
+
+    .toc li {
+      font-size: 14px;
+      color: var(--text-secondary);
+      padding: 4px 0;
+    }
+
+    @media (max-width: 640px) {
+      .hero { padding: 40px 24px; }
+      .hero h1 { font-size: 28px; }
+      .content { padding: 24px; }
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page">
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge">Introduction Guide</div>
+    <h1>Synapse<span class="accent">.</span></h1>
+    <p>Everything you need to introduce and explain the app to your friend — in one document.</p>
+  </div>
+
+  <div class="content">
+
+    <!-- TOC -->
+    <div class="toc">
+      <h3>Contents</h3>
+      <ol>
+        <li>App Overview — What is Synapse?</li>
+        <li>90-Second Pitch — Version 1 (Kevin O'Leary Style)</li>
+        <li>90-Second Pitch — Version 2 (Different Angle)</li>
+        <li>Design Talking Points</li>
+        <li>Entertain Feature — Deep Dive</li>
+        <li>Key "Aha" Moments to Highlight</li>
+        <li>Meet Mehrad — BodoNado & London Connection</li>
+        <li>Collaboration Pitch — Conversation Script</li>
+        <li>Growth Plan with Mehrad</li>
+        <li>The Big Picture — Migration & Entrepreneurship</li>
+      </ol>
+    </div>
+
+    <!-- SECTION 1: OVERVIEW -->
+    <div class="section">
+      <div class="section-label">01 — Overview</div>
+      <h2>What is Synapse?</h2>
+      <p>Synapse is an AI-powered fitness and health operating system — not just another fitness app. It plans your training, tracks your progress, reads your data, and adapts in real time. A trainer stays in the loop when you want one.</p>
+
+      <div class="grid-2">
+        <div class="feature-card">
+          <div class="icon" style="background:rgba(59,130,246,0.15)">🧠</div>
+          <h5>AI Coach</h5>
+          <p>Generates personalized workout plans based on your goal, equipment, and schedule.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon" style="background:rgba(34,197,94,0.15)">📊</div>
+          <h5>Progress Tracker</h5>
+          <p>Daily check-ins compared against your plan, with AI-flagged deviations.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon" style="background:rgba(168,85,247,0.15)">💬</div>
+          <h5>Live Chat</h5>
+          <p>Real-time trainer-client messaging with push notifications.</p>
+        </div>
+        <div class="feature-card">
+          <div class="icon" style="background:rgba(249,115,22,0.15)">📱</div>
+          <h5>PWA</h5>
+          <p>Installs like an app, works offline, no app store required.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- SECTION 2: PITCH V1 -->
+    <div class="section">
+      <div class="section-label">02 — 90-Second Pitch</div>
+      <h2>Version 1 — The System Problem</h2>
+
+      <div class="persian-text">
+        <p>گوش کن. یه سوال دارم ازت.</p>
+        <p>تو الان وقتی میخوای ورزش کنی، میخوای غذا بخوری، میخوای آب بخوری، چند تا اپ جداگانه باز میکنی؟ سه؟ چهار؟ پنج؟</p>
+        <p class="highlight">این وحشتناکه. این مثل اینه که بری رستوران و هر غذا رو از یه رستوران جداگانه سفارش بدی.</p>
+        <p>من دارم بهت Synapse رو میدم. اسمش خودت هست — سیناپس، مثل اتصال مغز.</p>
+        <p class="highlight">یه اپ. همه چی.</p>
+        <p>تو فقط میگی "میخوام ۵ کیلو کم کنم" — هوش مصنوعی یه برنامه کامل برات مینویسه. هفته به هفته. متناسب با هیکلت، وسایلی که داری، و برنامه‌ات.</p>
+        <p>بعدش؟ هر روز میری رو ترکر، چک‌این میزنی، هوش مصنوعی میبینه کجایی و <span class="highlight">خودش برنامه رو عوض میکنه.</span> نه اینکه بگی "آقا من خسته شدم" — خودش میفهمه.</p>
+        <p>آب خوردی؟ ثبت شد. دویدی؟ از Strava اومد. گرسنته شدی؟ برنامه غذایی داری.</p>
+        <p class="highlight">و اینجاست که جالب میشه:</p>
+        <p>اگه مربی داری، اون مربی زنده تو اپ هست. پیام میده، برنامه عوض میکنه، لحظه‌ای. تو سر کاری، اون داره برنامه فردا رو آپدیت میکنه. پوش نوتیفیکیشن هم میاد — حتی وقتی اپ بسته‌ست.</p>
+        <p class="highlight">مثل یه مربی شخصی ۲۴ ساعته، ولی پولش رو یه اپ میدی.</p>
+        <p>نصبش؟ رایگان. آفلاین کار میکنه. هیچ کردیت کارتی نمیخواد. مثل اپ نصب میشه رو گوشیت.</p>
+        <p class="highlight">اگه دنبال فیتنسی، و از پنج تا اپ مختلف خسته شدی — این همون چیزیه که دنبالش بودی.</p>
+        <p>این شمارو امتحان کن. دو دقیقه وقتت رو میگیره. بعدش خودت میفهمی.</p>
+      </div>
+
+      <div class="aha-box">
+        <h4>Aha Moments in This Pitch</h4>
+        <ul>
+          <li>The 5-app problem — relatable pain everyone feels</li>
+          <li>AI auto-adjusts without asking — surprising intelligence</li>
+          <li>Live trainer in your pocket, even offline — emotional hook</li>
+          <li>"Free. Offline. No credit card." — eliminates all objections</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- SECTION 3: PITCH V2 -->
+    <div class="section">
+      <div class="section-label">03 — 90-Second Pitch</div>
+      <h2>Version 2 — The Cycle Breaker</h2>
+
+      <div class="persian-text">
+        <p>صبر کن. یه چیزی بهت بگم.</p>
+        <p>تو الان چند وقته که میخوای شروع کنی؟ یک ماه؟ سه ماه؟ شیش ماه؟</p>
+        <p class="highlight">مشکل تو انگیزه نیست. مشکل سیستمه.</p>
+        <p>میری باشگاه، بدون برنامه تمرین میکنی. بعد دو هفته خسته میشی. بعدش؟ میوفتی رو کاناپه و گوشیت رو دستت میاد و اپ غذایی رو باز میکنی و آبی میخوری و... بیخیال.</p>
+        <p class="highlight">این یه چرخه معیوبه.</p>
+        <p>من یه چیزی بهت نشون بدم؟</p>
+        <p>Synapse. یه اپ. ولی این اپ معمولی نیست.</p>
+        <p class="highlight">اولش:</p> <p>تو میگی هدفت. "میخوام عضله بزنم." "میخوام وزن کم کنم." "میخوام ماراتن بدم." هر چی. هوش مصنوعی یه برنامه کامل برات مینویسه — دقیق، شخصی، مال تو.</p>
+        <p class="highlight">دومش:</p> <p>هر روز میای چک‌این میزنی. "دیروز سینه زدم." "دیروز ۵ کیلومتر دویدم." و هوش مصنوعی داره نگاه میکنه. <span class="highlight">میفهمه داری پیشرفت میکنی یا نه.</span> اگه داری عقب میوفتی، خودش برنامه رو تغییر میده. خودش.</p>
+        <p class="highlight">سومش:</p> <p>این بخش منه. مربیت زنده تو اپ هست. پیام میده. برنامه عوض میکنه. لحظه‌ای. تو خوابی، اون داره فردا رو برنامه‌ریزی میکنه.</p>
+        <p>و بعد... <span class="highlight">آب.</span> فراموش نکن آب بخوری. یادآوری داره. استریک داره.</p>
+        <p class="highlight">و همه اینا؟</p> <p>یه اپ. رایگان. آفلاین. نصب میشه رو گوشی. بدون کردیت کارت.</p>
+        <p class="highlight">فقط بیا امتحان کن. دو دقیقه.</p>
+        <p>اگه بعدش گفتی "نه، بیخیال" — قبول. ولی اگه گفتی "وای..." — <span class="highlight">خودش میفهمی.</span></p>
+      </div>
+
+      <div class="aha-box">
+        <h4>Aha Moments in This Pitch</h4>
+        <ul>
+          <li>"It's not motivation, it's the system" — reframes the problem</li>
+          <li>AI silently watches and adjusts — surprising intelligence</li>
+          <li>"Your trainer is alive in the app" — emotional hook</li>
+          <li>"Free. Offline. No credit card." — eliminates all objections</li>
+          <li>"Just try — if not, fine" — low pressure close</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- SECTION 4: DESIGN -->
+    <div class="section">
+      <div class="section-label">04 — Design Talking Points</div>
+      <h2>What to Say About the Design</h2>
+
+      <div class="persian-text">
+        <p>طراحیش؟ این یه اپ فیتنس معمولی نیست. این یه <span class="highlight">سیستم‌عامل فیتنس</span> هست.</p>
+        <p>تم مشکیه. حس خوبی داره. مثل یه اپ پرمیومه، نه یه اپ رایگان.</p>
+        <p class="highlight">یه چیزی که خیلی باحاله:</p>
+        <p>نقشه عضله داره. میری تمرین میکنی، عضله‌هایی که زدی روی نقشه روشن میشه. قرمز میشه. حس میکنی واقعاً داری کار میکنی.</p>
+        <p>و همه چیز یکپارچه‌ست. آب خوردی، ثبت شد. دویدی، اومد. چک‌این زدی، همه چی با هم. جدا جدا نیست.</p>
+        <p class="highlight">مثل یه داشبورد ماشینه — همه چی یه جا میبینی.</p>
+      </div>
+
+      <div class="aha-box">
+        <h4>Key Design Points</h4>
+        <ul>
+          <li>Dark premium feel — "it doesn't feel like a free app"</li>
+          <li>Muscle map — visual, interactive, unique</li>
+          <li>Everything unified — one dashboard, not five apps</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- SECTION 5: ENTERTAIN -->
+    <div class="section">
+      <div class="section-label">05 — Entertain Feature</div>
+      <h2>Entertain — AI-Curated Fitness Content</h2>
+      <p>An Instagram Explore-style experience, but only fitness content — all AI-curated based on the user's workout plan.</p>
+
+      <div class="persian-text">
+        <p>یه بخش دیگه داریم به اسم <span class="highlight">Entertain</span> — مثل اینستاگرام اکسپلور، ولی فقط فیتنس.</p>
+        <p>بر اساس برنامه تمرینیت، <span class="highlight">هوش مصنوعی برات محتوا پیدا میکنه.</span> چهار دسته داره:</p>
+        <p><span class="highlight">۱. ویدیو</span> — بهترین ویدیوهای تمرینی یوتیوب. کلیک کنی، مستقیم پخش میشه. نیازی نیست بری یوتیوب سرچ کنی.</p>
+        <p><span class="highlight">۲. پلی‌لیست</span> — موزیک‌های تمرینی. پلی‌لیست‌های محبوب. مثل اینه که یه DJ شخصی داری.</p>
+        <p><span class="highlight">۳. اخبار</span> — جدیدترین اخبار فیتنس و سلامتی. ترند.</p>
+        <p><span class="highlight">۴. رویدادها</span> — مسابقات دو، کراس‌فیت، ماراتن. هر چی نزدیکته.</p>
+        <p class="highlight">و باحال‌ترین بخشش:</p>
+        <p>همه اینا <span class="highlight">خودکار</span> آپدیت میشه. هر بار که میری، محتوای تازه داری. مثل فید اینستاگرام، ولی فقط چیزی که به کارتم مربوطه.</p>
+        <p><span class="highlight">ویدیو؟</span> یه کلیک. تو همون اپ پخش میشه. نیازی نیست از اپ خارج بشی.</p>
+      </div>
+
+      <div class="grid-2" style="margin-top:16px">
+        <div class="feature-card">
+          <span class="tag tag-purple">Videos</span>
+          <h5>YouTube Workout Videos</h5>
+          <p>AI searches YouTube based on your plan. Click to play in-app with embedded player.</p>
+        </div>
+        <div class="feature-card">
+          <span class="tag tag-orange">Playlists</span>
+          <h5>Workout Music</h5>
+          <p>Curated fitness playlists and music mixes for training sessions.</p>
+        </div>
+        <div class="feature-card">
+          <span class="tag tag-blue">News</span>
+          <h5>Fitness News</h5>
+          <p>Trending health and fitness articles from top sources.</p>
+        </div>
+        <div class="feature-card">
+          <span class="tag tag-green">Events</span>
+          <h5>Races & Competitions</h5>
+          <p>Upcoming marathons, CrossFit events, and fitness competitions near you.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- SECTION 6: AHA MOMENTS -->
+    <div class="section">
+      <div class="section-label">06 — Summary</div>
+      <h2>Key "Aha" Moments to Highlight</h2>
+      <p>When introducing Synapse, these are the moments that make people say "wow":</p>
+
+      <div class="card" style="margin-top:16px">
+        <div class="card-number">01</div>
+        <h4>AI Auto-Adjusts</h4>
+        <p>You don't ask it to change the plan — it sees you're struggling and adapts on its own. That's intelligence, not just an app.</p>
+      </div>
+      <div class="card">
+        <div class="card-number">02</div>
+        <h4>Live Trainer in Your Pocket</h4>
+        <p>Your trainer is messaging you, updating your plan, sending push notifications — even when the app is closed.</p>
+      </div>
+      <div class="card">
+        <div class="card-number">03</div>
+        <h4>Everything Unified</h4>
+        <p>Workout, nutrition, hydration, progress, chat — all in one place. No more 5 different apps.</p>
+      </div>
+      <div class="card">
+        <div class="card-number">04</div>
+        <h4>Muscle Map</h4>
+        <p>See which muscles you worked, highlighted on a body map. Visual, satisfying, unique.</p>
+      </div>
+      <div class="card">
+        <div class="card-number">05</div>
+        <h4>Entertain</h4>
+        <p>AI-curated fitness content — videos, playlists, news, events — all personalized to your plan. Never stale.</p>
+      </div>
+      <div class="card">
+        <div class="card-number">06</div>
+        <h4>Free. Offline. No Credit Card.</h4>
+        <p>Installs like an app. Works without internet. Zero friction to start.</p>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- NEW SECTIONS -->
+    <div class="section">
+      <div class="section-label">07 — Meet Mehrad</div>
+      <h2>مهراد — BodoNado & London Connection</h2>
+      <div class="persian-text">
+        <p>مهراد دوست منه و مربی حرفه‌ای در لندن. او باشگاه دویدن موفقی به اسم <span class="highlight">BodoNado</span> راه‌اندازی کرده.</p>
+        <p>مهراد دسترسی عالی به جامعه دوندگان، مربی‌ها و امکانات ورزشی لندن داره. این یه فرصت عالی برای گسترش Synapse هست.</p>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <div class="section-label">08 — Collaboration Pitch</div>
+      <h2>اسکریپت گفتگوی دعوت به همکاری</h2>
+      <div class="persian-text">
+        <p><strong>نسخه Kevin O’Leary Style (مستقیم و نتیجه‌محور):</strong></p>
+        <p>«مهراد، گوش کن. من یه اپ ساختم به اسم Synapse. این فقط یه اپ فیتنس نیست، یه سیستم هوش مصنوعی کامل هست که برنامه تمرین رو بر اساس داده‌های واقعی کاربر تغییر می‌ده.</p>
+        <p>تو BodoNado داری، جامعه قوی و مربی‌های خوب. تصور کن همه اعضای کلابت از این سیستم استفاده کنن. مربی‌ها بتونن برنامه اعضا رو لحظه‌ای ببینن و مدیریت کنن.</p>
+        <p>این می‌تونه اولین قدم برای تبدیل BodoNado به یه برند tech-fitness باشه. من از ایران روی توسعه فنی کار می‌کنم، تو در لندن روی مربیگری و گسترش.</p>
+        <p>این برای من فرصت مهاجرت و کارآفرینی هست و برای تو هم فرصت بزرگ شدن به عنوان entrepreneur در حوزه fitness AI.</p>
+        <p>چی فکر می‌کنی؟ آماده‌ای با هم این پروژه رو ببریم جلو؟»</p>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <div class="section-label">09 — Growth Plan with Mehrad</div>
+      <h2>برنامه رشد مشترک با مهراد</h2>
+      <div class="persian-text">
+        <p><strong>ایده‌های عملی:</strong></p>
+        <ul>
+          <li>استفاده از BodoNado به عنوان اولین گروه آزمایشی (Pilot)</li>
+          <li>اضافه کردن مربی‌های BodoNado به عنوان trainer داخل اپ</li>
+          <li>برگزاری چالش‌ها و رویدادهای مشترک (مسابقه دو + Synapse Challenge)</li>
+          <li>مذاکره با باشگاه‌ها و facilities لندن برای پروموشن اپ</li>
+          <li>ساخت محتوای ویدیویی مشترک برای رشد برند</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <div class="section-label">10 — The Big Picture</div>
+      <h2>تصویر بزرگ — مهاجرت و کارآفرینی</h2>
+      <div class="persian-text">
+        <p>این همکاری فقط پروموشن اپ نیست. این یه فرصت واقعی برای منه که از ایران به لندن حرکت کنم و تمام تمرکزم رو روی توسعه Synapse بگذارم.</p>
+        <p>برای مهراد هم فرصت عالیه که در انگلیس بمونه و به عنوان کارآفرین حوزه fitness technology فعالیت کنه.</p>
+        <p class="highlight">با هم می‌تونیم Synapse رو به یه محصول بین‌المللی تبدیل کنیم.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <p><strong>Synapse</strong> — Plan. Track. Analyze. Adapt.</p>
+    <p style="margin-top:4px">Prepared for meeting with Mehrad — London ۲۰۲۶</p>
+  </div>
+</div>
+
+</body>
+</html>
+```
+
+---
+
+**حالا فقط کپی کن و ذخیره کن.**  
+فایل رو باز کن، پرینت بگیر یا به مهراد بفرست.
+
+اگر چیزی دیگه می‌خوای اضافه یا تغییر کنه (مثلاً قوی‌تر کردن اسکریپت گفتگو) بگو. موفق باشی! 🚀
