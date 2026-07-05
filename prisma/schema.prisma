@@ -190,6 +190,8 @@ model User {
   clientConversations Conversation[]  @relation("ClientConversations")
   messages            Message[]
   sentInvitations     Invitation[]
+  createdEvents       SportEvent[]     @relation("EventCreator")
+  eventEngagements    EventEngagement[]
 }
 
 model UserPrompt {
@@ -402,6 +404,54 @@ model Invitation {
   @@unique([trainerId, clientEmail])
   @@index([clientEmail, status])
   @@index([trainerId])
+}
+
+model SportEvent {
+  id              String             @id @default(cuid())
+  creatorId       String
+  title           String
+  description     String?            @db.Text
+  date            DateTime
+  location        String?
+  locationLat     Float?
+  locationLng     Float?
+  maxParticipants Int?
+  status          EventStatus        @default(ACTIVE)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  creator         User               @relation("EventCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  engagements     EventEngagement[]
+
+  @@index([creatorId])
+  @@index([status, date])
+}
+
+model EventEngagement {
+  id        String             @id @default(cuid())
+  eventId   String
+  userId    String
+  status    EngagementStatus   @default(PENDING)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  event     SportEvent         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@index([userId])
+}
+
+enum EventStatus {
+  ACTIVE
+  CANCELLED
+  COMPLETED
+}
+
+enum EngagementStatus {
+  PENDING
+  APPROVED
+  DECLINED
 }
 
 model PushSubscription {
