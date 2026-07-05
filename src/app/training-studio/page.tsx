@@ -134,7 +134,7 @@ export default function TrainingStudio() {
   const [newEventMaxParticipants, setNewEventMaxParticipants] = useState('');
   const [newEventHostedBy, setNewEventHostedBy] = useState('');
   const [newEventCoverImage, setNewEventCoverImage] = useState('');
-  const [newEventSponsors, setNewEventSponsors] = useState('');
+  const [newEventSponsors, setNewEventSponsors] = useState<{ name: string; logo: string }[]>([]);
   const [isCreatingEvent, setIsCreatingEvent] = useState(false);
   const [showEventDetail, setShowEventDetail] = useState<string | null>(null);
 
@@ -636,7 +636,7 @@ export default function TrainingStudio() {
           maxParticipants: newEventMaxParticipants.trim() || undefined,
           hostedBy: newEventHostedBy.trim() || undefined,
           coverImage: newEventCoverImage.trim() || undefined,
-          sponsors: newEventSponsors.trim() || undefined,
+          sponsors: newEventSponsors.length > 0 ? JSON.stringify(newEventSponsors) : undefined,
         }),
       });
       if (res.ok) {
@@ -653,7 +653,7 @@ export default function TrainingStudio() {
         setNewEventMaxParticipants('');
         setNewEventHostedBy('');
         setNewEventCoverImage('');
-        setNewEventSponsors('');
+        setNewEventSponsors([]);
       }
     } catch (error) {
       console.error('Error creating event:', error);
@@ -1683,14 +1683,51 @@ export default function TrainingStudio() {
                 />
               </div>
               <div>
-                <label className="text-white/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Sponsors (JSON: name + logo URL)</label>
-                <textarea
-                  value={newEventSponsors}
-                  onChange={e => setNewEventSponsors(e.target.value)}
-                  placeholder='[{"name":"Nike","logo":"https://..."},{"name":"Gymshark","logo":"https://..."}]'
-                  rows={2}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white text-xs placeholder-white/30 outline-none focus:border-white/20 resize-none"
-                />
+                <label className="text-white/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Sponsors</label>
+                <div className="space-y-2">
+                  {newEventSponsors.map((s, i) => (
+                    <div key={i} className="flex gap-2">
+                      <input
+                        type="text"
+                        value={s.name}
+                        onChange={e => {
+                          const copy = [...newEventSponsors];
+                          copy[i] = { ...copy[i], name: e.target.value };
+                          setNewEventSponsors(copy);
+                        }}
+                        placeholder="Sponsor name"
+                        className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-white/30 outline-none focus:border-white/20"
+                      />
+                      <input
+                        type="url"
+                        value={s.logo}
+                        onChange={e => {
+                          const copy = [...newEventSponsors];
+                          copy[i] = { ...copy[i], logo: e.target.value };
+                          setNewEventSponsors(copy);
+                        }}
+                        placeholder="Logo URL"
+                        className="flex-[2] bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-white/30 outline-none focus:border-white/20"
+                      />
+                      <button
+                        onClick={() => setNewEventSponsors(newEventSponsors.filter((_, j) => j !== i))}
+                        className="px-2 text-red-400/60 hover:text-red-400 text-sm transition-colors"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => setNewEventSponsors([...newEventSponsors, { name: '', logo: '' }])}
+                    className="text-white/40 hover:text-white text-xs transition-colors flex items-center gap-1"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="12" y1="5" x2="12" y2="19" />
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    Add sponsor
+                  </button>
+                </div>
               </div>
               <div className="flex gap-2 pt-2">
                 <button
