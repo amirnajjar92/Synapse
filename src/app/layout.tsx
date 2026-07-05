@@ -10,14 +10,37 @@ const hanaleiFill = Hanalei_Fill({
   variable: "--font-hanalei-fill",
 });
 
+const SITE_URL = 'https://synapse-fit.vercel.app';
+
 export const metadata: Metadata = {
-  title: 'Synapse - Fitness & Health Tracker',
-  description: 'Your personal fitness and health tracking companion',
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: 'Synapse — AI Fitness & Health Tracker',
+    template: '%s | Synapse Fit',
+  },
+  description: 'AI-powered workout planning, progress tracking, and trainer collaboration. Generate personalized training plans, track every rep, and achieve your fitness goals.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
     title: 'Synapse',
+  },
+  openGraph: {
+    title: 'Synapse — AI Fitness & Health Tracker',
+    description: 'AI-powered workout planning, progress tracking, and trainer collaboration. Generate personalized training plans and achieve your fitness goals.',
+    url: SITE_URL,
+    siteName: 'Synapse Fit',
+    type: 'website',
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Synapse — AI Fitness & Health Tracker',
+    description: 'AI-powered workout planning, progress tracking, and trainer collaboration.',
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
