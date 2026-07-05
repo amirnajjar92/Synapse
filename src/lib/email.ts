@@ -4,7 +4,7 @@ const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
-const FROM_EMAIL = process.env.EMAIL_FROM || 'Synapse Fit <notifications@synapse-fit.vercel.app>';
+const FROM_EMAIL = process.env.EMAIL_FROM || 'onboarding@resend.dev';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://synapse-fit.vercel.app';
 
 interface SendEventEmailParams {
