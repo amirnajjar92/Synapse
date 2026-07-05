@@ -36,7 +36,7 @@ export async function GET(request: Request) {
           include: { user: { select: { id: true, name: true, email: true } } },
         },
       },
-      orderBy: { date: 'asc' },
+      orderBy: { date: 'desc' },
     })
 
     return NextResponse.json({ events })

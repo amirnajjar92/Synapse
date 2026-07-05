@@ -268,14 +268,14 @@ export default function SportEventPage() {
                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-              {event.status === 'ACTIVE' && !isPast && (
+              {event.status === 'ACTIVE' && !isPast && !showGuestForm && (
                 <div className="absolute bottom-3 right-3 z-[1]">
-                  {!isSignedIn && !showGuestForm ? (
+                  {!isSignedIn ? (
                     <div className="flex gap-2">
                       <button
                         onClick={() => { setIsSigningIn(true); signIn('google', { callbackUrl: window.location.href }); }}
                         disabled={isSigningIn}
-                        className="px-4 py-2 bg-[#FC4C02] text-white font-semibold text-xs rounded-lg hover:opacity-90 transition-all disabled:opacity-50 shadow-lg"
+                        className="px-4 py-2 bg-[#FC4C02]/70 backdrop-blur-sm text-white font-semibold text-xs rounded-lg hover:bg-[#FC4C02]/90 transition-all disabled:opacity-50 shadow-lg"
                       >
                         {isSigningIn ? '...' : 'Sign in to join'}
                       </button>
@@ -285,45 +285,6 @@ export default function SportEventPage() {
                       >
                         Join as Guest
                       </button>
-                    </div>
-                  ) : showGuestForm && !isSignedIn ? (
-                    <div className="bg-black/80 backdrop-blur-md rounded-xl p-3 w-64 space-y-2 shadow-xl border border-white/10">
-                      <input
-                        type="email"
-                        value={guestEmail}
-                        onChange={e => setGuestEmail(e.target.value)}
-                        placeholder="Email *"
-                        className="w-full px-3 py-1.5 bg-white/10 border border-white/10 rounded-lg text-white text-xs placeholder:text-white/40 focus:outline-none focus:border-[#FC4C02]/50"
-                      />
-                      <input
-                        type="tel"
-                        value={guestPhone}
-                        onChange={e => setGuestPhone(e.target.value)}
-                        placeholder="Phone (optional)"
-                        className="w-full px-3 py-1.5 bg-white/10 border border-white/10 rounded-lg text-white text-xs placeholder:text-white/40 focus:outline-none focus:border-[#FC4C02]/50"
-                      />
-                      <input
-                        type="url"
-                        value={guestLinks}
-                        onChange={e => setGuestLinks(e.target.value)}
-                        placeholder="Social link (optional)"
-                        className="w-full px-3 py-1.5 bg-white/10 border border-white/10 rounded-lg text-white text-xs placeholder:text-white/40 focus:outline-none focus:border-[#FC4C02]/50"
-                      />
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => { setShowGuestForm(false); setGuestEmail(''); setGuestPhone(''); setGuestLinks(''); }}
-                          className="flex-1 py-1.5 bg-white/10 text-white text-xs rounded-lg hover:bg-white/20 transition-all"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={handleGuestJoin}
-                          disabled={!guestEmail || isJoiningGuest}
-                          className="flex-1 py-1.5 bg-[#FC4C02] text-white font-semibold text-xs rounded-lg hover:opacity-90 transition-all disabled:opacity-50"
-                        >
-                          {isJoiningGuest ? '...' : 'Join'}
-                        </button>
-                      </div>
                     </div>
                   ) : !isEngaged ? (
                     <button
@@ -344,6 +305,48 @@ export default function SportEventPage() {
           )}
 
           <div className="px-4 pb-4 space-y-4">
+            {/* Guest form row below cover image */}
+            {event.coverImage && showGuestForm && !isSignedIn && (
+              <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 space-y-3">
+                <p className="text-white/60 text-xs font-medium">Join as Guest</p>
+                <input
+                  type="email"
+                  value={guestEmail}
+                  onChange={e => setGuestEmail(e.target.value)}
+                  placeholder="Email *"
+                  className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-xl text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[#FC4C02]/50"
+                />
+                <input
+                  type="tel"
+                  value={guestPhone}
+                  onChange={e => setGuestPhone(e.target.value)}
+                  placeholder="Phone (optional)"
+                  className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-xl text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[#FC4C02]/50"
+                />
+                <input
+                  type="url"
+                  value={guestLinks}
+                  onChange={e => setGuestLinks(e.target.value)}
+                  placeholder="Social link (optional)"
+                  className="w-full px-3 py-2 bg-white/10 border border-white/10 rounded-xl text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[#FC4C02]/50"
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { setShowGuestForm(false); setGuestEmail(''); setGuestPhone(''); setGuestLinks(''); }}
+                    className="flex-1 py-2.5 bg-white/10 text-white text-sm rounded-xl hover:bg-white/20 transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleGuestJoin}
+                    disabled={!guestEmail || isJoiningGuest}
+                    className="flex-1 py-2.5 bg-[#FC4C02] text-white font-semibold text-sm rounded-xl hover:opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {isJoiningGuest ? <Spinner size={16} /> : 'Join'}
+                  </button>
+                </div>
+              </div>
+            )}
             <div className="bg-white/5 rounded-2xl p-5 border border-white/5">
               <div className="flex items-start gap-2 mb-3">
                 <h2 className="text-white font-bold text-xl leading-tight flex-1">{event.title}</h2>
