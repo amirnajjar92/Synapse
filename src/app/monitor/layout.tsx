@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Health Monitor',
-  description: 'Track your cardio sessions, heart rate zones, and overall wellness metrics. Optimize your cardiovascular training and recovery.',
+  description: 'Monitor your heart health and wellness with Synapse Fit’s advanced tools for cardio training and recovery.',
 };
 
 export default function MonitorLayout({ children }: { children: React.ReactNode }) {
