@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Water Intake Tracker',
-  description: 'Track your daily water intake with smart reminders. Stay hydrated and optimize your performance with personalized hydration goals.',
+  description: 'Monitor your daily water consumption and improve your hydration with Synapse Fit\'s innovative water tracker.',
 };
 
 export default function WaterTrackerLayout({ children }: { children: React.ReactNode }) {

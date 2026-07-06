@@ -4,10 +4,10 @@ const SITE_URL = 'https://synapse-fit.vercel.app';
 
 export const metadata: Metadata = {
   title: 'Workout Planner',
-  description: 'Create personalized workout plans, track progress, and achieve goals with our intuitive planner. Set targets, log sessions, and stay motivated.',
+  description: 'Design your ideal workout plan, track progress, and crush your fitness goals with Synapse Fit\'s planner.',
   openGraph: {
-    title: 'Synapse Workout Planner - Create & Track Your Fitness Goals',
-    description: 'Design custom workout routines, log your sessions, and monitor progress in real time with Synapse Fit.',
+    title: 'Workout Planner - Synapse Fit',
+    description: 'Personalize your fitness journey with Synapse Fit\'s intuitive workout planner. Create, track, and achieve your goals effortlessly.',
     url: `${SITE_URL}/workout-planner`,
     images: [{ url: `${SITE_URL}/icons/icon-512x512.png`, width: 512, height: 512 }],
   },
