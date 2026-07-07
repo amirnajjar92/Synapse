@@ -87,15 +87,21 @@ export default function BlogPageClient() {
         <BlogHeader onSearch={setSearchQuery} showSearch />
 
         {/* Tag Filters */}
-        <BlogTags 
-          tags={allTags} 
-          selectedTag={selectedTag} 
-          onTagSelect={setSelectedTag} 
-        />
+        <div className="mt-5 flex items-center justify-center sm:justify-start">
+          <BlogTags 
+            tags={allTags} 
+            selectedTag={selectedTag} 
+            onTagSelect={setSelectedTag} 
+          />
+        </div>
+
+        {filteredPosts.length > 0 && (
+          <div className="mt-5 mb-6 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        )}
 
         {/* Posts Grid */}
         {filteredPosts.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredPosts.map(post => (
               <BlogCard key={post.id} post={post} variant="default" />
             ))}

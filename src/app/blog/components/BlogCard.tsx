@@ -1,7 +1,33 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { BlogPost } from '@/data/blog-posts';
+
+function PostImage({ src, alt, className = '' }: { src?: string; alt: string; className?: string }) {
+  const [error, setError] = useState(false);
+
+  if (!src || error) {
+    return (
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
+        <svg className="w-14 h-14 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+        </svg>
+        <span className="mt-2 text-white/40 text-xs font-medium line-clamp-2">{alt}</span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      loading="lazy"
+      onError={() => setError(true)}
+      className={`w-full h-full object-cover ${className}`}
+    />
+  );
+}
 
 interface BlogCardProps {
   post: BlogPost;
@@ -33,19 +59,7 @@ export default function BlogCard({ post, variant = 'default' }: BlogCardProps) {
         <div className="bg-white/5 rounded-2xl overflow-hidden border border-white/10 hover:bg-white/10 transition-all duration-300 hover:scale-[1.02]">
           {/* Featured Image */}
           <div className="relative w-full h-56 bg-gradient-to-br from-[#FC4C02]/20 to-[#3B82F6]/20">
-            {post.featuredImage ? (
-              <img 
-                src={post.featuredImage} 
-                alt={post.title}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <svg className="w-16 h-16 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                </svg>
-              </div>
-            )}
+            <PostImage src={post.featuredImage} alt={post.title} />
             {/* Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
             
@@ -107,19 +121,7 @@ export default function BlogCard({ post, variant = 'default' }: BlogCardProps) {
       <div className="bg-white/5 rounded-2xl overflow-hidden border border-white/10 hover:bg-white/10 transition-all duration-300 hover:scale-[1.02] h-full flex flex-col">
         {/* Image */}
         <div className="relative w-full h-48 bg-gradient-to-br from-[#FC4C02]/20 to-[#3B82F6]/20">
-          {post.featuredImage ? (
-            <img 
-              src={post.featuredImage} 
-              alt={post.title}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <svg className="w-12 h-12 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-          )}
+          <PostImage src={post.featuredImage} alt={post.title} />
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
           
           {/* Category Badge */}
