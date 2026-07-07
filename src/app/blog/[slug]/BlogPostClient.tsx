@@ -2,17 +2,30 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { BlogPost } from '@/data/blog-posts';
-import RelatedPosts from '../components/RelatedPosts';
 import BurgerMenuButton from '@/components/BurgerMenuButton';
 import FloatingNavBar from '@/components/FloatingNavBar';
 
 interface BlogPostClientProps {
-  post: BlogPost;
-  allPosts: BlogPost[];
+  post: {
+    id: string;
+    slug: string;
+    title: string;
+    content: string;
+    excerpt: string;
+    tags: string[];
+    description: string;
+    date: string;
+    featuredImage?: string;
+    image?: string;
+    og_image?: string;
+    publishedAt?: string;
+    createdAt?: string;
+    published: boolean;
+    url?: string;
+  };
 }
 
-export default function BlogPostClient({ post, allPosts }: BlogPostClientProps) {
+export default function BlogPostClient({ post }: BlogPostClientProps) {
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [copied, setCopied] = useState(false);
   const [activeHeading, setActiveHeading] = useState<string>('');
@@ -22,18 +35,30 @@ export default function BlogPostClient({ post, allPosts }: BlogPostClientProps) 
     return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   };
 
+  const isHtml = /^\s*</.test(post.content);
+
   // Extract headings from content for table of contents
   const extractHeadings = () => {
+    if (isHtml) {
+      const headingRegex = /<h2[^>]*>(.+?)<\/h2>/gi;
+      const headings: { id: string; text: string }[] = [];
+      let match;
+      while ((match = headingRegex.exec(post.content)) !== null) {
+        const text = match[1].replace(/<[^>]*>/g, '');
+        const id = text.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        headings.push({ id, text });
+      }
+      return headings;
+    }
+
     const headingRegex = /^##\s+(.+)$/gm;
     const headings: { id: string; text: string }[] = [];
     let match;
-
     while ((match = headingRegex.exec(post.content)) !== null) {
       const text = match[1];
       const id = text.toLowerCase().replace(/[^a-z0-9]+/g, '-');
       headings.push({ id, text });
     }
-
     return headings;
   };
 
@@ -85,24 +110,20 @@ export default function BlogPostClient({ post, allPosts }: BlogPostClientProps) 
     setShowShareMenu(false);
   };
 
-  // Format markdown content to HTML
+  // Format content to HTML (only for markdown, pass through HTML)
   const formatContent = (content: string) => {
+    if (isHtml) return content;
+
     return content
-      // Add IDs to h2 headings
       .replace(/^## (.+)$/gm, (_, text) => {
         const id = text.toLowerCase().replace(/[^a-z0-9]+/g, '-');
         return `<h2 id="${id}">${text}</h2>`;
       })
-      // Format h3 headings
       .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-      // Format bold
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      // Format lists
       .replace(/^- (.+)$/gm, '<li>$1</li>')
       .replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>')
-      // Format paragraphs
       .replace(/^(?!<[h|u|l]|$)(.+)$/gm, '<p>$1</p>')
-      // Format line breaks
       .replace(/\n\n/g, '\n');
   };
 
@@ -137,27 +158,12 @@ export default function BlogPostClient({ post, allPosts }: BlogPostClientProps) 
               Back to Blog
             </Link>
             
-            <div className="mb-4">
-              <span className="px-3 py-1 bg-[#FC4C02] text-white text-xs font-bold rounded-lg">
-                {post.category}
-              </span>
-            </div>
-            
             <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 leading-tight">
               {post.title}
             </h1>
             
             <div className="flex flex-wrap items-center gap-4 text-sm text-white/70">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                  <span className="text-xs font-bold">{post.author.name[0]}</span>
-                </div>
-                <span>{post.author.name}</span>
-              </div>
-              <span>•</span>
               <span>{formatDate(post.date)}</span>
-              <span>•</span>
-              <span>{post.readTime} min read</span>
             </div>
           </div>
         </div>
@@ -201,38 +207,22 @@ export default function BlogPostClient({ post, allPosts }: BlogPostClientProps) 
               </article>
 
               {/* Tags */}
-              <div className="mt-12 pt-8 border-t border-white/10">
-                <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-4">Tags</h3>
-                <div className="flex flex-wrap gap-2">
-                  {post.tags.map(tag => (
-                    <Link
-                      key={tag}
-                      href={`/blog?tag=${encodeURIComponent(tag)}`}
-                      className="px-3 py-1.5 bg-white/5 text-white/70 text-sm rounded-lg border border-white/10 hover:bg-white/10 hover:text-white transition-all"
-                    >
-                      {tag}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-
-              {/* Author Bio */}
-              {post.author.bio && (
-                <div className="mt-12 p-6 bg-white/5 rounded-2xl border border-white/10">
-                  <div className="flex items-start gap-4">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#FC4C02] to-[#3B82F6] flex items-center justify-center text-2xl font-bold flex-shrink-0">
-                      {post.author.name[0]}
-                    </div>
-                    <div>
-                      <h3 className="text-white font-bold text-lg mb-1">{post.author.name}</h3>
-                      <p className="text-white/70 text-sm">{post.author.bio}</p>
-                    </div>
+              {post.tags.length > 0 && (
+                <div className="mt-12 pt-8 border-t border-white/10">
+                  <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-4">Tags</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {post.tags.map(tag => (
+                      <Link
+                        key={tag}
+                        href={`/blog?tag=${encodeURIComponent(tag)}`}
+                        className="px-3 py-1.5 bg-white/5 text-white/70 text-sm rounded-lg border border-white/10 hover:bg-white/10 hover:text-white transition-all"
+                      >
+                        {tag}
+                      </Link>
+                    ))}
                   </div>
                 </div>
               )}
-
-              {/* Related Posts */}
-              <RelatedPosts currentPost={post} allPosts={allPosts} />
             </div>
 
             {/* Sidebar - Share & CTA (Desktop) */}

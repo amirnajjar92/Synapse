@@ -97,7 +97,7 @@ export default function BlogPageClient() {
         {filteredPosts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
             {filteredPosts.map(post => (
-              <BlogCard key={post.slug} post={post} variant="default" />
+              <BlogCard key={post.id} post={post} variant="default" />
             ))}
           </div>
         ) : (
