@@ -401,6 +401,26 @@ export default function Sidebar() {
               </div>
             </button>
 
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                router.push('/blog');
+              }}
+              className="group flex items-center gap-3 px-4 py-3 rounded-lg text-white/80 hover:text-black hover:bg-white transition-all duration-200"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
+                <line x1="10" y1="8" x2="16" y2="8" />
+                <line x1="10" y1="12" x2="16" y2="12" />
+                <line x1="10" y1="16" x2="16" y2="16" />
+              </svg>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="font-medium leading-tight">Blog</p>
+                <p className="text-[10px] text-white/45 group-hover:text-black/60 leading-tight mt-0.5">Fitness tips & insights</p>
+              </div>
+            </button>
+
             {/* Invitation Bell - Show for all logged-in users */}
             {user?.email && (
               <InvitationBell userEmail={user.email} />
