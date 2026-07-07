@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Training Studio for Coaches',
-  description: 'Simplify client management and training plans with Synapse Fit, your all-in-one dashboard for personal trainers and coaches.',
+  description: 'Transform your coaching experience with Synapse Fit\'s training studio for seamless client management and personalized plans.',
 };
 
 export default function TrainingStudioLayout({ children }: { children: React.ReactNode }) {

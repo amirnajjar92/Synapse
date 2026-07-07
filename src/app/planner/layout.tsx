@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'AI Workout Planner',
-  description: 'Achieve your fitness goals with our AI Workout Planner. Get a custom training plan designed for you at Synapse Fit.',
+  description: 'Transform your fitness journey with Synapse Fit\'s AI Workout Planner. Get personalized training plans tailored just for you.',
 };
 
 export default function PlannerLayout({ children }: { children: React.ReactNode }) {
