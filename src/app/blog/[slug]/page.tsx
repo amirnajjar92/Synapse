@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { headers } from 'next/headers';
 import BlogPostClient from './BlogPostClient';
 
 interface ApiPost {
@@ -18,8 +19,13 @@ interface ApiPost {
 
 async function fetchAllPosts(): Promise<ApiPost[]> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    const res = await fetch(`${baseUrl}/api/blog`, { cache: 'no-store' });
+    const h = await headers();
+    const host = h.get('host');
+    const protocol = h.get('x-forwarded-proto') || 'https';
+    const origin = host
+      ? `${protocol}://${host}`
+      : (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000');
+    const res = await fetch(`${origin}/api/blog`, { cache: 'no-store' });
     const data = await res.json();
     if (data.success && Array.isArray(data.posts)) {
       return data.posts;
