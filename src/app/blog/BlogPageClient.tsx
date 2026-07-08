@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { BlogPost, BlogPostAPIResponse } from '@/data/blog-posts';
+import { useBlogStore } from './BlogStore';
 import BlogHeader from './components/BlogHeader';
 import BlogTags from './components/BlogTags';
 import BlogCard from './components/BlogCard';
@@ -9,33 +10,34 @@ import BurgerMenuButton from '@/components/BurgerMenuButton';
 import FloatingNavBar from '@/components/FloatingNavBar';
 
 export default function BlogPageClient() {
-  const [posts, setPosts] = useState<BlogPostAPIResponse['posts']>([]);
-  const [loading, setLoading] = useState(true);
+  const store = useBlogStore();
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
+    if (store.hasLoaded) return;
+
     fetch('/api/blog')
       .then(res => res.json())
       .then((data: BlogPostAPIResponse) => {
         console.log('Fetched blog posts:', data);
         if (data.success && data.posts) {
-          setPosts(data.posts);
+          store.setPosts(data.posts);
         }
       })
       .catch(err => console.error('Failed to fetch blog posts:', err))
-      .finally(() => setLoading(false));
-  }, []);
+      .finally(() => store.setHasLoaded(true));
+  }, [store.hasLoaded]);
 
   // Map API posts to include a derived slug and normalized fields
-  const normalizedPosts = useMemo(() => posts.map(post => ({
+  const normalizedPosts = useMemo(() => store.posts.map(post => ({
     ...post,
     slug: post.url.split('/').filter(Boolean).pop() || post.id,
     tags: post.keywords,
     description: post.excerpt,
     date: post.publishedAt || post.createdAt,
     published: true,
-  } as BlogPost)), [posts]);
+  } as BlogPost)), [store.posts]);
 
   // Get all unique tags
   const allTags = useMemo(() => {
@@ -66,7 +68,7 @@ export default function BlogPageClient() {
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [selectedTag, searchQuery, normalizedPosts]);
 
-  if (loading) {
+  if (!store.hasLoaded) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">
         <div className="text-white/60 text-lg">Loading articles...</div>
