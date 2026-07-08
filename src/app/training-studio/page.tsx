@@ -51,8 +51,8 @@ interface PlanDayEntry {
 const Spinner = ({ size = 32 }: { size?: number }) => (
   <div className="flex items-center justify-center">
     <div
-      className="rounded-full border border-white/20 animate-spin"
-      style={{ width: size, height: size, borderTopColor: 'white', borderWidth: '2px' }}
+      className="rounded-full border border-[#F5F0EB]/20 animate-spin"
+      style={{ width: size, height: size, borderTopColor: '#F5F0EB', borderWidth: '2px' }}
     />
   </div>
 );
@@ -828,25 +828,25 @@ export default function TrainingStudio() {
   if (!isSignedIn) {
     return (
       <div className="w-full h-screen bg-[#151515] flex items-center justify-center p-2 sm:p-4 relative">
-        <div className="w-full max-w-[402px] h-full max-h-[874px] bg-black rounded-[40px] overflow-hidden shadow-2xl relative flex flex-col">
+      <div className="w-full max-w-[402px] h-full max-h-[874px] bg-black rounded-[40px] overflow-y-auto overflow-x-hidden shadow-2xl relative flex flex-col">
           <MuscleMapDisplay showToggle={false} />
           <div className="absolute inset-0 z-50 flex items-center justify-center p-4" style={{ backdropFilter: 'blur(10px)', backgroundColor: 'rgba(0,0,0,0.7)' }}>
-            <div className="w-full max-w-md bg-black border border-white/10 rounded-2xl overflow-hidden">
-              <div className="text-center p-8 pb-6 border-b border-white/10">
-                <h1 className="text-3xl font-bold text-white mb-2">Training Studio</h1>
-                <p className="text-lg text-white/60">Sign in to manage clients and build plans</p>
+            <div className="w-full max-w-md bg-black border border-[#F5F0EB]/10 rounded-2xl overflow-hidden">
+              <div className="text-center p-8 pb-6 border-b border-[#F5F0EB]/10">
+                <h1 className="text-3xl font-bold text-[#F5F0EB] mb-2">Training Studio</h1>
+                <p className="text-lg text-[#F5F0EB]/60">Sign in to manage clients and build plans</p>
               </div>
               <div className="p-8 space-y-6">
                 <button
                   onClick={handleGoogleSignIn}
                   disabled={isSigningIn}
-                  className="w-full py-3 bg-white text-black font-semibold rounded-xl hover:bg-white/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="w-full py-3 bg-[#F5F0EB] text-black font-semibold rounded-xl hover:bg-[#F5F0EB]/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {isSigningIn ? <Spinner size={20} /> : 'Sign in with Google'}
                 </button>
                 <button
                   onClick={() => { window.location.href = '/'; }}
-                  className="text-white/50 hover:text-white text-sm transition-colors flex items-center gap-2 mx-auto"
+                  className="text-[#F5F0EB]/50 hover:text-[#F5F0EB] text-sm transition-colors flex items-center gap-2 mx-auto"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M19 12H5M12 19l-7-7 7-7" />
@@ -873,23 +873,23 @@ export default function TrainingStudio() {
           {/* Header */}
           <div className="flex-shrink-0 px-5 pt-20 pb-3">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FC4C02] to-orange-500 flex items-center justify-center flex-shrink-0">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#EF0606] to-[#EF0606] flex items-center justify-center flex-shrink-0">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5F0EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 2L2 7l10 5 10-5-10-5z" />
                   <path d="M2 17l10 5 10-5" />
                   <path d="M2 12l10 5 10-5" />
                 </svg>
               </div>
               <div>
-                <h1 className="text-white font-bold text-lg leading-tight">Training Studio</h1>
-                <p className="text-white/50 text-xs">Create, manage & share plans</p>
+                <h1 className="text-[#F5F0EB] font-bold text-lg leading-tight">Training Studio</h1>
+                <p className="text-[#F5F0EB]/50 text-xs">Create, manage & share plans</p>
               </div>
             </div>
           </div>
 
           {/* Tab Bar */}
           <div className="flex-shrink-0 px-4 pb-2">
-            <div className="flex bg-white/5 rounded-xl p-1 gap-1">
+            <div className="flex items-stretch bg-[#F5F0EB]/5 rounded-xl p-1 gap-0.5 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {[
                 { id: 'dashboard' as Tab, label: 'Dashboard', icon: 'M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z' },
                 { id: 'builder' as Tab, label: 'Build Plan', icon: 'M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z' },
@@ -906,19 +906,19 @@ export default function TrainingStudio() {
                       setActiveTab(tab.id);
                       if (tab.id === 'messages' && selectedClient) markClientRead(selectedClient);
                     }}
-                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-medium transition-all duration-200 ${isActive ? 'bg-white text-black' : 'text-white/50 hover:text-white/80'}`}
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-1.5 rounded-lg text-[11px] font-medium transition-all duration-200 whitespace-nowrap ${isActive ? 'bg-[#F5F0EB] text-black' : 'text-[#F5F0EB]/50 hover:text-[#F5F0EB]/80'}`}
                   >
-                    <div className="relative">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                    <div className="relative shrink-0">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                         <path d={tab.icon} />
                       </svg>
                       {tab.id === 'messages' && unreadCount > 0 && (
-                        <span className="absolute -top-1.5 -right-2 w-3.5 h-3.5 rounded-full bg-[#FC4C02] text-white text-[8px] font-bold flex items-center justify-center leading-none">
+                        <span className="absolute -top-1.5 -right-2 w-3.5 h-3.5 rounded-full bg-[#EF0606] text-[#F5F0EB] text-[8px] font-bold flex items-center justify-center leading-none">
                           {unreadCount > 9 ? '9+' : unreadCount}
                         </span>
                       )}
                     </div>
-                    <span className="hidden sm:inline">{tab.label}</span>
+                    <span className="truncate">{tab.label}</span>
                   </button>
                 );
               })}
@@ -930,8 +930,8 @@ export default function TrainingStudio() {
             {activeTab === 'repository' && (
               <div className="h-full flex flex-col">
                 <div className="flex items-center justify-between mb-3 flex-shrink-0">
-                  <h2 className="text-white font-semibold text-sm">Your Plans</h2>
-                  <span className="text-white/40 text-xs">{plans.length} plan{plans.length !== 1 ? 's' : ''}</span>
+                  <h2 className="text-[#F5F0EB] font-semibold text-sm">Your Plans</h2>
+                  <span className="text-[#F5F0EB]/40 text-xs">{plans.length} plan{plans.length !== 1 ? 's' : ''}</span>
                 </div>
                 <div className="flex-1 overflow-y-auto space-y-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent pr-1">
                   {isLoadingPlans ? (
@@ -940,18 +940,18 @@ export default function TrainingStudio() {
                     </div>
                   ) : plans.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center text-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <div className="w-12 h-12 rounded-full bg-[#D3CCC7]/10 flex items-center justify-center">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D3CCC7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
                           <polyline points="14 2 14 8 20 8" />
                           <line x1="12" y1="18" x2="12" y2="12" />
                           <line x1="9" y1="15" x2="15" y2="15" />
                         </svg>
                       </div>
-                      <p className="text-gray-400 text-xs">No plans yet</p>
+                      <p className="text-[#D3CCC7] text-xs">No plans yet</p>
                       <button
                         onClick={() => setActiveTab('builder')}
-                        className="px-4 py-2 rounded-full bg-white text-black text-xs font-medium hover:opacity-90 transition-opacity"
+                        className="px-4 py-2 rounded-full bg-[#F5F0EB] text-black text-xs font-medium hover:opacity-90 transition-opacity"
                       >
                         Create Your First Plan
                       </button>
@@ -970,14 +970,14 @@ export default function TrainingStudio() {
                         <div
                           key={plan.id}
                           onClick={handlePlanClick}
-                          className="bg-white/5 rounded-xl p-3.5 hover:bg-white/10 transition-all cursor-pointer border border-white/5 group"
+                          className="bg-[#F5F0EB]/5 rounded-xl p-3.5 hover:bg-[#F5F0EB]/10 transition-all cursor-pointer border border-[#F5F0EB]/5 group"
                         >
                           <div className="flex items-start gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-[#FC4C02]/30 flex items-center justify-center flex-shrink-0 border border-[#FC4C02]/20">
+                            <div className="w-10 h-10 rounded-lg bg-[#EF0606]/30 flex items-center justify-center flex-shrink-0 border border-[#EF0606]/20">
                               {isWorkoutPlan ? (
                                 <img src="/vectors/workout-icon.svg" alt="workout" className="w-5 h-5 opacity-70 brightness-0 invert" />
                               ) : (
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F5F0EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                   <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
                                   <polyline points="14 2 14 8 20 8" />
                                   <line x1="12" y1="18" x2="12" y2="12" />
@@ -987,19 +987,19 @@ export default function TrainingStudio() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-0.5">
-                                <h3 className="text-white font-semibold text-sm truncate">{plan.title}</h3>
+                                <h3 className="text-[#F5F0EB] font-semibold text-sm truncate">{plan.title}</h3>
                                 <span className={
                                   "px-1.5 py-0.5 text-[8px] font-medium rounded-full whitespace-nowrap border " +
                                   (plan.status === 'IN_PROGRESS' ? 'bg-green-500/20 text-green-400 border-green-500/50' :
                                     plan.status === 'COMPLETED' ? 'bg-blue-500/20 text-blue-400 border-blue-500/50' :
                                       plan.status === 'PAUSED' ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50' :
-                                        'bg-gray-500/20 text-gray-400 border-gray-500/50')
+                                        'bg-[#D3CCC7]/20 text-[#D3CCC7] border-[#D3CCC7]/50')
                                 }>
                                   {plan.status.replace(/_/g, ' ')}
                                 </span>
                               </div>
                               {plan.prompt && (
-                                <p className="text-white/40 text-[11px] leading-relaxed line-clamp-2">{plan.prompt}</p>
+                                <p className="text-[#F5F0EB]/40 text-[11px] leading-relaxed line-clamp-2">{plan.prompt}</p>
                               )}
                             </div>
                             <div className="flex flex-col items-end gap-2 flex-shrink-0">
@@ -1008,7 +1008,7 @@ export default function TrainingStudio() {
                                   e.stopPropagation();
                                   console.log('Share plan:', plan.id);
                                 }}
-                                className="p-1.5 text-white/40 hover:text-[#FC4C02] transition-all opacity-0 group-hover:opacity-100"
+                                className="p-1.5 text-[#F5F0EB]/40 hover:text-[#EF0606] transition-all opacity-0 group-hover:opacity-100"
                                 aria-label="Share plan"
                               >
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1016,7 +1016,7 @@ export default function TrainingStudio() {
                                   <polyline points="8 4 12 8 16 4" />
                                 </svg>
                               </button>
-                              <p className="text-white/50 text-[10px] text-right">
+                              <p className="text-[#F5F0EB]/50 text-[10px] text-right">
                                 {new Date(plan.createdAt).toLocaleDateString()}
                               </p>
                             </div>
@@ -1032,9 +1032,9 @@ export default function TrainingStudio() {
             {activeTab === 'dashboard' && (
               <div className="h-full flex flex-col">
                 <div className="flex items-center justify-between mb-3 flex-shrink-0">
-                  <h2 className="text-white font-semibold text-sm">Your Clients</h2>
+                  <h2 className="text-[#F5F0EB] font-semibold text-sm">Your Clients</h2>
                   <div className="flex items-center gap-2">
-                    <span className="text-white/40 text-xs">{activeClients.length} clients</span>
+                    <span className="text-[#F5F0EB]/40 text-xs">{activeClients.length} clients</span>
                     <button
                       onClick={() => {
                         setInviteEmail('');
@@ -1042,7 +1042,7 @@ export default function TrainingStudio() {
                         setInviteSuccess('');
                         setShowInviteModal(true);
                       }}
-                      className="px-2.5 py-1 bg-[#FC4C02] hover:bg-[#FC4C02]/80 text-white text-[11px] font-medium rounded-lg transition-all flex items-center gap-1"
+                      className="px-2.5 py-1 bg-[#EF0606] hover:bg-[#EF0606]/80 text-[#F5F0EB] text-[11px] font-medium rounded-lg transition-all flex items-center gap-1"
                     >
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
@@ -1061,19 +1061,19 @@ export default function TrainingStudio() {
                     </div>
                   ) : activeClients.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center text-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <div className="w-12 h-12 rounded-full bg-[#D3CCC7]/10 flex items-center justify-center">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D3CCC7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
                           <circle cx="9" cy="7" r="4" />
                           <path d="M23 21v-2a4 4 0 00-3-3.87" />
                           <path d="M16 3.13a4 4 0 010 7.75" />
                         </svg>
                       </div>
-                      <p className="text-gray-400 text-xs">No clients yet</p>
+                      <p className="text-[#D3CCC7] text-xs">No clients yet</p>
                     </div>
                   ) : (
                     activeClients.map(client => {
-                      const statusColors = { active: 'bg-green-500', paused: 'bg-yellow-500', none: 'bg-gray-500' };
+                      const statusColors = { active: 'bg-green-500', paused: 'bg-yellow-500', none: 'bg-[#D3CCC7]' };
                       const statusLabels = { active: 'Active', paused: 'Paused', none: 'No Plan' };
                       return (
                         <div
@@ -1082,20 +1082,20 @@ export default function TrainingStudio() {
                             handleSelectClient(client.id);
                             setActiveTab('messages');
                           }}
-                          className="bg-white/5 rounded-xl p-3.5 hover:bg-white/10 transition-all cursor-pointer border border-white/5"
+                          className="bg-[#F5F0EB]/5 rounded-xl p-3.5 hover:bg-[#F5F0EB]/10 transition-all cursor-pointer border border-[#F5F0EB]/5"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#FC4C02]/30 to-orange-500/30 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0 border border-white/10">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#EF0606]/30 to-[#EF0606]/30 flex items-center justify-center text-[#F5F0EB] font-semibold text-sm flex-shrink-0 border border-[#F5F0EB]/10">
                               {client.name.charAt(0)}
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
-                                <p className="text-white font-medium text-sm truncate">{client.name}</p>
+                                <p className="text-[#F5F0EB] font-medium text-sm truncate">{client.name}</p>
                                 <div className={"w-1.5 h-1.5 rounded-full " + statusColors[client.planStatus]} />
                               </div>
-                              <p className="text-white/40 text-xs truncate">{client.email}</p>
+                              <p className="text-[#F5F0EB]/40 text-xs truncate">{client.email}</p>
                               {client.lastMessage && (
-                                <p className="text-white/30 text-xs truncate mt-0.5">{client.lastMessage}</p>
+                                <p className="text-[#F5F0EB]/30 text-xs truncate mt-0.5">{client.lastMessage}</p>
                               )}
                             </div>
                             <div className="flex flex-col items-end gap-1 flex-shrink-0">
@@ -1104,13 +1104,13 @@ export default function TrainingStudio() {
                                   "text-[10px] px-2 py-0.5 rounded-full font-medium " +
                                   (client.planStatus === 'active' ? 'bg-green-500/20 text-green-400' :
                                     client.planStatus === 'paused' ? 'bg-yellow-500/20 text-yellow-400' :
-                                      'bg-gray-500/20 text-gray-400')
+                                      'bg-[#D3CCC7]/20 text-[#D3CCC7]')
                                 }
                               >
                                 {statusLabels[client.planStatus]}
                               </span>
                               {client.lastMessageTime && (
-                                <span className="text-[10px] text-white/30">
+                                <span className="text-[10px] text-[#F5F0EB]/30">
                                   {new Date(client.lastMessageTime).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                 </span>
                               )}
@@ -1129,9 +1129,9 @@ export default function TrainingStudio() {
                 <div className="flex-1 overflow-y-auto space-y-3 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent pr-1">
                   {!generatedPlan ? (
                     <>
-                      <div className="bg-white/5 rounded-xl p-4 border border-white/5">
-                        <h3 className="text-white font-semibold text-sm mb-2">AI Plan Builder</h3>
-                        <p className="text-white/50 text-xs leading-relaxed mb-4">
+                      <div className="bg-[#F5F0EB]/5 rounded-xl p-4 border border-[#F5F0EB]/5">
+                        <h3 className="text-[#F5F0EB] font-semibold text-sm mb-2">AI Plan Builder</h3>
+                        <p className="text-[#F5F0EB]/50 text-xs leading-relaxed mb-4">
                           Describe the plan you want to create. Include goals, duration, frequency, and any specific preferences.
                         </p>
                         <div className="space-y-2">
@@ -1145,25 +1145,25 @@ export default function TrainingStudio() {
                               <button
                                 key={suggestion.label}
                                 onClick={() => setBuilderPrompt(suggestion.desc)}
-                                className="text-left bg-white/[0.03] hover:bg-white/10 border border-white/10 rounded-lg p-2.5 transition-all"
+                                className="text-left bg-[#F5F0EB]/[0.03] hover:bg-[#F5F0EB]/10 border border-[#F5F0EB]/10 rounded-lg p-2.5 transition-all"
                               >
-                                <p className="text-white text-xs font-medium">{suggestion.label}</p>
-                                <p className="text-white/40 text-[10px] mt-0.5">{suggestion.desc}</p>
+                                <p className="text-[#F5F0EB] text-xs font-medium">{suggestion.label}</p>
+                                <p className="text-[#F5F0EB]/40 text-[10px] mt-0.5">{suggestion.desc}</p>
                               </button>
                             ))}
                           </div>
                         </div>
                       </div>
 
-                      <div className="bg-white/5 rounded-xl p-4 border border-white/5">
-                        <h3 className="text-white font-semibold text-sm mb-3">Manual Plan Setup</h3>
+                      <div className="bg-[#F5F0EB]/5 rounded-xl p-4 border border-[#F5F0EB]/5">
+                        <h3 className="text-[#F5F0EB] font-semibold text-sm mb-3">Manual Plan Setup</h3>
                         <div className="space-y-3">
                           <input
                             type="text"
                             value={planTitle}
                             onChange={e => setPlanTitle(e.target.value)}
                             placeholder="Plan title (e.g. 12-Week Hypertrophy Program)"
-                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-white/20"
+                            className="w-full bg-[#F5F0EB]/5 border border-[#F5F0EB]/10 rounded-lg px-3 py-2.5 text-[#F5F0EB] text-sm placeholder-[#F5F0EB]/30 outline-none focus:border-[#F5F0EB]/20"
                           />
                           <div className="grid grid-cols-2 gap-2">
                             <input
@@ -1171,14 +1171,14 @@ export default function TrainingStudio() {
                               value={newDay}
                               onChange={e => setNewDay(e.target.value)}
                               placeholder="Day (e.g. Monday)"
-                              className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-white/30 outline-none focus:border-white/20"
+                              className="bg-[#F5F0EB]/5 border border-[#F5F0EB]/10 rounded-lg px-3 py-2 text-[#F5F0EB] text-sm placeholder-[#F5F0EB]/30 outline-none focus:border-[#F5F0EB]/20"
                             />
                             <input
                               type="text"
                               value={newFocus}
                               onChange={e => setNewFocus(e.target.value)}
                               placeholder="Focus (e.g. Chest & Triceps)"
-                              className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-white/30 outline-none focus:border-white/20"
+                              className="bg-[#F5F0EB]/5 border border-[#F5F0EB]/10 rounded-lg px-3 py-2 text-[#F5F0EB] text-sm placeholder-[#F5F0EB]/30 outline-none focus:border-[#F5F0EB]/20"
                             />
                           </div>
                           <textarea
@@ -1186,7 +1186,7 @@ export default function TrainingStudio() {
                             onChange={e => setNewExercises(e.target.value)}
                             placeholder="Exercises (one per line):&#10;Bench Press: 4x8-10&#10;Incline DB Press: 3x12"
                             rows={4}
-                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-white/20 resize-none"
+                            className="w-full bg-[#F5F0EB]/5 border border-[#F5F0EB]/10 rounded-lg px-3 py-2.5 text-[#F5F0EB] text-sm placeholder-[#F5F0EB]/30 outline-none focus:border-[#F5F0EB]/20 resize-none"
                           />
                           <div className="flex gap-2">
                             <input
@@ -1194,12 +1194,12 @@ export default function TrainingStudio() {
                               value={newDuration}
                               onChange={e => setNewDuration(e.target.value)}
                               placeholder="Duration (e.g. 45 min)"
-                              className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-white/30 outline-none focus:border-white/20"
+                              className="flex-1 bg-[#F5F0EB]/5 border border-[#F5F0EB]/10 rounded-lg px-3 py-2 text-[#F5F0EB] text-sm placeholder-[#F5F0EB]/30 outline-none focus:border-[#F5F0EB]/20"
                             />
                             <button
                               onClick={handleAddDay}
                               disabled={!newDay.trim() || !newExercises.trim()}
-                              className="px-3 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-30 rounded-lg text-white text-sm transition-all flex-shrink-0"
+                              className="px-3 py-2 bg-[#F5F0EB]/10 hover:bg-[#F5F0EB]/20 disabled:opacity-30 rounded-lg text-[#F5F0EB] text-sm transition-all flex-shrink-0"
                             >
                               {editingDayIdx !== null ? 'Update' : 'Add Day'}
                             </button>
@@ -1207,20 +1207,20 @@ export default function TrainingStudio() {
                           {planDays.length > 0 && (
                             <div className="space-y-1">
                               {planDays.map((d, i) => (
-                                <div key={d.id} className="flex items-center gap-2 bg-white/[0.03] rounded-lg px-3 py-2 group">
+                                <div key={d.id} className="flex items-center gap-2 bg-[#F5F0EB]/[0.03] rounded-lg px-3 py-2 group">
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2">
-                                      <span className="text-white text-xs font-medium">{d.day}</span>
-                                      {d.focus && <span className="text-white/40 text-[10px]">{d.focus}</span>}
-                                      {d.duration && <span className="text-white/30 text-[10px]">{d.duration}</span>}
+                                      <span className="text-[#F5F0EB] text-xs font-medium">{d.day}</span>
+                                      {d.focus && <span className="text-[#F5F0EB]/40 text-[10px]">{d.focus}</span>}
+                                      {d.duration && <span className="text-[#F5F0EB]/30 text-[10px]">{d.duration}</span>}
                                     </div>
-                                    <p className="text-white/50 text-[10px] truncate mt-0.5">
+                                    <p className="text-[#F5F0EB]/50 text-[10px] truncate mt-0.5">
                                       {d.exercises.split('\n').length} exercises
                                     </p>
                                   </div>
                                   <button
                                     onClick={() => handleEditDay(i)}
-                                    className="opacity-0 group-hover:opacity-100 text-white/30 hover:text-white transition-all p-1"
+                                    className="opacity-0 group-hover:opacity-100 text-[#F5F0EB]/30 hover:text-[#F5F0EB] transition-all p-1"
                                   >
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                       <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
@@ -1229,7 +1229,7 @@ export default function TrainingStudio() {
                                   </button>
                                   <button
                                     onClick={() => handleRemoveDay(i)}
-                                    className="opacity-0 group-hover:opacity-100 text-white/30 hover:text-red-400 transition-all p-1"
+                                    className="opacity-0 group-hover:opacity-100 text-[#F5F0EB]/30 hover:text-[#EF0606] transition-all p-1"
                                   >
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                       <line x1="18" y1="6" x2="6" y2="18" />
@@ -1244,32 +1244,32 @@ export default function TrainingStudio() {
                       </div>
                     </>
                   ) : (
-                    <div className="bg-white/5 rounded-xl p-4 border border-white/5">
+                    <div className="bg-[#F5F0EB]/5 rounded-xl p-4 border border-[#F5F0EB]/5">
                       <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-white font-semibold text-sm truncate flex-1">{planTitle || 'Untitled Plan'}</h3>
+                        <h3 className="text-[#F5F0EB] font-semibold text-sm truncate flex-1">{planTitle || 'Untitled Plan'}</h3>
                         <button
                           onClick={() => { setGeneratedPlan(null); setPlanDays([]); }}
-                          className="text-white/40 hover:text-white text-xs transition-colors ml-2 flex-shrink-0"
+                          className="text-[#F5F0EB]/40 hover:text-[#F5F0EB] text-xs transition-colors ml-2 flex-shrink-0"
                         >
                           Edit
                         </button>
                       </div>
-                      <p className="text-white/60 text-xs mb-3">{generatedPlan}</p>
+                      <p className="text-[#F5F0EB]/60 text-xs mb-3">{generatedPlan}</p>
                       <div className="space-y-3">
                         {planDays.map((d) => (
-                          <div key={d.id} className="bg-white/[0.03] rounded-lg px-3 py-2.5">
+                          <div key={d.id} className="bg-[#F5F0EB]/[0.03] rounded-lg px-3 py-2.5">
                             <div className="flex items-center justify-between mb-1.5">
                               <div className="flex items-center gap-2">
-                                <span className="text-white text-xs font-semibold">{d.day}</span>
-                                {d.focus && <span className="text-white/50 text-[10px]">| {d.focus}</span>}
+                                <span className="text-[#F5F0EB] text-xs font-semibold">{d.day}</span>
+                                {d.focus && <span className="text-[#F5F0EB]/50 text-[10px]">| {d.focus}</span>}
                               </div>
-                              {d.duration && <span className="text-white/30 text-[10px]">{d.duration}</span>}
+                              {d.duration && <span className="text-[#F5F0EB]/30 text-[10px]">{d.duration}</span>}
                             </div>
                             <div className="space-y-0.5">
                               {d.exercises.split('\n').filter(Boolean).map((ex, ei) => (
                                 <div key={ei} className="flex items-center gap-2">
-                                  <span className="w-4 h-4 rounded-full bg-white/10 flex items-center justify-center text-[8px] text-white/50 flex-shrink-0">{ei + 1}</span>
-                                  <span className="text-white/70 text-[11px]">{ex}</span>
+                                  <span className="w-4 h-4 rounded-full bg-[#F5F0EB]/10 flex items-center justify-center text-[8px] text-[#F5F0EB]/50 flex-shrink-0">{ei + 1}</span>
+                                  <span className="text-[#F5F0EB]/70 text-[11px]">{ex}</span>
                                 </div>
                               ))}
                             </div>
@@ -1279,13 +1279,13 @@ export default function TrainingStudio() {
                       <div className="mt-4 flex gap-2">
                         <button
                           onClick={() => setShowAssignModal(true)}
-                          className="flex-1 py-2.5 bg-gradient-to-r from-[#FC4C02] to-orange-500 text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-all"
+                          className="flex-1 py-2.5 bg-gradient-to-r from-[#EF0606] to-[#EF0606] text-[#F5F0EB] text-sm font-semibold rounded-lg hover:opacity-90 transition-all"
                         >
                           Assign to Client
                         </button>
                         <button
                           onClick={handleSaveToRepository}
-                          className="py-2.5 px-3 bg-white/10 hover:bg-white/20 text-white text-sm rounded-lg transition-all"
+                          className="py-2.5 px-3 bg-[#F5F0EB]/10 hover:bg-[#F5F0EB]/20 text-[#F5F0EB] text-sm rounded-lg transition-all"
                         ><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8" />
                             <polyline points="16 6 12 2 8 6" />
@@ -1307,18 +1307,18 @@ export default function TrainingStudio() {
                       onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleGeneratePlan(); } }}
                       placeholder="Describe the plan you want to build..."
                       disabled={isGenerating}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl pl-4 pr-12 py-3 text-white text-sm placeholder-white/30 outline-none focus:border-white/20 disabled:opacity-50"
+                      className="w-full bg-[#F5F0EB]/5 border border-[#F5F0EB]/10 rounded-xl pl-4 pr-12 py-3 text-[#F5F0EB] text-sm placeholder-[#F5F0EB]/30 outline-none focus:border-[#F5F0EB]/20 disabled:opacity-50"
                     />
                     <button
                       onClick={handleGeneratePlan}
                       disabled={!builderPrompt.trim() || isGenerating}
                       className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center transition-all disabled:opacity-30"
-                      style={{ backgroundColor: builderPrompt.trim() && !isGenerating ? '#FC4C02' : 'transparent' }}
+                      style={{ backgroundColor: builderPrompt.trim() && !isGenerating ? '#EF0606' : 'transparent' }}
                     >
                       {isGenerating ? (
                         <Spinner size={16} />
                       ) : (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F5F0EB" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M5 12h14M12 5l7 7-7 7" />
                         </svg>
                       )}
@@ -1331,10 +1331,10 @@ export default function TrainingStudio() {
             {activeTab === 'events' && (
               <div className="h-full flex flex-col">
                 <div className="flex items-center justify-between mb-3 flex-shrink-0">
-                  <h2 className="text-white font-semibold text-sm">Sport Events</h2>
+                  <h2 className="text-[#F5F0EB] font-semibold text-sm">Sport Events</h2>
                   <button
                     onClick={() => setShowEventForm(true)}
-                    className="px-2.5 py-1 bg-[#FC4C02] hover:bg-[#FC4C02]/80 text-white text-[11px] font-medium rounded-lg transition-all flex items-center gap-1"
+                    className="px-2.5 py-1 bg-[#EF0606] hover:bg-[#EF0606]/80 text-[#F5F0EB] text-[11px] font-medium rounded-lg transition-all flex items-center gap-1"
                   >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="12" y1="5" x2="12" y2="19" />
@@ -1351,18 +1351,18 @@ export default function TrainingStudio() {
                     </div>
                   ) : events.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center text-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <div className="w-12 h-12 rounded-full bg-[#D3CCC7]/10 flex items-center justify-center">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#D3CCC7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                           <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                           <line x1="16" y1="2" x2="16" y2="6" />
                           <line x1="8" y1="2" x2="8" y2="6" />
                           <line x1="3" y1="10" x2="21" y2="10" />
                         </svg>
                       </div>
-                      <p className="text-gray-400 text-xs">No events yet</p>
+                      <p className="text-[#D3CCC7] text-xs">No events yet</p>
                       <button
                         onClick={() => setShowEventForm(true)}
-                        className="px-4 py-2 rounded-full bg-white text-black text-xs font-medium hover:opacity-90 transition-opacity"
+                        className="px-4 py-2 rounded-full bg-[#F5F0EB] text-black text-xs font-medium hover:opacity-90 transition-opacity"
                       >
                         Create Your First Event
                       </button>
@@ -1377,7 +1377,7 @@ export default function TrainingStudio() {
                       return (
                         <div
                           key={event.id}
-                          className="bg-white/5 rounded-xl p-3.5 hover:bg-white/10 transition-all border border-white/5 group"
+                          className="bg-[#F5F0EB]/5 rounded-xl p-3.5 hover:bg-[#F5F0EB]/10 transition-all border border-[#F5F0EB]/5 group"
                         >
                           <div 
                             className="flex items-start gap-3 cursor-pointer"
@@ -1386,9 +1386,9 @@ export default function TrainingStudio() {
                             <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 border ${
                               event.status === 'CANCELLED' ? 'bg-red-500/20 border-red-500/20' :
                               isPast ? 'bg-blue-500/20 border-blue-500/20' :
-                              'bg-[#FC4C02]/30 border-[#FC4C02]/20'
+                              'bg-[#EF0606]/30 border-[#EF0606]/20'
                             }`}>
-                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-70">
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5F0EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-70">
                                 <circle cx="12" cy="12" r="10" />
                                 <polyline points="12 16 16 12 12 8" />
                                 <line x1="8" y1="12" x2="16" y2="12" />
@@ -1396,7 +1396,7 @@ export default function TrainingStudio() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-0.5">
-                                <h3 className="text-white font-semibold text-sm truncate">{event.title}</h3>
+                                <h3 className="text-[#F5F0EB] font-semibold text-sm truncate">{event.title}</h3>
                                 {event.status === 'CANCELLED' && (
                                   <span className="px-1.5 py-0.5 bg-red-500/20 text-red-400 text-[8px] font-medium rounded-full">Cancelled</span>
                                 )}
@@ -1404,15 +1404,15 @@ export default function TrainingStudio() {
                                   <span className="px-1.5 py-0.5 bg-blue-500/20 text-blue-400 text-[8px] font-medium rounded-full">Past</span>
                                 )}
                               </div>
-                              <p className="text-white/40 text-[11px] leading-relaxed">
+                              <p className="text-[#F5F0EB]/40 text-[11px] leading-relaxed">
                                 {eventDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                 {event.location && ` · ${event.location}`}
                               </p>
                               {event.description && (
-                                <p className="text-white/30 text-[10px] mt-0.5 line-clamp-1">{event.description}</p>
+                                <p className="text-[#F5F0EB]/30 text-[10px] mt-0.5 line-clamp-1">{event.description}</p>
                               )}
                               <div className="flex items-center gap-2 mt-1.5">
-                                <span className="text-white/30 text-[10px]">{totalEngaged} participant{totalEngaged !== 1 ? 's' : ''}</span>
+                                <span className="text-[#F5F0EB]/30 text-[10px]">{totalEngaged} participant{totalEngaged !== 1 ? 's' : ''}</span>
                                 {pendingEngagements.length > 0 && (
                                   <span className="text-yellow-400/60 text-[10px]">{pendingEngagements.length} pending</span>
                                 )}
@@ -1420,7 +1420,7 @@ export default function TrainingStudio() {
                             </div>
                           </div>
                           {/* Card footer - always visible icons */}
-                          <div className="flex items-center gap-1.5 mt-2.5 pt-2.5 border-t border-white/5">
+                          <div className="flex items-center gap-1.5 mt-2.5 pt-2.5 border-t border-[#F5F0EB]/5">
                             {/* Approved Participants */}
                             {event.engagements.filter(e => e.status === 'APPROVED').length > 0 && (
                               <button
@@ -1431,7 +1431,7 @@ export default function TrainingStudio() {
                                     `• ${e.user?.name || e.user?.email || 'Guest'}${e.guestPhone ? ` · ${e.guestPhone}` : ''}${e.guestLinks ? ` · ${e.guestLinks}` : ''}`
                                   ).join('\n')}`);
                                 }}
-                                className="px-2 py-1 text-white/40 hover:text-green-400 transition-colors"
+                                className="px-2 py-1 text-[#F5F0EB]/40 hover:text-green-400 transition-colors"
                                 title="Show approved participants"
                               >
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1479,7 +1479,7 @@ export default function TrainingStudio() {
                                 setNewEventWebsiteLink((clonePayload as any).websiteLink || '');
                                 setShowEventForm(true);
                               }}
-                              className="px-2 py-1 text-white/40 hover:text-[#FC4C02] transition-colors"
+                              className="px-2 py-1 text-[#F5F0EB]/40 hover:text-[#EF0606] transition-colors"
                               title="Clone event"
                             >
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1493,7 +1493,7 @@ export default function TrainingStudio() {
                                 e.stopPropagation();
                                 handleEditEvent(event);
                               }}
-                              className="px-2 py-1 text-white/40 hover:text-blue-400 transition-colors"
+                              className="px-2 py-1 text-[#F5F0EB]/40 hover:text-blue-400 transition-colors"
                               title="Edit event"
                             >
                               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1507,7 +1507,7 @@ export default function TrainingStudio() {
                                 e.stopPropagation();
                                 handleDeleteEvent(event.id);
                               }}
-                              className="px-2 py-1 text-white/40 hover:text-red-400 transition-colors"
+                              className="px-2 py-1 text-[#F5F0EB]/40 hover:text-[#EF0606] transition-colors"
                               title="Delete event"
                             >
                               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1521,7 +1521,7 @@ export default function TrainingStudio() {
                                 e.stopPropagation();
                                 handleShareEvent(event.id);
                               }}
-                              className="px-2 py-1 text-white/40 hover:text-[#FC4C02] transition-colors"
+                              className="px-2 py-1 text-[#F5F0EB]/40 hover:text-[#EF0606] transition-colors"
                               title="Share event"
                             >
                               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1536,19 +1536,19 @@ export default function TrainingStudio() {
                                   e.stopPropagation();
                                   setShowEventDetail(showEventDetail === event.id ? null : event.id);
                                 }}
-                                className="px-2 py-1 text-white/40 hover:text-white transition-colors text-[11px] font-medium"
+                                className="px-2 py-1 text-[#F5F0EB]/40 hover:text-[#F5F0EB] transition-colors text-[11px] font-medium"
                               >
                                 {showEventDetail === event.id ? 'Less' : 'Manage'}
                               </button>
                             )}
                           </div>
                           {showEventDetail === event.id && (
-                            <div className="mt-3 pt-3 border-t border-white/5 space-y-2">
+                            <div className="mt-3 pt-3 border-t border-[#F5F0EB]/5 space-y-2">
                               {event.locationLat && event.locationLng && (
                                 <div className="mb-2">
-                                  <h4 className="text-white/50 text-[10px] font-medium uppercase tracking-wider mb-1.5">Location</h4>
+                                  <h4 className="text-[#F5F0EB]/50 text-[10px] font-medium uppercase tracking-wider mb-1.5">Location</h4>
                                   <div
-                                    className="w-full h-32 rounded-lg overflow-hidden border border-white/10"
+                                    className="w-full h-32 rounded-lg overflow-hidden border border-[#F5F0EB]/10"
                                     ref={el => {
                                       if (!el || event.locationLat === null || event.locationLng === null) return;
                                       import('leaflet').then(L => {
@@ -1577,16 +1577,16 @@ export default function TrainingStudio() {
                                   />
                                 </div>
                               )}
-                              <h4 className="text-white/50 text-[10px] font-medium uppercase tracking-wider">Engagements</h4>
+                              <h4 className="text-[#F5F0EB]/50 text-[10px] font-medium uppercase tracking-wider">Engagements</h4>
                               {event.engagements.length === 0 ? (
-                                <p className="text-white/30 text-[10px]">No one has joined yet.</p>
+                                <p className="text-[#F5F0EB]/30 text-[10px]">No one has joined yet.</p>
                               ) : (
                                 event.engagements.map(eng => (
                                   <div key={eng.id} className="flex items-center gap-2">
-                                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#FC4C02]/30 to-orange-500/30 flex items-center justify-center text-[7px] font-bold text-white flex-shrink-0 border border-white/10">
+                                    <div className="w-5 h-5 rounded-full bg-gradient-to-br from-[#EF0606]/30 to-[#EF0606]/30 flex items-center justify-center text-[7px] font-bold text-[#F5F0EB] flex-shrink-0 border border-[#F5F0EB]/10">
                                       {(eng.user?.name?.charAt(0) || eng.user?.email?.charAt(0) || eng.guestEmail?.charAt(0) || 'G').toUpperCase()}
                                     </div>
-                                    <span className="text-white/60 text-[11px] flex-1 truncate">{eng.user?.name || eng.user?.email || eng.guestEmail || 'Guest'}</span>
+                                    <span className="text-[#F5F0EB]/60 text-[11px] flex-1 truncate">{eng.user?.name || eng.user?.email || eng.guestEmail || 'Guest'}</span>
                                     {eng.status === 'PENDING' && (
                                       <div className="flex gap-1">
                                         <button
@@ -1639,7 +1639,7 @@ export default function TrainingStudio() {
                       <button
                         key={client.id}
                         onClick={() => handleSelectClient(client.id)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${selectedClient === client.id ? 'bg-[#FC4C02] text-white' : 'bg-white/5 text-white/60 hover:bg-white/10'}`}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${selectedClient === client.id ? 'bg-[#EF0606] text-[#F5F0EB]' : 'bg-[#F5F0EB]/5 text-[#F5F0EB]/60 hover:bg-[#F5F0EB]/10'}`}
                       >
                         {client.name}
                       </button>
@@ -1650,7 +1650,7 @@ export default function TrainingStudio() {
                 {/* Chat Message Window */}
                 <div ref={chatContainerRef} className="flex-1 overflow-y-auto space-y-2 pr-1 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                   {chatMessages.length === 0 ? (
-                    <div className="h-full flex items-center justify-center text-center text-white/30 text-xs">
+                    <div className="h-full flex items-center justify-center text-center text-[#F5F0EB]/30 text-xs">
                       No messages yet. Say hello!
                     </div>
                   ) : (
@@ -1673,7 +1673,7 @@ export default function TrainingStudio() {
                               </button>
                             )}
                             <div
-                              className={`rounded-2xl px-3.5 py-2 text-xs ${isTrainer ? 'bg-[#FC4C02] text-white rounded-tr-none' : 'bg-white/10 text-white rounded-tl-none'}`}
+                              className={`rounded-2xl px-3.5 py-2 text-xs ${isTrainer ? 'bg-[#EF0606] text-[#F5F0EB] rounded-tr-none' : 'bg-[#F5F0EB]/10 text-[#F5F0EB] rounded-tl-none'}`}
                               onContextMenu={e => { if (isTrainer) { e.preventDefault(); setDeletingMsgId(showDelete ? null : msg.id); } }}
                               onPointerDown={() => {
                                 if (!isTrainer) return;
@@ -1691,7 +1691,7 @@ export default function TrainingStudio() {
                               {msg.text}
                             </div>
                           </div>
-                          <span className="text-[9px] text-white/30 mt-0.5 px-1">
+                          <span className="text-[9px] text-[#F5F0EB]/30 mt-0.5 px-1">
                             {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
@@ -1708,12 +1708,12 @@ export default function TrainingStudio() {
                     onChange={e => setChatInput(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter') handleSendChat(); }}
                     placeholder="Type a message..."
-                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-white/20"
+                    className="flex-1 bg-[#F5F0EB]/5 border border-[#F5F0EB]/10 rounded-xl px-4 py-2.5 text-[#F5F0EB] text-sm placeholder-[#F5F0EB]/30 outline-none focus:border-[#F5F0EB]/20"
                   />
                   <button
                     onClick={handleSendChat}
                     disabled={!chatInput.trim()}
-                    className="w-10 h-10 rounded-xl bg-[#FC4C02] disabled:opacity-30 text-white flex items-center justify-center transition-opacity flex-shrink-0"
+                    className="w-10 h-10 rounded-xl bg-[#EF0606] disabled:opacity-30 text-[#F5F0EB] flex items-center justify-center transition-opacity flex-shrink-0"
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="22" y1="2" x2="11" y2="13" />
@@ -1730,12 +1730,12 @@ export default function TrainingStudio() {
       {/* Invite Client Modal */}
       {showInviteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}>
-          <div className="w-full max-w-md bg-black border border-white/10 rounded-2xl overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-white/10">
-              <h3 className="text-white font-semibold text-sm">Invite Client</h3>
+          <div className="w-full max-w-md bg-black border border-[#F5F0EB]/10 rounded-2xl overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-[#F5F0EB]/10">
+              <h3 className="text-[#F5F0EB] font-semibold text-sm">Invite Client</h3>
               <button
                 onClick={() => setShowInviteModal(false)}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#F5F0EB]/40 hover:text-[#F5F0EB] hover:bg-[#F5F0EB]/10 transition-all"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18" />
@@ -1744,7 +1744,7 @@ export default function TrainingStudio() {
               </button>
             </div>
             <div className="p-4 space-y-4">
-              <p className="text-white/50 text-xs">
+              <p className="text-[#F5F0EB]/50 text-xs">
                 Enter the email of the user you want to add as a client. They will receive an invitation to accept.
               </p>
               <input
@@ -1753,7 +1753,7 @@ export default function TrainingStudio() {
                 onChange={e => setInviteEmail(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') handleInviteClient(); }}
                 placeholder="client@example.com"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/30 outline-none focus:border-white/20"
+                className="w-full bg-[#F5F0EB]/5 border border-[#F5F0EB]/10 rounded-xl px-4 py-3 text-[#F5F0EB] text-sm placeholder-[#F5F0EB]/30 outline-none focus:border-[#F5F0EB]/20"
               />
               {inviteError && (
                 <p className="text-red-400 text-xs">{inviteError}</p>
@@ -1764,14 +1764,14 @@ export default function TrainingStudio() {
               <div className="flex gap-2">
                 <button
                   onClick={() => setShowInviteModal(false)}
-                  className="flex-1 py-2.5 bg-white/10 hover:bg-white/20 text-white text-sm rounded-lg transition-all"
+                  className="flex-1 py-2.5 bg-[#F5F0EB]/10 hover:bg-[#F5F0EB]/20 text-[#F5F0EB] text-sm rounded-lg transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleInviteClient}
                   disabled={!inviteEmail.trim() || isInviting}
-                  className="flex-1 py-2.5 bg-[#FC4C02] hover:bg-[#FC4C02]/80 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-all"
+                  className="flex-1 py-2.5 bg-[#EF0606] hover:bg-[#EF0606]/80 disabled:opacity-50 text-[#F5F0EB] text-sm font-semibold rounded-lg transition-all"
                 >
                   {isInviting ? 'Sending...' : 'Send Invitation'}
                 </button>
@@ -1784,12 +1784,12 @@ export default function TrainingStudio() {
       {/* New Event Modal */}
       {showEventForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}>
-          <div className="w-full max-w-md bg-black border border-white/10 rounded-2xl overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-white/10">
-              <h3 className="text-white font-semibold text-sm">{editingEventId ? 'Edit' : 'Create'} Sport Event</h3>
+          <div className="w-full max-w-md bg-black border border-[#F5F0EB]/10 rounded-2xl overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-[#F5F0EB]/10">
+              <h3 className="text-[#F5F0EB] font-semibold text-sm">{editingEventId ? 'Edit' : 'Create'} Sport Event</h3>
               <button
                 onClick={handleCloseEventForm}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#F5F0EB]/40 hover:text-[#F5F0EB] hover:bg-[#F5F0EB]/10 transition-all"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18" />
@@ -1799,47 +1799,47 @@ export default function TrainingStudio() {
             </div>
             <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
               <div>
-                <label className="text-white/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Title *</label>
+                <label className="text-[#F5F0EB]/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Title *</label>
                 <input
                   type="text"
                   value={newEventTitle}
                   onChange={e => setNewEventTitle(e.target.value)}
                   placeholder="e.g. Weekend Football Match"
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-white/20"
+                  className="w-full bg-[#F5F0EB]/5 border border-[#F5F0EB]/10 rounded-lg px-3 py-2.5 text-[#F5F0EB] text-sm placeholder-[#F5F0EB]/30 outline-none focus:border-[#F5F0EB]/20"
                 />
               </div>
               <div>
-                <label className="text-white/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Description</label>
+                <label className="text-[#F5F0EB]/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Description</label>
                 <textarea
                   value={newEventDescription}
                   onChange={e => setNewEventDescription(e.target.value)}
                   placeholder="Describe the event..."
                   rows={3}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-white/20 resize-none"
+                  className="w-full bg-[#F5F0EB]/5 border border-[#F5F0EB]/10 rounded-lg px-3 py-2.5 text-[#F5F0EB] text-sm placeholder-[#F5F0EB]/30 outline-none focus:border-[#F5F0EB]/20 resize-none"
                 />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-white/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Date *</label>
+                  <label className="text-[#F5F0EB]/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Date *</label>
                   <input
                     type="date"
                     value={newEventDate}
                     onChange={e => setNewEventDate(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm outline-none focus:border-white/20 [color-scheme:dark]"
+                    className="w-full bg-[#F5F0EB]/5 border border-[#F5F0EB]/10 rounded-lg px-3 py-2.5 text-[#F5F0EB] text-sm outline-none focus:border-[#F5F0EB]/20 [color-scheme:dark]"
                   />
                 </div>
                 <div>
-                  <label className="text-white/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Time</label>
+                  <label className="text-[#F5F0EB]/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Time</label>
                   <input
                     type="time"
                     value={newEventTime}
                     onChange={e => setNewEventTime(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm outline-none focus:border-white/20 [color-scheme:dark]"
+                    className="w-full bg-[#F5F0EB]/5 border border-[#F5F0EB]/10 rounded-lg px-3 py-2.5 text-[#F5F0EB] text-sm outline-none focus:border-[#F5F0EB]/20 [color-scheme:dark]"
                   />
                 </div>
               </div>
               <div>
-                <label className="text-white/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Location</label>
+                <label className="text-[#F5F0EB]/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Location</label>
                 <LocationPicker
                   defaultLat={newEventLocationLat || undefined}
                   defaultLng={newEventLocationLng || undefined}
@@ -1851,74 +1851,74 @@ export default function TrainingStudio() {
                 />
               </div>
               <div>
-                <label className="text-white/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Max Participants</label>
+                <label className="text-[#F5F0EB]/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Max Participants</label>
                 <input
                   type="number"
                   min="1"
                   value={newEventMaxParticipants}
                   onChange={e => setNewEventMaxParticipants(e.target.value)}
                   placeholder="Leave empty for unlimited"
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-white/20"
+                  className="w-full bg-[#F5F0EB]/5 border border-[#F5F0EB]/10 rounded-lg px-3 py-2.5 text-[#F5F0EB] text-sm placeholder-[#F5F0EB]/30 outline-none focus:border-[#F5F0EB]/20"
                 />
               </div>
               <div>
-                <label className="text-white/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Hosted By</label>
+                <label className="text-[#F5F0EB]/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Hosted By</label>
                 <input
                   type="text"
                   value={newEventHostedBy}
                   onChange={e => setNewEventHostedBy(e.target.value)}
                   placeholder="e.g. Local Sports Club"
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-white/20"
+                  className="w-full bg-[#F5F0EB]/5 border border-[#F5F0EB]/10 rounded-lg px-3 py-2.5 text-[#F5F0EB] text-sm placeholder-[#F5F0EB]/30 outline-none focus:border-[#F5F0EB]/20"
                 />
               </div>
               <div>
-                <label className="text-white/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Cover Image URL</label>
+                <label className="text-[#F5F0EB]/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Cover Image URL</label>
                 <input
                   type="url"
                   value={newEventCoverImage}
                   onChange={e => setNewEventCoverImage(e.target.value)}
                   placeholder="https://example.com/cover.jpg"
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm placeholder-white/30 outline-none focus:border-white/20"
+                  className="w-full bg-[#F5F0EB]/5 border border-[#F5F0EB]/10 rounded-lg px-3 py-2.5 text-[#F5F0EB] text-sm placeholder-[#F5F0EB]/30 outline-none focus:border-[#F5F0EB]/20"
                 />
               </div>
 
               {/* Social Media Links */}
-              <div className="pt-2 border-t border-white/10">
-                <label className="text-white/50 text-[10px] font-medium uppercase tracking-wider mb-2 block">Social Media & Links</label>
+              <div className="pt-2 border-t border-[#F5F0EB]/10">
+                <label className="text-[#F5F0EB]/50 text-[10px] font-medium uppercase tracking-wider mb-2 block">Social Media & Links</label>
                 <div className="space-y-2">
                   <input
                     type="url"
                     value={newEventInstagramLink}
                     onChange={e => setNewEventInstagramLink(e.target.value)}
                     placeholder="Instagram URL"
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-white/30 outline-none focus:border-white/20"
+                    className="w-full bg-[#F5F0EB]/5 border border-[#F5F0EB]/10 rounded-lg px-3 py-2 text-[#F5F0EB] text-sm placeholder-[#F5F0EB]/30 outline-none focus:border-[#F5F0EB]/20"
                   />
                   <input
                     type="url"
                     value={newEventFacebookLink}
                     onChange={e => setNewEventFacebookLink(e.target.value)}
                     placeholder="Facebook URL"
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-white/30 outline-none focus:border-white/20"
+                    className="w-full bg-[#F5F0EB]/5 border border-[#F5F0EB]/10 rounded-lg px-3 py-2 text-[#F5F0EB] text-sm placeholder-[#F5F0EB]/30 outline-none focus:border-[#F5F0EB]/20"
                   />
                   <input
                     type="url"
                     value={newEventTwitterLink}
                     onChange={e => setNewEventTwitterLink(e.target.value)}
                     placeholder="Twitter/X URL"
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-white/30 outline-none focus:border-white/20"
+                    className="w-full bg-[#F5F0EB]/5 border border-[#F5F0EB]/10 rounded-lg px-3 py-2 text-[#F5F0EB] text-sm placeholder-[#F5F0EB]/30 outline-none focus:border-[#F5F0EB]/20"
                   />
                   <input
                     type="url"
                     value={newEventWebsiteLink}
                     onChange={e => setNewEventWebsiteLink(e.target.value)}
                     placeholder="Website URL"
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-white/30 outline-none focus:border-white/20"
+                    className="w-full bg-[#F5F0EB]/5 border border-[#F5F0EB]/10 rounded-lg px-3 py-2 text-[#F5F0EB] text-sm placeholder-[#F5F0EB]/30 outline-none focus:border-[#F5F0EB]/20"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-white/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Sponsors</label>
+                <label className="text-[#F5F0EB]/50 text-[10px] font-medium uppercase tracking-wider mb-1.5 block">Sponsors</label>
                 <div className="space-y-2">
                   {newEventSponsors.map((s, i) => (
                     <div key={i} className="flex gap-2">
@@ -1931,7 +1931,7 @@ export default function TrainingStudio() {
                           setNewEventSponsors(copy);
                         }}
                         placeholder="Sponsor name"
-                        className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-white/30 outline-none focus:border-white/20"
+                        className="flex-1 bg-[#F5F0EB]/5 border border-[#F5F0EB]/10 rounded-lg px-3 py-2 text-[#F5F0EB] text-sm placeholder-[#F5F0EB]/30 outline-none focus:border-[#F5F0EB]/20"
                       />
                       <input
                         type="url"
@@ -1942,11 +1942,11 @@ export default function TrainingStudio() {
                           setNewEventSponsors(copy);
                         }}
                         placeholder="Logo URL"
-                        className="flex-[2] bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-white/30 outline-none focus:border-white/20"
+                        className="flex-[2] bg-[#F5F0EB]/5 border border-[#F5F0EB]/10 rounded-lg px-3 py-2 text-[#F5F0EB] text-sm placeholder-[#F5F0EB]/30 outline-none focus:border-[#F5F0EB]/20"
                       />
                       <button
                         onClick={() => setNewEventSponsors(newEventSponsors.filter((_, j) => j !== i))}
-                        className="px-2 text-red-400/60 hover:text-red-400 text-sm transition-colors"
+                        className="px-2 text-red-400/60 hover:text-[#EF0606] text-sm transition-colors"
                       >
                         ✕
                       </button>
@@ -1954,7 +1954,7 @@ export default function TrainingStudio() {
                   ))}
                   <button
                     onClick={() => setNewEventSponsors([...newEventSponsors, { name: '', logo: '' }])}
-                    className="text-white/40 hover:text-white text-xs transition-colors flex items-center gap-1"
+                    className="text-[#F5F0EB]/40 hover:text-[#F5F0EB] text-xs transition-colors flex items-center gap-1"
                   >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="12" y1="5" x2="12" y2="19" />
@@ -1967,21 +1967,21 @@ export default function TrainingStudio() {
               <div className="flex gap-2 pt-2">
                 <button
                   onClick={handleCloseEventForm}
-                  className="flex-1 py-2.5 bg-white/10 hover:bg-white/20 text-white text-sm rounded-lg transition-all"
+                  className="flex-1 py-2.5 bg-[#F5F0EB]/10 hover:bg-[#F5F0EB]/20 text-[#F5F0EB] text-sm rounded-lg transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handlePreviewEvent}
                   disabled={!newEventTitle.trim() || !newEventDate.trim()}
-                  className="flex-1 py-2.5 bg-white/10 hover:bg-white/20 disabled:opacity-50 text-white text-sm rounded-lg transition-all"
+                  className="flex-1 py-2.5 bg-[#F5F0EB]/10 hover:bg-[#F5F0EB]/20 disabled:opacity-50 text-[#F5F0EB] text-sm rounded-lg transition-all"
                 >
                   Preview
                 </button>
                 <button
                   onClick={handleCreateEvent}
                   disabled={!newEventTitle.trim() || !newEventDate.trim() || isCreatingEvent}
-                  className="flex-1 py-2.5 bg-[#FC4C02] hover:bg-[#FC4C02]/80 disabled:opacity-50 text-white text-sm font-semibold rounded-lg transition-all"
+                  className="flex-1 py-2.5 bg-[#EF0606] hover:bg-[#EF0606]/80 disabled:opacity-50 text-[#F5F0EB] text-sm font-semibold rounded-lg transition-all"
                 >
                   {isCreatingEvent ? (editingEventId ? 'Saving...' : 'Creating...') : (editingEventId ? 'Save' : 'Create')}
                 </button>
@@ -1994,12 +1994,12 @@ export default function TrainingStudio() {
       {/* Assign Plan to Client Modal */}
       {showAssignModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}>
-          <div className="w-full max-w-md bg-black border border-white/10 rounded-2xl overflow-hidden">
-            <div className="flex items-center justify-between p-4 border-b border-white/10">
-              <h3 className="text-white font-semibold text-sm">Assign &ldquo;{planTitle}&rdquo; to</h3>
+          <div className="w-full max-w-md bg-black border border-[#F5F0EB]/10 rounded-2xl overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-[#F5F0EB]/10">
+              <h3 className="text-[#F5F0EB] font-semibold text-sm">Assign &ldquo;{planTitle}&rdquo; to</h3>
               <button
                 onClick={() => setShowAssignModal(false)}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-all"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-[#F5F0EB]/40 hover:text-[#F5F0EB] hover:bg-[#F5F0EB]/10 transition-all"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18" />
@@ -2009,7 +2009,7 @@ export default function TrainingStudio() {
             </div>
             <div className="p-2 max-h-60 overflow-y-auto">
               {activeClients.filter(c => c.planStatus !== 'active').length === 0 ? (
-                <div className="p-4 text-center text-white/40 text-xs">
+                <div className="p-4 text-center text-[#F5F0EB]/40 text-xs">
                   All clients already have active plans
                 </div>
               ) : (
@@ -2018,18 +2018,18 @@ export default function TrainingStudio() {
                     key={client.id}
                     onClick={() => handleAssignToClient(client.trainerClientId || client.id)}
                     disabled={isAssigning}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/10 transition-all disabled:opacity-50 text-left"
+                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-[#F5F0EB]/10 transition-all disabled:opacity-50 text-left"
                   >
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#FC4C02]/30 to-orange-500/30 flex items-center justify-center text-white font-semibold text-xs flex-shrink-0 border border-white/10">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#EF0606]/30 to-[#EF0606]/30 flex items-center justify-center text-[#F5F0EB] font-semibold text-xs flex-shrink-0 border border-[#F5F0EB]/10">
                       {client.name.charAt(0)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm font-medium truncate">{client.name}</p>
-                      <p className="text-white/40 text-[11px] truncate">{client.email}</p>
+                      <p className="text-[#F5F0EB] text-sm font-medium truncate">{client.name}</p>
+                      <p className="text-[#F5F0EB]/40 text-[11px] truncate">{client.email}</p>
                     </div>
                     <span className={
                       "text-[10px] px-2 py-0.5 rounded-full font-medium " +
-                      (client.planStatus === 'paused' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-gray-500/20 text-gray-400')
+                      (client.planStatus === 'paused' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-[#D3CCC7]/20 text-[#D3CCC7]')
                     }>
                       {client.planStatus === 'paused' ? 'Paused' : 'No Plan'}
                     </span>

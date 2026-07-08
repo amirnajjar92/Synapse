@@ -70,14 +70,14 @@ export default function BlogPageClient() {
 
   if (!store.hasLoaded) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">
-        <div className="text-white/60 text-lg">Loading articles...</div>
+      <div className="min-h-screen bg-[#0a0a0a] text-[#F5F0EB] flex items-center justify-center">
+        <div className="text-[#F5F0EB]/60 text-lg">Loading articles...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
+    <div className="min-h-screen bg-[#0a0a0a] text-[#F5F0EB]">
       {/* Navigation */}
       <div className="fixed top-6 left-6 z-50">
         <BurgerMenuButton />
@@ -111,21 +111,21 @@ export default function BlogPageClient() {
         ) : (
           <div className="text-center py-20">
             <svg 
-              className="w-16 h-16 text-white/20 mx-auto mb-4"
+              className="w-16 h-16 text-[#F5F0EB]/20 mx-auto mb-4"
               fill="none" 
               stroke="currentColor" 
               viewBox="0 0 24 24"
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <p className="text-white/60 text-lg">No articles found</p>
-            <p className="text-white/40 text-sm mt-2">Try adjusting your filters or search query</p>
+            <p className="text-[#F5F0EB]/60 text-lg">No articles found</p>
+            <p className="text-[#F5F0EB]/40 text-sm mt-2">Try adjusting your filters or search query</p>
           </div>
         )}
 
         {/* Results Count */}
         {filteredPosts.length > 0 && (
-          <div className="mt-8 text-center text-white/40 text-sm">
+          <div className="mt-8 text-center text-[#F5F0EB]/40 text-sm">
             Showing {filteredPosts.length} {filteredPosts.length === 1 ? 'article' : 'articles'}
             {selectedTag && ` in "${selectedTag}"`}
             {searchQuery && ` matching "${searchQuery}"`}

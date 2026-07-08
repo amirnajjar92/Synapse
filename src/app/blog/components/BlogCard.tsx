@@ -10,10 +10,10 @@ function PostImage({ src, alt, className = '' }: { src?: string; alt: string; cl
   if (!src || error) {
     return (
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
-        <svg className="w-14 h-14 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-14 h-14 text-[#F5F0EB]/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
         </svg>
-        <span className="mt-2 text-white/40 text-xs font-medium line-clamp-2">{alt}</span>
+        <span className="mt-2 text-[#F5F0EB]/40 text-xs font-medium line-clamp-2">{alt}</span>
       </div>
     );
   }
@@ -43,11 +43,11 @@ export default function BlogCard({ post, variant = 'default' }: BlogCardProps) {
   if (variant === 'compact') {
     return (
       <Link href={`/blog/${post.slug}`} className="group block">
-        <div className="bg-white/5 rounded-xl p-3 border border-white/10 hover:bg-white/10 transition-all duration-300">
-          <h3 className="text-white font-semibold text-sm line-clamp-2 mb-1 group-hover:text-[#FC4C02] transition-colors">
+        <div className="bg-[#F5F0EB]/5 rounded-xl p-3 border border-[#F5F0EB]/10 hover:bg-[#F5F0EB]/10 transition-all duration-300">
+          <h3 className="text-[#F5F0EB] font-semibold text-sm line-clamp-2 mb-1 group-hover:text-[#EF0606] transition-colors">
             {post.title}
           </h3>
-          <p className="text-white/40 text-xs">{formatDate(post.date)}</p>
+          <p className="text-[#F5F0EB]/40 text-xs">{formatDate(post.date)}</p>
         </div>
       </Link>
     );
@@ -56,9 +56,9 @@ export default function BlogCard({ post, variant = 'default' }: BlogCardProps) {
   if (variant === 'featured') {
     return (
       <Link href={`/blog/${post.slug}`} className="group block">
-        <div className="bg-white/5 rounded-2xl overflow-hidden border border-white/10 hover:bg-white/10 transition-all duration-300 hover:scale-[1.02]">
+        <div className="bg-[#F5F0EB]/5 rounded-2xl overflow-hidden border border-[#F5F0EB]/10 hover:bg-[#F5F0EB]/10 transition-all duration-300 hover:scale-[1.02]">
           {/* Featured Image */}
-          <div className="relative w-full h-56 bg-gradient-to-br from-[#FC4C02]/20 to-[#3B82F6]/20">
+          <div className="relative w-full h-56 bg-gradient-to-br from-[#EF0606]/20 to-[#3B82F6]/20">
             <PostImage src={post.featuredImage} alt={post.title} />
             {/* Gradient Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
@@ -66,7 +66,7 @@ export default function BlogCard({ post, variant = 'default' }: BlogCardProps) {
             {/* Category Badge */}
             {post.category && (
               <div className="absolute top-3 left-3">
-                <span className="px-3 py-1 bg-[#FC4C02] text-white text-xs font-bold rounded-lg">
+                <span className="px-3 py-1 bg-[#EF0606] text-[#F5F0EB] text-xs font-bold rounded-lg">
                   {post.category}
                 </span>
               </div>
@@ -75,16 +75,16 @@ export default function BlogCard({ post, variant = 'default' }: BlogCardProps) {
 
           {/* Content */}
           <div className="p-5">
-            <h2 className="text-white font-bold text-xl mb-2 line-clamp-2 group-hover:text-[#FC4C02] transition-colors">
+            <h2 className="text-[#F5F0EB] font-bold text-xl mb-2 line-clamp-2 group-hover:text-[#EF0606] transition-colors">
               {post.title}
             </h2>
             
-            <p className="text-white/70 text-sm mb-4 line-clamp-3">
+            <p className="text-[#F5F0EB]/70 text-sm mb-4 line-clamp-3">
               {post.excerpt}
             </p>
 
             {/* Meta Info */}
-            <div className="flex items-center justify-between text-xs text-white/50 mb-4">
+            <div className="flex items-center justify-between text-xs text-[#F5F0EB]/50 mb-4">
               <div className="flex items-center gap-2">
                 {post.author?.name && <span>{post.author.name}</span>}
                 {post.author?.name && <span>•</span>}
@@ -98,7 +98,7 @@ export default function BlogCard({ post, variant = 'default' }: BlogCardProps) {
               {post.tags.slice(0, 3).map(tag => (
                 <span 
                   key={tag}
-                  className="px-2 py-1 bg-white/5 text-white/60 text-xs rounded-md border border-white/10"
+                  className="px-2 py-1 bg-[#F5F0EB]/5 text-[#F5F0EB]/60 text-xs rounded-md border border-[#F5F0EB]/10"
                 >
                   {tag}
                 </span>
@@ -106,7 +106,7 @@ export default function BlogCard({ post, variant = 'default' }: BlogCardProps) {
             </div>
 
             {/* Read More Button */}
-            <button className="w-full px-4 py-2 bg-[#FC4C02] text-white rounded-xl hover:opacity-90 transition-all font-semibold text-sm">
+            <button className="w-full px-4 py-2 bg-[#EF0606] text-[#F5F0EB] rounded-xl hover:opacity-90 transition-all font-semibold text-sm">
               Read More →
             </button>
           </div>
@@ -118,16 +118,16 @@ export default function BlogCard({ post, variant = 'default' }: BlogCardProps) {
   // Default variant
   return (
     <Link href={`/blog/${post.slug}`} className="group block">
-      <div className="bg-white/5 rounded-2xl overflow-hidden border border-white/10 hover:bg-white/10 transition-all duration-300 hover:scale-[1.02] h-full flex flex-col">
+      <div className="bg-[#F5F0EB]/5 rounded-2xl overflow-hidden border border-[#F5F0EB]/10 hover:bg-[#F5F0EB]/10 transition-all duration-300 hover:scale-[1.02] h-full flex flex-col">
         {/* Image */}
-        <div className="relative w-full h-48 bg-gradient-to-br from-[#FC4C02]/20 to-[#3B82F6]/20">
+        <div className="relative w-full h-48 bg-gradient-to-br from-[#EF0606]/20 to-[#3B82F6]/20">
           <PostImage src={post.featuredImage} alt={post.title} />
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
           
           {/* Category Badge */}
           {post.category && (
             <div className="absolute top-3 left-3">
-              <span className="px-2 py-1 bg-[#FC4C02] text-white text-xs font-bold rounded-lg">
+              <span className="px-2 py-1 bg-[#EF0606] text-[#F5F0EB] text-xs font-bold rounded-lg">
                 {post.category}
               </span>
             </div>
@@ -136,16 +136,16 @@ export default function BlogCard({ post, variant = 'default' }: BlogCardProps) {
 
         {/* Content */}
         <div className="p-4 flex-1 flex flex-col">
-          <h2 className="text-white font-bold text-lg mb-2 line-clamp-2 group-hover:text-[#FC4C02] transition-colors">
+          <h2 className="text-[#F5F0EB] font-bold text-lg mb-2 line-clamp-2 group-hover:text-[#EF0606] transition-colors">
             {post.title}
           </h2>
           
-          <p className="text-white/70 text-sm mb-3 line-clamp-3 flex-1">
+          <p className="text-[#F5F0EB]/70 text-sm mb-3 line-clamp-3 flex-1">
             {post.excerpt}
           </p>
 
           {/* Meta Info */}
-          <div className="flex items-center justify-between text-xs text-white/50 mb-3">
+          <div className="flex items-center justify-between text-xs text-[#F5F0EB]/50 mb-3">
             <span>{formatDate(post.date)}</span>
             {post.readTime && <span>{post.readTime} min read</span>}
           </div>
@@ -155,7 +155,7 @@ export default function BlogCard({ post, variant = 'default' }: BlogCardProps) {
             {post.tags.slice(0, 3).map(tag => (
               <span 
                 key={tag}
-                className="px-2 py-1 bg-white/5 text-white/60 text-xs rounded-md border border-white/10"
+                className="px-2 py-1 bg-[#F5F0EB]/5 text-[#F5F0EB]/60 text-xs rounded-md border border-[#F5F0EB]/10"
               >
                 {tag}
               </span>
