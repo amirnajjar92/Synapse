@@ -38,7 +38,15 @@ export async function GET() {
       const data = await response.json();
       if (data.success && data.posts && data.posts.length > 0) {
         console.log('✅ Successfully fetched from Flask proxy');
-        return NextResponse.json(data);
+        const mapped = {
+          ...data,
+          posts: data.posts.map((p: any) => ({
+            ...p,
+            featuredImage: p.featuredImage || p.featured_image,
+            featured_image: undefined,
+          })),
+        };
+        return NextResponse.json(mapped);
       }
     }
     console.log('⚠️ Flask proxy returned no posts');
