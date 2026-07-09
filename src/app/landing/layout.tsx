@@ -4,10 +4,10 @@ const SITE_URL = 'https://synapse-fit.vercel.app';
 
 export const metadata: Metadata = {
   title: 'Synapse — Your AI Fitness Brain',
-  description: 'Elevate your fitness journey with AI-driven insights and personalized workouts at Synapse Fit, your top choice for fitness enhancement.',
+  description: 'Transform your fitness routine with AI-enhanced workouts and insights at Synapse Fit, your partner in reaching optimal fitness levels.',
   openGraph: {
-    title: 'Unlock Your Fitness Potential with Synapse',
-    description: 'Discover AI-powered fitness solutions at Synapse Fit. Transform your workouts and achieve your goals effortlessly.',
+    title: 'Elevate Your Fitness with Synapse Fit',
+    description: 'Unlock personalized workouts and AI insights for your best fitness journey at Synapse Fit, where technology meets wellness.',
     url: `${SITE_URL}/landing`,
     images: [{ url: `${SITE_URL}/icons/icon-512x512.png`, width: 512, height: 512 }],
   },
