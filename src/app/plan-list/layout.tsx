@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Workout Plans',
-  description: 'Explore tailored workout plans for every fitness goal at Synapse Fit. Achieve your transformation today with expert guidance!',
+  description: 'Unlock your fitness potential with customized workout plans designed for every goal. Transform your health today - Synapse',
 };
 
 export default function PlanListLayout({ children }: { children: React.ReactNode }) {
