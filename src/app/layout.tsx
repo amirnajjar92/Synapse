@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     default: 'Synapse — AI Fitness & Health Tracker',
     template: '%s | Synapse Fit',
   },
-  description: "Unlock your fitness potential with Synapse's AI-driven training plans and progress tracking. Join us today! - Synapse's AI-driven workout planning and progress tracking. Achieve your goals with personalized training plans. - Synapse",
+  description: "Unlock your fitness potential with Synapse's AI-driven training plans and progress tracking. Join us today!",
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
