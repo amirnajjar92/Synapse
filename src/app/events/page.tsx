@@ -153,12 +153,12 @@ export default function EventsPage() {
                   <Spinner size={20} />
                 </div>
               ) : (
-                <span
+                <h1
                   className="text-xl sm:text-2xl font-bold tracking-wider"
                   style={{ fontFamily: 'var(--font-hanalei-fill)', color: '#e5e5e5' }}
                 >
                   EVENTS
-                </span>
+                </h1>
               )}
             </div>
             <button
@@ -267,6 +267,14 @@ export default function EventsPage() {
         />
       )}
       
+      {/* Internal links for SEO */}
+      <nav className="flex justify-center gap-6 pb-4" style={{ opacity: 0.4 }}>
+        <a href="/" className="text-white text-sm">Home</a>
+        <a href="/entertain" className="text-white text-sm">Fitness Entertainment</a>
+        <a href="/planner" className="text-white text-sm">Workout Planner</a>
+        <a href="/blog" className="text-white text-sm">Fitness Blog</a>
+      </nav>
+
       {/* Floating Navigation Bar */}
       <FloatingNavBar />
     </div>

@@ -100,6 +100,7 @@ export default function RootLayout({
           <a href="/plan-progress-tracker">Plan Progress Tracker</a>
           <a href="/water-tracker">Water Tracker</a>
           <a href="/entertain">Fitness Entertainment</a>
+          <a href="/events">Fitness Events</a>
           <a href="/blog">Fitness Blog</a>
           <a href="/training-chat">Training Chat</a>
           <a href="/landing">About Synapse Fit</a>
