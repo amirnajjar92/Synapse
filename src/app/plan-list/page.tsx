@@ -65,9 +65,9 @@ export default function PlanListPage() {
               {isLoading ? (
                 <Skeleton className="w-3/4 h-6" />
               ) : (
-                <p className="text-gray-400 text-base sm:text-lg md:text-xl font-light">
+                <h1 className="text-gray-400 text-base sm:text-lg md:text-xl font-light">
                   SELECT ITEMS TO VIEW DETAILE
-                </p>
+                </h1>
               )}
             </div>
             <div className="w-10"></div>
@@ -145,6 +145,14 @@ export default function PlanListPage() {
               />
             </div>
           </div>
+
+          {/* Internal links for SEO */}
+          <nav className="flex justify-center gap-6 mt-4" style={{ opacity: 0.4 }}>
+            <a href="/" className="text-white text-sm">Home</a>
+            <a href="/planner" className="text-white text-sm">Workout Planner</a>
+            <a href="/my-plans" className="text-white text-sm">My Plans</a>
+            <a href="/blog" className="text-white text-sm">Fitness Blog</a>
+          </nav>
         </div>
       </div>
     </div>
