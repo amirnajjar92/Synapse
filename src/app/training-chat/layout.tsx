@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Training Chat',
-  description: 'Unlock personalized fitness coaching with AI-driven workout plans at Synapse Fit. Transform your workouts today!',
+  description: 'Unlock your fitness potential with personalized AI coaching and tailored workout plans. Elevate your journey today! - Synapse',
 };
 
 export default function TrainingChatLayout({ children }: { children: React.ReactNode }) {
