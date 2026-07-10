@@ -6,7 +6,6 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/api/', '/admin/', '/demo/', '/logotest/', '/test-anatomy/'],
       },
     ],
     sitemap: 'https://synapse-fit.vercel.app/sitemap.xml',
