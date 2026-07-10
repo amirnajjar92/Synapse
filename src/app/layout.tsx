@@ -94,6 +94,7 @@ export default function RootLayout({
           <a href="/planner">AI Workout Planner</a>
           <a href="/workout-planner">Workout Planner</a>
           <a href="/workout-tracker">Workout Tracker</a>
+          <a href="/training-studio">Training Studio</a>
           <a href="/blog">Fitness Blog</a>
           <a href="/training-chat">Training Chat</a>
           <a href="/landing">About Synapse Fit</a>
