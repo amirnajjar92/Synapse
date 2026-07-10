@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Progress Tracker',
-  description: 'Unlock your fitness journey with our Progress Tracker. Achieve real-time insights and elevate your workouts for maximum results - Synapse',
+  description: 'Monitor your fitness journey with real-time analytics and insights using Synapse Fit. Optimize workouts and track improvements today.',
 };
 
 export default function PlanProgressLayout({ children }: { children: React.ReactNode }) {

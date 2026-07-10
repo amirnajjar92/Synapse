@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     default: 'Synapse — AI Fitness & Health Tracker',
     template: '%s | Synapse Fit',
   },
-  description: "Unlock your fitness potential with Synapse's AI-driven training plans and progress tracking. Join us today! - Synapse's AI-driven workout planning and progress tracking. Achieve your goals with personalized training plans. - Synapse",
+  description: "Unlock your fitness potential with Synapse's AI-driven training plans and progress tracking. Join us today!",
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'Unlock Your Fitness with Synapse',
-    description: 'Discover AI-driven fitness tracking and tailored workout plans that elevate your health journey. Start achieving today! - Synapse',
+    description: 'Achieve your fitness goals with Synapse\'s AI-driven training plans and progress tracking. Join today and start your journey!',
     url: SITE_URL,
     siteName: 'Synapse Fit',
     type: 'website',
