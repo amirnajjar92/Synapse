@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: 'Workout Planner',
   description: "Create custom workout plans and track your fitness journey effectively with Synapse Fit's powerful planner.",
   openGraph: {
-    title: 'Customize Your Workout Plans | Synapse Fit',
+    title: 'Transform Your Fitness with Our Workout Planner',
     description: "Design your personalized workout plan and achieve your fitness goals with Synapse Fit's intuitive workout planner.",
     url: `${SITE_URL}/workout-planner`,
     images: [{ url: `${SITE_URL}/icons/icon-512x512.png`, width: 512, height: 512 }],

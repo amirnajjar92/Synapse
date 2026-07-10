@@ -26,8 +26,8 @@ export const metadata: Metadata = {
     title: 'Synapse',
   },
   openGraph: {
-    title: 'Unlock Your Fitness with Synapse',
-    description: 'Achieve your fitness goals with Synapse\'s AI-driven training plans and progress tracking. Join today and start your journey!',
+    title: 'Revolutionize Your Fitness Journey with Synapse',
+    description: 'Transform your health with AI-powered training and progress tracking. Achieve your goals with Synapse! - Synapse's AI-driven training plans and progress tracking. Join today and start your journey!',
     url: SITE_URL,
     siteName: 'Synapse Fit',
     type: 'website',
