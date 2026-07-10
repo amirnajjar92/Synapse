@@ -477,12 +477,12 @@ export default function EntertainPage() {
               {isLoading ? (
                 <Spinner size={24} />
               ) : (
-                <span
+                <h1
                   className="text-white font-bold tracking-wider"
                   style={{ fontFamily: 'var(--font-hanalei-fill)', fontSize: '19px' }}
                 >
                   {selectedCategory ? selectedCategory.toUpperCase() : 'ENTERTAIN'}
-                </span>
+                </h1>
               )}
             </div>
           </div>
@@ -748,6 +748,14 @@ export default function EntertainPage() {
         />
       )}
       
+      {/* Internal links for SEO */}
+      <nav className="flex justify-center gap-6 pb-4" style={{ opacity: 0.4 }}>
+        <a href="/" className="text-white text-sm">Home</a>
+        <a href="/blog" className="text-white text-sm">Fitness Blog</a>
+        <a href="/planner" className="text-white text-sm">Workout Planner</a>
+        <a href="/training-studio" className="text-white text-sm">Training Studio</a>
+      </nav>
+
       {/* Floating Navigation Bar */}
       <FloatingNavBar />
     </div>
