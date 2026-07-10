@@ -1,12 +1,6 @@
-import { Metadata } from 'next';
 import ReminderSettings from '@/components/ReminderSettings';
 import ReminderInitializer from '@/components/ReminderInitializer';
 import DailyPlanReminderSettings from '@/components/DailyPlanReminderSettings';
-
-export const metadata: Metadata = {
-  title: 'Reminders | Synapse Fit',
-  description: 'Manage your fitness and health reminders',
-};
 
 export default function RemindersPage() {
   return (
@@ -18,6 +12,14 @@ export default function RemindersPage() {
         
         {/* General Reminders Section */}
         <ReminderSettings />
+
+        {/* Internal links for SEO */}
+        <nav className="flex justify-center gap-6 pt-6" style={{ opacity: 0.4 }}>
+          <a href="/" className="text-gray-600 text-sm hover:text-gray-900">Home</a>
+          <a href="/planner" className="text-gray-600 text-sm hover:text-gray-900">Workout Planner</a>
+          <a href="/workout-tracker" className="text-gray-600 text-sm hover:text-gray-900">Workout Tracker</a>
+          <a href="/blog" className="text-gray-600 text-sm hover:text-gray-900">Fitness Blog</a>
+        </nav>
       </div>
     </div>
   );
