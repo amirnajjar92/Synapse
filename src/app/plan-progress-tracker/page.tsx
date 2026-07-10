@@ -1355,6 +1355,14 @@ export default function PlanProgressTrackerPage() {
         <PlanProgressContent />
       </Suspense>
       
+      {/* Internal links for SEO */}
+      <nav className="flex justify-center gap-6 pb-4" style={{ opacity: 0.4 }}>
+        <a href="/" className="text-white text-sm">Home</a>
+        <a href="/planner" className="text-white text-sm">Workout Planner</a>
+        <a href="/my-plans" className="text-white text-sm">My Plans</a>
+        <a href="/blog" className="text-white text-sm">Fitness Blog</a>
+      </nav>
+
       {/* Floating Navigation Bar */}
       <FloatingNavBar />
     </>
