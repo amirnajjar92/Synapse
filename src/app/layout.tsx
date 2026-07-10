@@ -89,6 +89,14 @@ export default function RootLayout({
         />
       </head>
       <body className={`antialiased`}>
+        <h1 className="sr-only">Synapse — AI Fitness &amp; Health Tracker</h1>
+        <nav className="sr-only" aria-label="Primary navigation">
+          <a href="/planner">Workout Planner</a>
+          <a href="/workout-tracker">Workout Tracker</a>
+          <a href="/blog">Fitness Blog</a>
+          <a href="/training-chat">Training Chat</a>
+          <a href="/landing">About Synapse Fit</a>
+        </nav>
         <Providers>
           <AppShell>
             {children}
