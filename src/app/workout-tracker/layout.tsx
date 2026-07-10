@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: 'Workout Tracker',
   description: "Track your workouts and see progress easily with Synapse Fit's powerful tracker.",
   openGraph: {
-    title: 'Track Your Workouts | Synapse Fit',
+    title: 'Transform Your Workouts with Synapse',
     description: "Effortlessly monitor your fitness journey with Synapse Fit's intuitive workout tracker.",
     url: `${SITE_URL}/workout-tracker`,
     images: [{ url: `${SITE_URL}/icons/icon-512x512.png`, width: 512, height: 512 }],
