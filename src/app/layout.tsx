@@ -20,6 +20,7 @@ export const metadata: Metadata = {
   },
   description: "Unlock your fitness potential with Synapse's AI-driven training plans and progress tracking. Join us today!",
   manifest: '/manifest.json',
+  keywords: ['AI fitness', 'workout planner', 'health tracker', 'personal training', 'fitness app'],
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
@@ -32,17 +33,22 @@ export const metadata: Metadata = {
     siteName: 'Synapse Fit',
     type: 'website',
     locale: 'en_US',
+    images: [{ url: `${SITE_URL}/icons/icon-512x512.png`, width: 512, height: 512, alt: 'Synapse Fit' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Synapse — AI Fitness & Health Tracker',
     description: 'AI-powered workout planning, progress tracking, and trainer collaboration.',
+    images: [`${SITE_URL}/icons/icon-512x512.png`],
   },
   robots: {
     index: true,
     follow: true,
   },
-};
+  alternates: {
+    canonical: SITE_URL,
+  },
+}
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -67,6 +73,20 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Synapse" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="theme-color" content="#0a0a0a" />
+        <link rel="alternate" hrefLang="en-US" href={SITE_URL} />
+        <link rel="alternate" hrefLang="en" href={SITE_URL} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WebPage',
+              name: 'Synapse — AI Fitness & Health Tracker',
+              description: "Unlock your fitness potential with Synapse's AI-driven training plans and progress tracking.",
+              url: SITE_URL,
+            }),
+          }}
+        />
       </head>
       <body className={`antialiased`}>
         <Providers>

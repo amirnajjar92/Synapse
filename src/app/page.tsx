@@ -22,6 +22,14 @@ export default function Home() {
   return (
     <>
       <DailyPlanNotifier />
+      <h1 style={{ display: 'none' }}>Synapse — AI Fitness &amp; Health Tracker</h1>
+      <nav style={{ display: 'none' }}>
+        <a href="/planner">Workout Planner</a>
+        <a href="/workout-tracker">Workout Tracker</a>
+        <a href="/blog">Fitness Blog</a>
+        <a href="/training-chat">Training Chat</a>
+        <a href="/landing">About Synapse Fit</a>
+      </nav>
       <div
         style={{
           position: "fixed",
