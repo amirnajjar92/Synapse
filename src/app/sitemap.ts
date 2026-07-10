@@ -1,10 +1,10 @@
 import type { MetadataRoute } from 'next';
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+export default function sitemap(): MetadataRoute.Sitemap {
   const base = 'https://synapse-fit.vercel.app';
   const now = new Date().toISOString().split('T')[0];
 
-  const staticPages = [
+  return [
     { url: base, lastModified: now, changeFrequency: 'monthly' as const, priority: 1 },
     { url: `${base}/landing`, lastModified: now, changeFrequency: 'monthly' as const, priority: 0.9 },
     { url: `${base}/planner`, lastModified: now, changeFrequency: 'weekly' as const, priority: 0.8 },
@@ -23,24 +23,4 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/reminders`, lastModified: now, changeFrequency: 'monthly' as const, priority: 0.4 },
     { url: `${base}/blog`, lastModified: now, changeFrequency: 'weekly' as const, priority: 0.7 },
   ];
-
-  // Fetch blog post slugs from the blog API
-  let blogPosts: MetadataRoute.Sitemap = [];
-  try {
-    const res = await fetch(`${base}/api/blog`, { cache: 'no-store' });
-    if (res.ok) {
-      const data = await res.json();
-      const posts = Array.isArray(data) ? data : data.posts ?? data.articles ?? [];
-      blogPosts = posts.map((post: { slug?: string; _id?: string; updatedAt?: string; createdAt?: string }) => ({
-        url: `${base}/blog/${post.slug || post._id}`,
-        lastModified: post.updatedAt?.split('T')[0] || post.createdAt?.split('T')[0] || now,
-        changeFrequency: 'weekly' as const,
-        priority: 0.6,
-      }));
-    }
-  } catch {
-    // API unavailable at build time — skip blog posts
-  }
-
-  return [...staticPages, ...blogPosts];
 }
