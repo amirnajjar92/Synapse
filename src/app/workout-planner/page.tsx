@@ -679,7 +679,7 @@ export default function WorkoutPlannerPage() {
           <div className="w-full max-w-md bg-black border border-white/10 rounded-2xl overflow-hidden">
             {/* Header */}
             <div className="text-center p-8 pb-6 border-b border-white/10">
-              <h1 className="text-3xl font-bold text-white mb-2">Welcome to Synapse</h1>
+              <h1 className="text-3xl font-bold text-white mb-2">Workout Planner</h1>
               <p className="text-lg text-white/60">
                 Sign in to create your personalized workout plan
               </p>
@@ -748,6 +748,14 @@ export default function WorkoutPlannerPage() {
         </div>
       )}
       
+      {/* Internal links for SEO */}
+      <nav className="flex justify-center gap-6 pb-20 pt-2" style={{ opacity: 0.4 }}>
+        <a href="/" className="text-white text-sm">Home</a>
+        <a href="/planner" className="text-white text-sm">AI Workout Planner</a>
+        <a href="/blog" className="text-white text-sm">Fitness Blog</a>
+        <a href="/training-chat" className="text-white text-sm">Training Chat</a>
+      </nav>
+
       {/* Floating Navigation Bar - hidden when AI chat is open */}
       {!showChat && <FloatingNavBar onAIClick={handleOpenChat} />}
     </div>
