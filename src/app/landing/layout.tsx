@@ -5,6 +5,7 @@ const SITE_URL = 'https://synapse-fit.vercel.app';
 export const metadata: Metadata = {
   title: 'Synapse — Your AI Fitness Brain',
   description: 'Unlock your fitness potential with AI-driven workouts and insights. Elevate your journey to optimal health today - Synapse',
+  keywords: ['AI fitness', 'personal training', 'workout planner', 'health tracker', 'fitness app'],
   openGraph: {
     title: 'Achieve Your Fitness Goals with Synapse',
     description: 'Transform your workout routine with AI-enhanced insights. Discover fitness like never before - Synapse',
@@ -22,5 +23,21 @@ export const metadata: Metadata = {
 };
 
 export default function LandingLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'WebPage',
+            name: 'Synapse - AI Fitness Brain',
+            description: 'AI-driven workout planning, progress tracking, and personalized training.',
+            url: `${SITE_URL}/landing`,
+          }),
+        }}
+      />
+      {children}
+    </>
+  );
 }

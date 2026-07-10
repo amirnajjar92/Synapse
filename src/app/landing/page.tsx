@@ -1372,6 +1372,12 @@ export default function LandingPage() {
             Synapse
           </span>
         </div>
+        <nav style={{ display:'flex', justifyContent:'center', gap:20, marginBottom:20, flexWrap:'wrap' }}>
+          <a href="/planner" style={{ color:'rgba(255,255,255,0.4)', fontSize:13, textDecoration:'none' }}>Workout Planner</a>
+          <a href="/workout-tracker" style={{ color:'rgba(255,255,255,0.4)', fontSize:13, textDecoration:'none' }}>Workout Tracker</a>
+          <a href="/training-chat" style={{ color:'rgba(255,255,255,0.4)', fontSize:13, textDecoration:'none' }}>Training Chat</a>
+          <a href="/blog" style={{ color:'rgba(255,255,255,0.4)', fontSize:13, textDecoration:'none' }}>Blog</a>
+        </nav>
         <p style={{ color:'rgba(255,255,255,0.25)', fontSize:12 }}>
           © {new Date().getFullYear()} Synapse Fit. Elevating athletic intelligence.
         </p>
