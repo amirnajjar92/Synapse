@@ -8,6 +8,7 @@ import BlogTags from './components/BlogTags';
 import BlogCard from './components/BlogCard';
 import BurgerMenuButton from '@/components/BurgerMenuButton';
 import FloatingNavBar from '@/components/FloatingNavBar';
+import SynapseFitLogo from '@/components/SynapseFitLogo';
 
 export default function BlogPageClient() {
   const store = useBlogStore();
@@ -70,8 +71,20 @@ export default function BlogPageClient() {
 
   if (!store.hasLoaded) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] text-[#F5F0EB] flex items-center justify-center">
-        <div className="text-[#F5F0EB]/60 text-lg">Loading articles...</div>
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)",
+        }}
+      >
+        <SynapseFitLogo
+          size={180}
+          loading={true}
+          accentInk="#FFFFFF"
+        />
       </div>
     );
   }

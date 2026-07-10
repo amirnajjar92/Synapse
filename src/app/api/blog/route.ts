@@ -25,36 +25,12 @@ function localFallback() {
 }
 
 export async function GET() {
-  // 1. Try Flask proxy (source of truth for blog posts)
+  // 1. Try MongoDB (source of truth — SEO engine writes here)
   try {
-    console.log('🔄 Attempting Flask proxy for blog posts...');
-    const response = await fetch(`${FLASK_PROXY_URL}/synapse/blog-posts`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      signal: AbortSignal.timeout(5000),
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      if (data.success && data.posts && data.posts.length > 0) {
-        console.log('✅ Successfully fetched from Flask proxy');
-        return NextResponse.json(data);
-      }
-    }
-    console.log('⚠️ Flask proxy returned no posts');
-  } catch (proxyError) {
-    console.log('⚠️ Flask proxy error:', proxyError);
-  }
-
-  // 2. Try MongoDB (production DB)
-  try {
-    console.log('🔌 Connecting to MongoDB...');
-    const { MongoClient, ServerApiVersion } = await import('mongodb');
     const uri = process.env.MONGODB_URI;
-
-    if (!uri) {
-      console.log('⚠️ MONGODB_URI not set, skipping MongoDB');
-    } else {
+    if (uri) {
+      console.log('🔌 Connecting to MongoDB...');
+      const { MongoClient, ServerApiVersion } = await import('mongodb');
       const client = new MongoClient(uri, {
         serverApi: { version: ServerApiVersion.v1, strict: true, deprecationErrors: true },
       });
@@ -74,6 +50,7 @@ export async function GET() {
       await client.close();
 
       if (allPosts.length > 0) {
+        console.log('✅ Successfully fetched from MongoDB');
         const cleanPosts = allPosts.map(post => ({
           id: post._id.toString(),
           title: post.title,
@@ -88,7 +65,6 @@ export async function GET() {
           publishedAt: post.published_at,
         }));
 
-        console.log('✅ Successfully fetched from MongoDB');
         return NextResponse.json({
           success: true,
           posts: cleanPosts,
@@ -97,9 +73,40 @@ export async function GET() {
         });
       }
       console.log('⚠️ MongoDB returned no posts');
+    } else {
+      console.log('⚠️ MONGODB_URI not set, skipping MongoDB');
     }
   } catch (error) {
     console.error('⚠️ MongoDB error:', error);
+  }
+
+  // 2. Try Flask proxy (fallback)
+  try {
+    console.log('🔄 Attempting Flask proxy for blog posts...');
+    const response = await fetch(`${FLASK_PROXY_URL}/synapse/blog-posts`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout(5000),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success && data.posts && data.posts.length > 0) {
+        console.log('✅ Successfully fetched from Flask proxy');
+        const mapped = {
+          ...data,
+          posts: data.posts.map((p: any) => ({
+            ...p,
+            featuredImage: p.featuredImage || p.featured_image,
+            featured_image: undefined,
+          })),
+        };
+        return NextResponse.json(mapped);
+      }
+    }
+    console.log('⚠️ Flask proxy returned no posts');
+  } catch (proxyError) {
+    console.log('⚠️ Flask proxy error:', proxyError);
   }
 
   // 3. Final fallback to local blog posts
