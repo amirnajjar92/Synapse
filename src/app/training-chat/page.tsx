@@ -164,7 +164,7 @@ export default function TrainingChatPage() {
         <BurgerMenuButton />
 
         <div className="px-4 pt-16 pb-4">
-          <h1 className="text-white text-lg font-bold">Chat with Trainer</h1>
+          <h1 className="text-white text-lg font-bold">Training Chat</h1>
         </div>
 
         {loading ? (
@@ -287,6 +287,14 @@ export default function TrainingChatPage() {
             </div>
           </div>
         )}
+
+        {/* Internal links for SEO */}
+        <nav className="flex justify-center gap-6 pb-4" style={{ opacity: 0.4 }}>
+          <a href="/" className="text-white text-sm">Home</a>
+          <a href="/planner" className="text-white text-sm">Workout Planner</a>
+          <a href="/workout-planner" className="text-white text-sm">Workout Builder</a>
+          <a href="/blog" className="text-white text-sm">Fitness Blog</a>
+        </nav>
 
         <FloatingNavBar />
       </div>
