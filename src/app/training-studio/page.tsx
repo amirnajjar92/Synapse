@@ -2067,11 +2067,11 @@ export default function TrainingStudio() {
       )}
 
       {/* Internal links for SEO */}
-      <nav className="flex justify-center gap-6 pb-4" style={{ opacity: 0.4 }}>
-        <a href="/" className="text-white text-sm">Home</a>
-        <a href="/planner" className="text-white text-sm">Workout Planner</a>
-        <a href="/trainer-dashboard" className="text-white text-sm">Trainer Dashboard</a>
-        <a href="/blog" className="text-white text-sm">Fitness Blog</a>
+      <nav className="sr-only" aria-label="Internal navigation">
+        <a href="/">Home</a>
+        <a href="/planner">Workout Planner</a>
+        <a href="/trainer-dashboard">Trainer Dashboard</a>
+        <a href="/blog">Fitness Blog</a>
       </nav>
     </div>
   );

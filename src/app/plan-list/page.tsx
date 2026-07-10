@@ -147,11 +147,11 @@ export default function PlanListPage() {
           </div>
 
           {/* Internal links for SEO */}
-          <nav className="flex justify-center gap-6 mt-4" style={{ opacity: 0.4 }}>
-            <a href="/" className="text-white text-sm">Home</a>
-            <a href="/planner" className="text-white text-sm">Workout Planner</a>
-            <a href="/my-plans" className="text-white text-sm">My Plans</a>
-            <a href="/blog" className="text-white text-sm">Fitness Blog</a>
+          <nav className="sr-only" aria-label="Internal navigation">
+            <a href="/">Home</a>
+            <a href="/planner">Workout Planner</a>
+            <a href="/my-plans">My Plans</a>
+            <a href="/blog">Fitness Blog</a>
           </nav>
         </div>
       </div>

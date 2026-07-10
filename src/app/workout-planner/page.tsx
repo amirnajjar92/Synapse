@@ -749,11 +749,11 @@ export default function WorkoutPlannerPage() {
       )}
       
       {/* Internal links for SEO */}
-      <nav className="flex justify-center gap-6 pb-20 pt-2" style={{ opacity: 0.4 }}>
-        <a href="/" className="text-white text-sm">Home</a>
-        <a href="/planner" className="text-white text-sm">AI Workout Planner</a>
-        <a href="/blog" className="text-white text-sm">Fitness Blog</a>
-        <a href="/training-chat" className="text-white text-sm">Training Chat</a>
+      <nav className="sr-only" aria-label="Internal navigation">
+        <a href="/">Home</a>
+        <a href="/planner">AI Workout Planner</a>
+        <a href="/blog">Fitness Blog</a>
+        <a href="/training-chat">Training Chat</a>
       </nav>
 
       {/* Floating Navigation Bar - hidden when AI chat is open */}

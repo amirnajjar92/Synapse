@@ -430,11 +430,11 @@ export default function PlannerPage() {
       )}
       
       {/* Internal links for SEO */}
-      <nav className="flex justify-center gap-6 pb-20 pt-2" style={{ opacity: 0.4 }}>
-        <a href="/workout-planner" className="text-white text-sm">Workout Plans</a>
-        <a href="/training-chat" className="text-white text-sm">AI Training Chat</a>
-        <a href="/blog" className="text-white text-sm">Blog</a>
-        <a href="/landing" className="text-white text-sm">Home</a>
+      <nav className="sr-only" aria-label="Internal navigation">
+        <a href="/workout-planner">Workout Plans</a>
+        <a href="/training-chat">AI Training Chat</a>
+        <a href="/blog">Blog</a>
+        <a href="/landing">Home</a>
       </nav>
 
       {/* Floating Navigation Bar */}

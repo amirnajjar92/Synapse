@@ -14,11 +14,11 @@ export default function RemindersPage() {
         <ReminderSettings />
 
         {/* Internal links for SEO */}
-        <nav className="flex justify-center gap-6 pt-6" style={{ opacity: 0.4 }}>
-          <a href="/" className="text-gray-600 text-sm hover:text-gray-900">Home</a>
-          <a href="/planner" className="text-gray-600 text-sm hover:text-gray-900">Workout Planner</a>
-          <a href="/workout-tracker" className="text-gray-600 text-sm hover:text-gray-900">Workout Tracker</a>
-          <a href="/blog" className="text-gray-600 text-sm hover:text-gray-900">Fitness Blog</a>
+        <nav className="sr-only" aria-label="Internal navigation">
+          <a href="/">Home</a>
+          <a href="/planner">Workout Planner</a>
+          <a href="/workout-tracker">Workout Tracker</a>
+          <a href="/blog">Fitness Blog</a>
         </nav>
       </div>
     </div>

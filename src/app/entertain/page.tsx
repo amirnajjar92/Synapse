@@ -749,11 +749,11 @@ export default function EntertainPage() {
       )}
       
       {/* Internal links for SEO */}
-      <nav className="flex justify-center gap-6 pb-4" style={{ opacity: 0.4 }}>
-        <a href="/" className="text-white text-sm">Home</a>
-        <a href="/blog" className="text-white text-sm">Fitness Blog</a>
-        <a href="/planner" className="text-white text-sm">Workout Planner</a>
-        <a href="/training-studio" className="text-white text-sm">Training Studio</a>
+      <nav className="sr-only" aria-label="Internal navigation">
+        <a href="/">Home</a>
+        <a href="/blog">Fitness Blog</a>
+        <a href="/planner">Workout Planner</a>
+        <a href="/training-studio">Training Studio</a>
       </nav>
 
       {/* Floating Navigation Bar */}
