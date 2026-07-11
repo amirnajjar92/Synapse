@@ -111,6 +111,18 @@ export default function FloatingNavBar({ onAIClick }: FloatingNavBarProps) {
             pointerEvents: isExpanded ? 'auto' : 'none',
           }}
         >
+          {/* Home */}
+          <button
+            onClick={() => handleNavClick('/')}
+            className="group w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-white/20 active:scale-95 flex-shrink-0"
+            style={{ background: isActive('/') ? '#ffffff' : 'transparent' }}
+          >
+            <svg {...iconBase} stroke={isActive('/') ? '#000000' : '#ffffff'}>
+              <path d="M3 12l9-9 9 9" />
+              <path d="M5 10v8a1 1 0 001 1h4v-4h4v4h4a1 1 0 001-1v-8" />
+            </svg>
+          </button>
+
           {/* Events - Calendar sparkle */}
           <button
             onClick={() => handleNavClick('/events')}

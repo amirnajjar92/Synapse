@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { headers } from 'next/headers';
+import { blogPosts } from '@/data/blog-posts';
 import BlogPostClient from './BlogPostClient';
 
 interface ApiPost {
@@ -36,6 +37,11 @@ async function fetchAllPosts(): Promise<ApiPost[]> {
   return [];
 }
 
+function getAuthorName(slug: string): string {
+  const post = blogPosts.find(p => p.slug === slug);
+  return post?.author?.name || 'Synapse Fit';
+}
+
 // Generate metadata for SEO
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -49,11 +55,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://synapse.fit';
   const postUrl = `${siteUrl}/blog/${slug}`;
   const ogImage = post.og_image || post.featuredImage || `${siteUrl}/og-image-blog.jpg`;
+  const authorName = getAuthorName(slug);
 
   return {
     title: `${post.title} | Synapse Fit Blog`,
     description: post.excerpt,
     keywords: post.keywords,
+    authors: [{ name: authorName }],
     openGraph: {
       title: post.title,
       description: post.excerpt,
@@ -71,6 +79,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       images: [ogImage],
     },
     alternates: { canonical: postUrl },
+    other: {
+      'author': authorName,
+    },
   };
 }
 
@@ -101,6 +112,10 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
     published: true,
   };
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://synapse.fit';
+  const authorName = getAuthorName(slug);
+  const otherPosts = blogPosts.filter(p => p.slug !== slug && p.published);
+
   return (
     <>
       <script
@@ -108,19 +123,36 @@ export default async function BlogPost({ params }: { params: Promise<{ slug: str
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             '@context': 'https://schema.org',
-            '@type': 'Article',
+            '@type': 'BlogPosting',
             headline: post.title,
             description: post.excerpt,
             image: post.featuredImage,
             datePublished: post.date,
-            url: post.url,
+            author: {
+              '@type': 'Person',
+              name: authorName,
+            },
+            publisher: {
+              '@type': 'Organization',
+              name: 'Synapse Fit',
+              logo: {
+                '@type': 'ImageObject',
+                url: `${siteUrl}/icons/icon-512x512.png`,
+              },
+            },
             mainEntityOfPage: {
               '@type': 'WebPage',
-              '@id': `${process.env.NEXT_PUBLIC_SITE_URL || 'https://synapse.fit'}/blog/${post.slug}`,
+              '@id': `${siteUrl}/blog/${post.slug}`,
             },
           }),
         }}
       />
+      <nav className="sr-only" aria-label="Related blog posts">
+        <a href="/blog">Back to Blog</a>
+        {otherPosts.map(p => (
+          <a key={p.slug} href={`/blog/${p.slug}`}>{p.title}</a>
+        ))}
+      </nav>
       <BlogPostClient post={post} />
     </>
   );

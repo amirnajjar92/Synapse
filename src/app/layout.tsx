@@ -91,6 +91,7 @@ export default function RootLayout({
       <body className={`antialiased`}>
         <h1 className="sr-only">Synapse — AI Fitness &amp; Health Tracker</h1>
         <nav className="sr-only" aria-label="Primary navigation">
+          <a href="/">Home</a>
           <a href="/planner">AI Workout Planner</a>
           <a href="/workout-planner">Workout Planner</a>
           <a href="/workout-tracker">Workout Tracker</a>
@@ -105,6 +106,9 @@ export default function RootLayout({
           <a href="/musclemap">Muscle Anatomy Map</a>
           <a href="/reminders">Reminders</a>
           <a href="/blog">Fitness Blog</a>
+          <a href="/blog/ai-powered-workout-planning-revolution">AI Revolution in Workout Planning</a>
+          <a href="/blog/progressive-web-apps-fitness-future">PWA Fitness Future</a>
+          <a href="/blog/trainer-client-platform-guide">Trainer-Client Platform Guide</a>
           <a href="/training-chat">Training Chat</a>
           <a href="/landing">About Synapse Fit</a>
         </nav>

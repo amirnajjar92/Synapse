@@ -1,10 +1,11 @@
 import type { MetadataRoute } from 'next';
+import { blogPosts } from '@/data/blog-posts';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = 'https://synapse-fit.vercel.app';
   const now = new Date().toISOString().split('T')[0];
 
-  return [
+  const staticPages: MetadataRoute.Sitemap = [
     { url: base, lastModified: now, changeFrequency: 'monthly' as const, priority: 1 },
     { url: `${base}/landing`, lastModified: now, changeFrequency: 'monthly' as const, priority: 0.9 },
     { url: `${base}/planner`, lastModified: now, changeFrequency: 'weekly' as const, priority: 0.8 },
@@ -23,4 +24,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/reminders`, lastModified: now, changeFrequency: 'monthly' as const, priority: 0.4 },
     { url: `${base}/blog`, lastModified: now, changeFrequency: 'weekly' as const, priority: 0.7 },
   ];
+
+  const blogUrls: MetadataRoute.Sitemap = blogPosts
+    .filter(post => post.published)
+    .map(post => ({
+      url: `${base}/blog/${post.slug}`,
+      lastModified: post.date,
+      changeFrequency: 'monthly' as const,
+      priority: 0.5,
+    }));
+
+  return [...staticPages, ...blogUrls];
 }

@@ -710,6 +710,11 @@ export default function LandingPage() {
           </span>
         </div>
         <div style={{ display:'flex', alignItems:'center', gap:28 }}>
+          <a href="/" style={{ color:'rgba(255,255,255,0.5)', fontSize:13, textDecoration:'none', transition: 'color 0.2s' }}
+            onMouseEnter={e=>(e.currentTarget.style.color='#fff')}
+            onMouseLeave={e=>(e.currentTarget.style.color='rgba(255,255,255,0.5)')}>
+            Home
+          </a>
           <a href="#features" style={{ color:'rgba(255,255,255,0.5)', fontSize:13, textDecoration:'none', transition: 'color 0.2s' }}
             onMouseEnter={e=>(e.currentTarget.style.color='#fff')}
             onMouseLeave={e=>(e.currentTarget.style.color='rgba(255,255,255,0.5)')}>
@@ -1373,6 +1378,7 @@ export default function LandingPage() {
           </span>
         </div>
         <nav style={{ display:'flex', justifyContent:'center', gap:20, marginBottom:20, flexWrap:'wrap' }}>
+          <a href="/" style={{ color:'rgba(255,255,255,0.4)', fontSize:13, textDecoration:'none' }}>Home</a>
           <a href="/planner" style={{ color:'rgba(255,255,255,0.4)', fontSize:13, textDecoration:'none' }}>Workout Planner</a>
           <a href="/workout-tracker" style={{ color:'rgba(255,255,255,0.4)', fontSize:13, textDecoration:'none' }}>Workout Tracker</a>
           <a href="/training-chat" style={{ color:'rgba(255,255,255,0.4)', fontSize:13, textDecoration:'none' }}>Training Chat</a>

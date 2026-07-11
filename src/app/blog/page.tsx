@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import BlogPageClient from './BlogPageClient';
 
 export const metadata: Metadata = {
-  title: 'Blog - Synapse Fit | AI Fitness Insights & Training Tips',
+  title: { absolute: 'Blog \u2013 Synapse Fit | AI Fitness Insights & Tips' },
   description: 'Expert fitness advice, AI-powered training insights, workout tips, and health guides from Synapse Fit. Learn from the best to reach your fitness goals faster.',
   keywords: ['fitness blog', 'ai fitness', 'workout tips', 'training advice', 'health guides', 'personal training', 'workout planning'],
   openGraph: {
