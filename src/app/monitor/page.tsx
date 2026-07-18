@@ -931,8 +931,8 @@ function MonitorContent() {
                   </h3>
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-6 h-6 flex items-center justify-center rounded-lg transition-colors hover:bg-white/10"
-                    style={{ color: activePalette.textMuted, filter: 'drop-shadow(0 0 5px rgba(255,255,255,0.4))' }}
+                    className="w-6 h-6 flex items-center justify-center rounded-lg transition-colors hover:bg-white/10 animate-pulse"
+                    style={{ color: '#ffffff', boxShadow: '0 0 10px rgba(255,255,255,0.6), 0 0 20px rgba(255,255,255,0.2)' }}
                     disabled={isExtracting || isDescribing}
                     aria-label="Upload from gallery"
                   >
@@ -944,8 +944,8 @@ function MonitorContent() {
                   </button>
                   <button
                     onClick={() => cameraInputRef.current?.click()}
-                    className="w-6 h-6 flex items-center justify-center rounded-lg transition-colors hover:bg-white/10"
-                    style={{ color: activePalette.textMuted, filter: 'drop-shadow(0 0 5px rgba(255,255,255,0.4))' }}
+                    className="w-6 h-6 flex items-center justify-center rounded-lg transition-colors hover:bg-white/10 animate-pulse"
+                    style={{ color: '#ffffff', boxShadow: '0 0 10px rgba(255,255,255,0.6), 0 0 20px rgba(255,255,255,0.2)' }}
                     disabled={isExtracting || isDescribing}
                     aria-label="Take photo with camera"
                   >
