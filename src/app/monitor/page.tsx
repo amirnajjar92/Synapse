@@ -228,26 +228,32 @@ function MonitorContent() {
     });
   };
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    let file = e.target.files?.[0];
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (!file) return;
     const source = e.target === cameraInputRef.current ? 'camera' : 'gallery';
 
+    const previewUrl = URL.createObjectURL(file);
+    setUploadedImage(file);
+    setImagePreview(previewUrl);
+    debugLog('file_selected', { name: file.name, size: file.size, type: file.type, source });
+
     if (/\.heic|\.heif/i.test(file.name) || file.type === 'image/heic' || file.type === 'image/heif') {
       debugLog('heic_detected', { name: file.name, size: file.size });
-      try {
-        const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.8 });
-        const blob = Array.isArray(converted) ? converted[0] : converted;
-        file = new File([blob], file.name.replace(/\.(heic|heif)$/i, '.jpg'), { type: 'image/jpeg' });
-        debugLog('heic_converted', { originalSize: file.size, newSize: blob.size });
-      } catch (convErr: any) {
-        debugLog('heic_conversion_error', { message: convErr?.message, name: convErr?.name });
-      }
+      (async () => {
+        try {
+          const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.8 });
+          const blob = Array.isArray(converted) ? converted[0] : converted;
+          const jpegFile = new File([blob], file.name.replace(/\.(heic|heif)$/i, '.jpg'), { type: 'image/jpeg' });
+          URL.revokeObjectURL(previewUrl);
+          setUploadedImage(jpegFile);
+          setImagePreview(URL.createObjectURL(jpegFile));
+          debugLog('heic_converted', { originalSize: file.size, newSize: blob.size });
+        } catch (convErr) {
+          debugLog('heic_conversion_error', { message: convErr instanceof Error ? convErr.message : String(convErr) });
+        }
+      })();
     }
-
-    setUploadedImage(file);
-    setImagePreview(URL.createObjectURL(file));
-    debugLog('file_selected', { name: file.name, size: file.size, type: file.type, source });
   };
 
   const clearUploadedImage = () => {
