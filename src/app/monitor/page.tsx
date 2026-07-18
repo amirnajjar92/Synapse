@@ -14,6 +14,7 @@ import {
   toWeightChartHeights,
   type PlanEntryWithMetrics,
 } from '@/lib/weightGoal';
+import heic2any from 'heic2any';
 
 const Skeleton = ({ className = '' }: { className?: string }) => (
   <div className={`animate-pulse bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 bg-[length:200%_100%] opacity-50 ${className}`} />
@@ -22,7 +23,7 @@ const Skeleton = ({ className = '' }: { className?: string }) => (
 async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 2, onDebug?: (event: string, data?: any) => void): Promise<Response> {
   for (let i = 0; i <= maxRetries; i++) {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    const timeoutId = setTimeout(() => controller.abort(), 120000);
     try {
       const t0 = Date.now();
       const res = await fetch(url, { ...options, signal: controller.signal });
@@ -35,10 +36,13 @@ async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 2,
       onDebug?.('fetch_retry', { attempt: i + 1, status: res.status, duration });
       if (i < maxRetries) await new Promise(r => setTimeout(r, 1000 * (i + 1)));
       else return res;
-    } catch (e: any) {
+    } catch (e: unknown) {
       clearTimeout(timeoutId);
       console.warn(`fetchWithRetry attempt ${i + 1} failed:`, e);
-      onDebug?.('fetch_error', { attempt: i + 1, message: e?.message, name: e?.name });
+      const serialized = e instanceof Error
+        ? { message: e.message, name: e.name }
+        : { raw: JSON.stringify(e, Object.getOwnPropertyNames(e)) };
+      onDebug?.('fetch_error', { attempt: i + 1, ...serialized });
       if (i < maxRetries) await new Promise(r => setTimeout(r, 1000 * (i + 1)));
       else throw e;
     }
@@ -224,10 +228,23 @@ function MonitorContent() {
     });
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    let file = e.target.files?.[0];
     if (!file) return;
     const source = e.target === cameraInputRef.current ? 'camera' : 'gallery';
+
+    if (/\.heic|\.heif/i.test(file.name) || file.type === 'image/heic' || file.type === 'image/heif') {
+      debugLog('heic_detected', { name: file.name, size: file.size });
+      try {
+        const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.8 });
+        const blob = Array.isArray(converted) ? converted[0] : converted;
+        file = new File([blob], file.name.replace(/\.(heic|heif)$/i, '.jpg'), { type: 'image/jpeg' });
+        debugLog('heic_converted', { originalSize: file.size, newSize: blob.size });
+      } catch (convErr: any) {
+        debugLog('heic_conversion_error', { message: convErr?.message, name: convErr?.name });
+      }
+    }
+
     setUploadedImage(file);
     setImagePreview(URL.createObjectURL(file));
     debugLog('file_selected', { name: file.name, size: file.size, type: file.type, source });
@@ -527,12 +544,15 @@ function MonitorContent() {
         setNotesHistory(prev => [...prev, { role: 'assistant', content: errorMsg }]);
         debugLog('analyze_error', { status: res.status, statusText: res.statusText });
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error(e);
       const errorMsg = 'Network error. Retrying failed — check your connection.';
       setChatMessages(prev => [...prev, errorMsg]);
       setNotesHistory(prev => [...prev, { role: 'assistant', content: errorMsg }]);
-      debugLog('catch_error', { message: e?.message, name: e?.name });
+      const serialized = e instanceof Error
+        ? { message: e.message, name: e.name, stack: e.stack }
+        : { raw: JSON.stringify(e, Object.getOwnPropertyNames(e)) };
+      debugLog('catch_error', serialized);
     } finally {
       setIsExtracting(false);
       clearUploadedImage();
