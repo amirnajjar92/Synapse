@@ -14,7 +14,6 @@ import {
   toWeightChartHeights,
   type PlanEntryWithMetrics,
 } from '@/lib/weightGoal';
-import heic2any from 'heic2any';
 
 const Skeleton = ({ className = '' }: { className?: string }) => (
   <div className={`animate-pulse bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 bg-[length:200%_100%] opacity-50 ${className}`} />
@@ -233,27 +232,9 @@ function MonitorContent() {
     if (!file) return;
     const source = e.target === cameraInputRef.current ? 'camera' : 'gallery';
 
-    const previewUrl = URL.createObjectURL(file);
     setUploadedImage(file);
-    setImagePreview(previewUrl);
+    setImagePreview(URL.createObjectURL(file));
     debugLog('file_selected', { name: file.name, size: file.size, type: file.type, source });
-
-    if (/\.heic|\.heif/i.test(file.name) || file.type === 'image/heic' || file.type === 'image/heif') {
-      debugLog('heic_detected', { name: file.name, size: file.size });
-      (async () => {
-        try {
-          const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.8 });
-          const blob = Array.isArray(converted) ? converted[0] : converted;
-          const jpegFile = new File([blob], file.name.replace(/\.(heic|heif)$/i, '.jpg'), { type: 'image/jpeg' });
-          URL.revokeObjectURL(previewUrl);
-          setUploadedImage(jpegFile);
-          setImagePreview(URL.createObjectURL(jpegFile));
-          debugLog('heic_converted', { originalSize: file.size, newSize: blob.size });
-        } catch (convErr) {
-          debugLog('heic_conversion_error', { message: convErr instanceof Error ? convErr.message : String(convErr) });
-        }
-      })();
-    }
   };
 
   const clearUploadedImage = () => {
@@ -444,55 +425,94 @@ function MonitorContent() {
         setIsDescribing(true);
         setChatMessages(prev => [...prev, 'Reading your watch screen...']);
 
-        const base64 = await fileToBase64(uploadedImage);
-        debugLog('base64_converted', { size: base64.length });
-        const describePrompt = 'Extract fitness activity data from this watch screen. Look for distance, time, pace, heart rate, steps, calories, and any other metrics visible. Return the raw numbers.';
-
-        let description = '';
-
+        let base64: string | null = null;
         try {
-          const t0 = Date.now();
-          const paidRes = await fetch('https://moole-back.vercel.app/describe-image', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ image_base64: base64, prompt: describePrompt }),
-          });
-          const duration = Date.now() - t0;
-          const paidData = paidRes.ok ? await paidRes.json() : null;
-          description = paidData?.description || '';
-          debugLog('describe_paid', { ok: paidRes.ok, status: paidRes.status, duration, hasDescription: !!description });
-        } catch (e: any) {
-          console.warn('Paid describe-image failed, falling back to free', e);
-          debugLog('describe_paid_error', { message: e?.message, stack: e?.stack });
-        }
-
-        if (!description) {
+          base64 = await fileToBase64(uploadedImage);
+          debugLog('base64_converted', { size: base64.length });
+        } catch {
+          debugLog('base64_skipped', { name: uploadedImage.name, type: uploadedImage.type });
+          setChatMessages(prev => [...prev, 'Converting image format...']);
           try {
-            const t0 = Date.now();
-            const freeRes = await fetch('https://moole-back.vercel.app/describe-image-openrouter', {
+            const convForm = new FormData();
+            convForm.append('file', uploadedImage);
+            const convRes = await fetch('https://moole-back.vercel.app/convert-image', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ image_url: base64 }),
+              body: convForm,
             });
-            const duration = Date.now() - t0;
-            const freeData = freeRes.ok ? await freeRes.json() : null;
-            description = freeData?.description || '';
-            debugLog('describe_free', { ok: freeRes.ok, status: freeRes.status, duration, hasDescription: !!description });
-          } catch (e2: any) {
-            console.error('Free describe-image also failed', e2);
-            debugLog('describe_free_error', { message: e2?.message, stack: e2?.stack });
+            if (convRes.ok) {
+              const jpegBlob = await convRes.blob();
+              const jpegFile = new File([jpegBlob], 'converted.jpg', { type: 'image/jpeg' });
+              if (imagePreview) URL.revokeObjectURL(imagePreview);
+              setUploadedImage(jpegFile);
+              setImagePreview(URL.createObjectURL(jpegFile));
+              base64 = await fileToBase64(jpegFile);
+              debugLog('server_converted', { size: jpegBlob.size });
+            } else {
+              const errData = await convRes.json().catch(() => ({}));
+              debugLog('server_convert_failed', { status: convRes.status, error: errData.error });
+            }
+          } catch (convErr) {
+            debugLog('server_convert_error', { message: String(convErr) });
+          }
+
+          if (!base64) {
+            const skipMsg = 'Could not read image format. Proceeding without watch screen analysis.';
+            setChatMessages(prev => [...prev, skipMsg]);
           }
         }
 
-        setIsDescribing(false);
-
-        if (description) {
-          setChatMessages(prev => [...prev, `AI read: ${description}`]);
-          finalPrompt = userMessage
-            ? `${userMessage}\n\nWatch screen shows: ${description}`
-            : `Watch screen shows: ${description}`;
+        if (!base64) {
+          setIsDescribing(false);
+          finalPrompt = userMessage || 'Activity logged with photo';
         } else {
-          setChatMessages(prev => [...prev, 'Could not read the image. Proceeding with your notes only.']);
+          const describePrompt = 'Extract fitness activity data from this watch screen. Look for distance, time, pace, heart rate, steps, calories, and any other metrics visible. Return the raw numbers.';
+
+          let description = '';
+
+          try {
+            const t0 = Date.now();
+            const paidRes = await fetch('https://moole-back.vercel.app/describe-image', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ image_base64: base64, prompt: describePrompt }),
+            });
+            const duration = Date.now() - t0;
+            const paidData = paidRes.ok ? await paidRes.json() : null;
+            description = paidData?.description || '';
+            debugLog('describe_paid', { ok: paidRes.ok, status: paidRes.status, duration, hasDescription: !!description });
+          } catch (e: any) {
+            console.warn('Paid describe-image failed, falling back to free', e);
+            debugLog('describe_paid_error', { message: e?.message, stack: e?.stack });
+          }
+
+          if (!description) {
+            try {
+              const t0 = Date.now();
+              const freeRes = await fetch('https://moole-back.vercel.app/describe-image-openrouter', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image_url: base64 }),
+              });
+              const duration = Date.now() - t0;
+              const freeData = freeRes.ok ? await freeRes.json() : null;
+              description = freeData?.description || '';
+              debugLog('describe_free', { ok: freeRes.ok, status: freeRes.status, duration, hasDescription: !!description });
+            } catch (e2: any) {
+              console.error('Free describe-image also failed', e2);
+              debugLog('describe_free_error', { message: e2?.message, stack: e2?.stack });
+            }
+          }
+
+          setIsDescribing(false);
+
+          if (description) {
+            setChatMessages(prev => [...prev, `AI read: ${description}`]);
+            finalPrompt = userMessage
+              ? `${userMessage}\n\nWatch screen shows: ${description}`
+              : `Watch screen shows: ${description}`;
+          } else {
+            setChatMessages(prev => [...prev, 'Could not read the image. Proceeding with your notes only.']);
+          }
         }
       }
 
