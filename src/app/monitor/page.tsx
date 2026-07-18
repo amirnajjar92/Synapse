@@ -19,19 +19,26 @@ const Skeleton = ({ className = '' }: { className?: string }) => (
   <div className={`animate-pulse bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 bg-[length:200%_100%] opacity-50 ${className}`} />
 );
 
-async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 2): Promise<Response> {
+async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 2, onDebug?: (event: string, data?: any) => void): Promise<Response> {
   for (let i = 0; i <= maxRetries; i++) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
     try {
+      const t0 = Date.now();
       const res = await fetch(url, { ...options, signal: controller.signal });
       clearTimeout(timeoutId);
-      if (res.ok) return res;
+      const duration = Date.now() - t0;
+      if (res.ok) {
+        onDebug?.('fetch_ok', { attempt: i + 1, status: res.status, duration });
+        return res;
+      }
+      onDebug?.('fetch_retry', { attempt: i + 1, status: res.status, duration });
       if (i < maxRetries) await new Promise(r => setTimeout(r, 1000 * (i + 1)));
       else return res;
-    } catch (e) {
+    } catch (e: any) {
       clearTimeout(timeoutId);
       console.warn(`fetchWithRetry attempt ${i + 1} failed:`, e);
+      onDebug?.('fetch_error', { attempt: i + 1, message: e?.message, name: e?.name });
       if (i < maxRetries) await new Promise(r => setTimeout(r, 1000 * (i + 1)));
       else throw e;
     }
@@ -188,21 +195,42 @@ function MonitorContent() {
   const [isDescribing, setIsDescribing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const debugSession = useRef(crypto.randomUUID()).current;
+
+  const debugLog = useCallback(async (event: string, data?: any) => {
+    try {
+      await fetch('/api/debug-logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session: debugSession, event, data }),
+      });
+    } catch {
+      // silently fail — debug logging should never interrupt the user
+    }
+  }, [debugSession]);
 
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
+      reader.onload = () => {
+        debugLog('base64_success', { name: file.name, size: file.size });
+        resolve(reader.result as string);
+      };
+      reader.onerror = (e) => {
+        debugLog('base64_error', { name: file.name, size: file.size, error: e });
+        reject(e);
+      };
     });
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const source = e.target === cameraInputRef.current ? 'camera' : 'gallery';
     setUploadedImage(file);
     setImagePreview(URL.createObjectURL(file));
+    debugLog('file_selected', { name: file.name, size: file.size, type: file.type, source });
   };
 
   const clearUploadedImage = () => {
@@ -372,6 +400,10 @@ function MonitorContent() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  useEffect(() => {
+    debugLog('session_start', { userAgent: navigator.userAgent });
+  }, [debugLog]);
+
   const handleSendToAI = async () => {
     if (!user?.email || !selectedPlan || (!notesInput.trim() && !uploadedImage)) return;
     const userMessage = notesInput.trim();
@@ -390,37 +422,42 @@ function MonitorContent() {
         setChatMessages(prev => [...prev, 'Reading your watch screen...']);
 
         const base64 = await fileToBase64(uploadedImage);
+        debugLog('base64_converted', { size: base64.length });
         const describePrompt = 'Extract fitness activity data from this watch screen. Look for distance, time, pace, heart rate, steps, calories, and any other metrics visible. Return the raw numbers.';
 
         let description = '';
 
         try {
+          const t0 = Date.now();
           const paidRes = await fetch('https://moole-back.vercel.app/describe-image', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ image_base64: base64, prompt: describePrompt }),
           });
-          if (paidRes.ok) {
-            const paidData = await paidRes.json();
-            description = paidData.description || '';
-          }
-        } catch (e) {
+          const duration = Date.now() - t0;
+          const paidData = paidRes.ok ? await paidRes.json() : null;
+          description = paidData?.description || '';
+          debugLog('describe_paid', { ok: paidRes.ok, status: paidRes.status, duration, hasDescription: !!description });
+        } catch (e: any) {
           console.warn('Paid describe-image failed, falling back to free', e);
+          debugLog('describe_paid_error', { message: e?.message, stack: e?.stack });
         }
 
         if (!description) {
           try {
+            const t0 = Date.now();
             const freeRes = await fetch('https://moole-back.vercel.app/describe-image-openrouter', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ image_url: base64 }),
             });
-            if (freeRes.ok) {
-              const freeData = await freeRes.json();
-              description = freeData.description || '';
-            }
-          } catch (e2) {
+            const duration = Date.now() - t0;
+            const freeData = freeRes.ok ? await freeRes.json() : null;
+            description = freeData?.description || '';
+            debugLog('describe_free', { ok: freeRes.ok, status: freeRes.status, duration, hasDescription: !!description });
+          } catch (e2: any) {
             console.error('Free describe-image also failed', e2);
+            debugLog('describe_free_error', { message: e2?.message, stack: e2?.stack });
           }
         }
 
@@ -446,10 +483,17 @@ function MonitorContent() {
         formData.append('image', uploadedImage);
       }
 
+      const analyzeUrl = `/api/users/me/daily-entries/${encodeURIComponent(getTodayStr())}/analyze`;
+      debugLog('analyze_start', { url: analyzeUrl, hasImage: !!uploadedImage, promptLength: finalPrompt?.length });
+
       const res = await fetchWithRetry(
-        `/api/users/me/daily-entries/${encodeURIComponent(getTodayStr())}/analyze`,
-        { method: 'POST', body: formData }
+        analyzeUrl,
+        { method: 'POST', body: formData },
+        2,
+        debugLog
       );
+
+      debugLog('analyze_result', { ok: res.ok, status: res.status, statusText: res.statusText });
 
       if (res.ok) {
         const data = await res.json();
@@ -481,12 +525,14 @@ function MonitorContent() {
         const errorMsg = 'Server error. Retrying failed — please try again.';
         setChatMessages(prev => [...prev, errorMsg]);
         setNotesHistory(prev => [...prev, { role: 'assistant', content: errorMsg }]);
+        debugLog('analyze_error', { status: res.status, statusText: res.statusText });
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
       const errorMsg = 'Network error. Retrying failed — check your connection.';
       setChatMessages(prev => [...prev, errorMsg]);
       setNotesHistory(prev => [...prev, { role: 'assistant', content: errorMsg }]);
+      debugLog('catch_error', { message: e?.message, name: e?.name });
     } finally {
       setIsExtracting(false);
       clearUploadedImage();

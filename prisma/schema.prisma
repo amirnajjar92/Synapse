@@ -79,6 +79,17 @@ model Activity {
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model DebugLog {
+  id        String   @id @default(cuid())
+  session   String
+  event     String
+  data      Json?
+  createdAt DateTime @default(now())
+
+  @@index([session])
+  @@index([createdAt])
+}
+
 model DailyEntry {
   id          String        @id @default(cuid())
   userId      String
