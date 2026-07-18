@@ -167,6 +167,7 @@ function MonitorContent() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isDescribing, setIsDescribing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -939,15 +940,35 @@ function MonitorContent() {
                   ref={fileInputRef}
                   className="hidden"
                   accept="image/*"
+                  onChange={handleFileSelect}
+                />
+                <input
+                  type="file"
+                  ref={cameraInputRef}
+                  className="hidden"
+                  accept="image/*"
                   capture="environment"
                   onChange={handleFileSelect}
                 />
                 <button
                   onClick={() => fileInputRef.current?.click()}
+                  className="absolute bottom-[18px] right-[80px] z-10 w-7 h-7 flex items-center justify-center rounded-lg transition-colors"
+                  style={{ color: activePalette.textMuted }}
+                  disabled={isExtracting || isDescribing}
+                  aria-label="Upload from gallery"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <polyline points="21 15 16 10 5 21" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => cameraInputRef.current?.click()}
                   className="absolute bottom-[18px] right-[56px] z-10 w-7 h-7 flex items-center justify-center rounded-lg transition-colors"
                   style={{ color: activePalette.textMuted }}
                   disabled={isExtracting || isDescribing}
-                  aria-label="Upload watch screen photo"
+                  aria-label="Take photo with camera"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
