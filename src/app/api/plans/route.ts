@@ -6,9 +6,9 @@ const getOrCreateUser = async (email: string) => {
   if (!email) {
     throw new Error('Email is required')
   }
-  let user = await prisma.user.findUnique({
-    where: { email }
-  })
+
+  let user = await prisma.user.findUnique({ where: { email } })
+
   if (!user) {
     user = await prisma.user.create({
       data: {
@@ -18,6 +18,11 @@ const getOrCreateUser = async (email: string) => {
       }
     })
   }
+
+  if (!user) {
+    throw new Error(`Failed to find or create user for email: ${email}`)
+  }
+
   return user
 }
 
@@ -99,6 +104,17 @@ export async function POST(request: Request) {
 
     const user = await getOrCreateUser(userEmail)
     console.log('User found:', user);
+
+    if (!Array.isArray(tables)) {
+      return NextResponse.json({ error: 'Tables data must be an array' }, { status: 400 });
+    }
+
+    for (const table of tables) {
+      if (!Array.isArray(table.rows)) {
+        console.error('Invalid table rows for:', table.title);
+        return NextResponse.json({ error: 'Invalid table data', details: `Table "${table.title}" has invalid rows` }, { status: 400 });
+      }
+    }
 
     // Extract goal weight from prompt
     const { weight: goalWeight, unit: goalWeightUnit } = await extractGoalWeight(prompt, request.url);

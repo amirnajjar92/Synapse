@@ -19,7 +19,19 @@ declare global {
       accounts: {
         id: {
           initialize: (config: any) => void;
-          prompt: () => void;
+          prompt: (cb?: (notification: unknown) => void) => void;
+        };
+        oauth2: {
+          initTokenClient: (config: {
+            client_id: string;
+            scope: string;
+            callback: (response: {
+              access_token?: string;
+              error?: string;
+            }) => void;
+          }) => {
+            requestAccessToken: () => void;
+          };
         };
       };
     };
@@ -374,55 +386,58 @@ export default function WorkoutPlannerPage() {
   const handleGoogleSignIn = async () => {
     setIsSigningIn(true);
     try {
-      if (typeof window !== "undefined" && window.google?.accounts?.id) {
-        initializeGoogleGSI();
-        return;
+      if (typeof window.google?.accounts?.oauth2 === 'undefined' && typeof window.google?.accounts?.id === 'undefined') {
+        await new Promise<void>((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = "https://accounts.google.com/gsi/client";
+          script.async = true;
+          script.defer = true;
+          script.onload = () => resolve();
+          script.onerror = () => {
+            console.error("Failed to load Google Identity Services");
+            setIsSigningIn(false);
+            reject();
+          };
+          document.head.appendChild(script);
+        });
       }
 
-      const script = document.createElement("script");
-      script.src = "https://accounts.google.com/gsi/client";
-      script.async = true;
-      script.defer = true;
-      
-      script.onload = () => {
-        initializeGoogleGSI();
-      };
-
-      script.onerror = () => {
-        console.error("Failed to load Google Identity Services");
+      if (!window.google?.accounts?.oauth2) {
+        console.error("Google OAuth2 not available after script load");
         setIsSigningIn(false);
-      };
+        return;
+      }
+      const client = window.google.accounts.oauth2.initTokenClient({
+        client_id: "763002332533-9fk3gd611c2etmdfdmu3bhlu7u7uosaj.apps.googleusercontent.com",
+        scope: "openid profile email",
+        callback: (response) => {
+          if (response.error) {
+            console.error("Google OAuth error:", response.error);
+            setIsSigningIn(false);
+            return;
+          }
+          if (response.access_token) {
+            handleAccessTokenResponse(response.access_token);
+          } else {
+            console.error("No access token received");
+            setIsSigningIn(false);
+          }
+        },
+      });
 
-      document.head.appendChild(script);
+      client.requestAccessToken();
     } catch (error) {
       console.error("Google Sign-In error:", error);
       setIsSigningIn(false);
     }
   };
 
-  const initializeGoogleGSI = () => {
-    if (!window.google?.accounts?.id) return;
-
-    window.google.accounts.id.initialize({
-      client_id: "763002332533-9fk3gd611c2etmdfdmu3bhlu7u7uosaj.apps.googleusercontent.com",
-      callback: handleCredentialResponse,
-      auto_select: false,
-      cancel_on_tap_outside: true,
-    });
-
-    window.google.accounts.id.prompt();
-  };
-
-  const handleCredentialResponse = async (response: { credential: string }) => {
+  const handleAccessTokenResponse = async (accessToken: string) => {
     try {
       const backendResponse = await fetch(`${SYNAPSE_BACKEND_URL}/api/synapse/auth/google/signin`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id_token: response.credential
-        })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ access_token: accessToken }),
       });
 
       const data = await backendResponse.json();
@@ -432,10 +447,9 @@ export default function WorkoutPlannerPage() {
         localStorage.setItem("synapse_user", JSON.stringify({
           email: data.email,
           name: data.name,
-          picture: data.picture
+          picture: data.picture,
         }));
 
-        // Save user to Synapse DB (non-blocking)
         fetch('/api/users/info', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

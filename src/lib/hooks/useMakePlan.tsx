@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAppSelector, useAppDispatch } from '@/lib/redux/hooks';
 import { store } from '@/lib/redux/store';
 import {
@@ -8,8 +8,10 @@ import {
   setGenerationError,
   setPlanItemLoadingState,
   setTableData,
+  setPlanTitle,
 } from '@/lib/redux/slices/planSlice';
 import mockPlan from '@/lib/mock-data/mock-plan.json';
+import { PlanLogger } from '@/lib/plan-logger';
 
 const filterResponse = (response: string): string => {
   // Remove any markdown code blocks and extra whitespace
@@ -115,6 +117,8 @@ const useMakePlan = (userPrompt: string, autoRun = false) => {
   const { isGenerating } = useAppSelector((state) => state.plan);
 
   const [resetState, setResetState] = useState(false);
+  const [logAvailable, setLogAvailable] = useState(false);
+  const loggerRef = useRef<PlanLogger | null>(null);
 
   const askAIForTable = async (
     tableIndex: number,
@@ -359,20 +363,67 @@ RULES:
 6. Match the column structure EXACTLY`;
     });
 
-    // Start all table requests in parallel!
-    const tablePromises = tablePrompts.map((prompt, index) =>
-      askAIForTable(index, TABLE_METADATA[index].title, prompt)
-    );
+    const logger = new PlanLogger();
+    loggerRef.current = logger;
+    setLogAvailable(false);
 
-    // Wait for all tables to complete
-    await Promise.all(tablePromises);
+    logger.log('GENERATE_START', { promptPreview: promptToUse.slice(0, 200) });
+
+    // Sequential chain: Meals → Nutrients → Cardio → Recommended → Challenges → Supplements
+    const EXECUTION_ORDER = [0, 2, 1, 3, 4, 5];
+    const contextData: { title: string; data: unknown }[] = [];
+
+    for (const tableIndex of EXECUTION_ORDER) {
+      const metadata = TABLE_METADATA[tableIndex];
+      let prompt = tablePrompts[tableIndex];
+
+      if (contextData.length > 0) {
+        const contextStr = contextData
+          .map(ctx => `${ctx.title}:\n${JSON.stringify(ctx.data, null, 2)}`)
+          .join('\n\n');
+
+        prompt += `\n\nCONTEXT - Previously planned tables (ensure consistency with them):\n${contextStr}`;
+      }
+
+      logger.log('AI_START', { table: metadata.title, contextCount: contextData.length, promptLength: prompt.length });
+
+      await askAIForTable(tableIndex, metadata.title, prompt);
+
+      const state = store.getState().plan;
+      const tableData = state.planTypes[tableIndex].tableData;
+      logger.log('AI_COMPLETE', { table: metadata.title, rows: Array.isArray(tableData) ? tableData.length : 0 });
+
+      contextData.push({
+        title: metadata.title,
+        data: tableData,
+      });
+    }
+
+    logger.log('ALL_TABLES_COMPLETE', { totalDuration: logger.getTotalDuration() });
 
     // Mark overall generation as complete
     dispatch(setIsGenerating(false));
-    
+
     // Auto-save the plan!
     const planState = store.getState().plan;
-    savePlan({ planTypes: planState.planTypes, promptText: promptToUse });
+    logger.log('SAVE_START', {
+      tables: planState.planTypes.map((pt: { title: string; tableData: unknown[] }) => ({
+        title: pt.title,
+        rows: Array.isArray(pt.tableData) ? pt.tableData.length : 0,
+      })),
+    });
+
+    const saveResult = await savePlan({ planTypes: planState.planTypes, promptText: promptToUse, logger });
+
+    if (saveResult) {
+      dispatch(setPlanTitle(saveResult.title));
+      logger.log('GENERATE_COMPLETE', { status: 'success', planId: saveResult.id, planTitle: saveResult.title, totalDuration: logger.getTotalDuration() });
+    } else {
+      logger.log('GENERATE_COMPLETE', { status: 'failed', totalDuration: logger.getTotalDuration() });
+    }
+
+    setLogAvailable(true);
+    logger.download();
   };
 
   const resetPlan = () => {
@@ -391,20 +442,28 @@ RULES:
     }
   }, [autoRun, userPrompt]);
 
-  const savePlan = async ({ planTypes, promptText }: { planTypes: any[]; promptText: string }) => {
-    if (!planTypes) return;
-
-    // Get user email from localStorage
-    const userStr = localStorage.getItem('synapse_user');
-    const user = userStr ? JSON.parse(userStr) : null;
-    if (!user?.email) {
-      console.error('No user email found');
+  const savePlan = async ({
+    planTypes, promptText, logger,
+  }: {
+    planTypes: any[]; promptText: string; logger?: PlanLogger;
+  }) => {
+    if (!planTypes) {
+      logger?.log('SAVE_SKIPPED', { reason: 'planTypes is null' });
       return;
     }
 
-    // Generate a short, catchy title using AI
+    const userStr = localStorage.getItem('synapse_user');
+    const user = userStr ? JSON.parse(userStr) : null;
+    logger?.log('USER_CHECK', { hasUser: !!user, email: user?.email ? user.email.split('@')[0] + '@***' : 'none' });
+    if (!user?.email) {
+      console.error('No user email found');
+      logger?.log('SAVE_FAILED', { reason: 'No user email in localStorage' });
+      return;
+    }
+
     let shortTitle = 'Personalized Plan';
     try {
+      logger?.log('TITLE_START', { promptPreview: `Generate a short, catchy title for: "${promptText.slice(0, 80)}..."` });
       const titleResponse = await fetch('/api/ai/analyse', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -416,28 +475,36 @@ RULES:
       if (titleResponse.ok) {
         const titleData = await titleResponse.json();
         const generatedTitle = titleData.answer?.trim();
-        
-        // Remove quotes if AI added them
+        logger?.log('TITLE_RESPONSE', { status: titleResponse.status, generatedTitle: generatedTitle || 'none' });
         if (generatedTitle) {
           shortTitle = generatedTitle.replace(/^["']|["']$/g, '');
         }
+      } else {
+        logger?.log('TITLE_RESPONSE', { status: titleResponse.status });
       }
     } catch (error) {
       console.error('Error generating short title:', error);
-      // Fallback: use first 50 characters of prompt
+      logger?.log('TITLE_ERROR', { error: String(error) });
       shortTitle = promptText.length > 50 ? promptText.substring(0, 50) + '...' : promptText;
     }
 
     const planData = {
-      title: shortTitle, // Use AI-generated short title
-      prompt: promptText, // Keep full prompt as description
+      title: shortTitle,
+      prompt: promptText,
       icon: '/vectors/plan-icon.svg',
-      tables: planTypes.map((pt) => ({
+      tables: planTypes.map((pt: { title: string; tableData: unknown[] }) => ({
         title: pt.title,
-        rows: pt.tableData,
+        rows: Array.isArray(pt.tableData) ? pt.tableData : [],
       })),
-      userEmail: user.email, // Add user email to plan data
+      userEmail: user.email,
     };
+
+    logger?.log('SAVE_REQUEST', {
+      title: shortTitle,
+      tablesCount: planData.tables.length,
+      rowsPerTable: planData.tables.map((t: { title: string; rows: unknown[] }) => `${t.title}:${t.rows.length}`).join(', '),
+      emailDomain: user.email.split('@')[1],
+    });
 
     try {
       console.log('Attempting to save plan with data:', planData);
@@ -449,19 +516,25 @@ RULES:
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Save plan failed with status:', response.status, 'Error text:', errorText);
+        logger?.log('SAVE_RESPONSE', { status: response.status, body: errorText });
         throw new Error(`Failed to save plan: ${response.status} - ${errorText}`);
       }
       const data = await response.json();
       console.log('Plan saved successfully:', data.plan);
-      // Save plan id to localStorage for planner page
+      logger?.log('SAVE_RESPONSE', { status: response.status, planId: data.plan.id });
       localStorage.setItem('current_plan_id', data.plan.id);
       return data.plan;
     } catch (error) {
       console.error('Error saving plan:', error);
+      logger?.log('SAVE_ERROR', { error: String(error) });
     }
   };
 
-  return { generatePlan, resetPlan, savePlan };
+  const downloadLog = () => {
+    loggerRef.current?.download();
+  };
+
+  return { generatePlan, resetPlan, savePlan, downloadLog, logAvailable };
 };
 
 export default useMakePlan;

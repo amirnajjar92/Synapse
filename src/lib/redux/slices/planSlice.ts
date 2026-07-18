@@ -24,6 +24,7 @@ interface PlanState {
   isGenerating: boolean;
   generationError: string | null;
   planItemLoadingStates: boolean[]; // For GoalsSection ticks loading
+  planTitle: string;
 }
 
 const initialState: PlanState = {
@@ -37,6 +38,7 @@ const initialState: PlanState = {
   isGenerating: false,
   generationError: null,
   planItemLoadingStates: [false, false, false, false, false, false], // 6 items
+  planTitle: '',
 };
 
 // Convert GeneratedPlan (from OpenAI) to PlanType[] (for plan-detail)
@@ -145,6 +147,9 @@ const planSlice = createSlice({
         state.planGenerated = true;
       }
     },
+    setPlanTitle: (state, action: PayloadAction<string>) => {
+      state.planTitle = action.payload;
+    },
     setTableData: (
       state,
       action: PayloadAction<{ index: number; tableData: { id: string | number; columns: string[] }[] }>
@@ -162,6 +167,7 @@ const planSlice = createSlice({
       state.isGenerating = false;
       state.generationError = null;
       state.planItemLoadingStates = [false, false, false, false, false, false];
+      state.planTitle = '';
     },
   },
 });
@@ -178,6 +184,7 @@ export const {
   setGenerationError,
   setPlanItemLoadingState,
   setTableData,
+  setPlanTitle,
   resetPlan,
 } = planSlice.actions;
 export default planSlice.reducer;

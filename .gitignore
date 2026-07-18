@@ -47,3 +47,6 @@ next-env.d.ts
 # Landing page media (too large for git - host on CDN)
 public/videos/
 public/screeenshots/
+
+# Plan generation logs (auto-generated during testing)
+/logs/

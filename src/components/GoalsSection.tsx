@@ -16,7 +16,7 @@ const Spinner = ({ className = '' }: { className?: string }) => (
 );
 
 const GoalsSection: React.FC<GoalsSectionProps> = ({ isLoading }) => {
-  const { planItemLoadingStates, promptText, isGenerating, planGenerated } = useAppSelector((state) => state.plan);
+  const { planItemLoadingStates, promptText, isGenerating, planGenerated, planTitle } = useAppSelector((state) => state.plan);
   const [revealedCount, setRevealedCount] = useState(0);
   const [allRevealed, setAllRevealed] = useState(false);
   const prevGenerating = useRef(isGenerating);
@@ -69,7 +69,7 @@ const GoalsSection: React.FC<GoalsSectionProps> = ({ isLoading }) => {
     'Challenges',
   ];
 
-  const displayPrompt = promptText || 'Your fitness goal here';
+  const displayTitle = planTitle || (promptText ? promptText.length > 60 ? promptText.slice(0, 60) + '...' : promptText : 'Your fitness goal here');
 
   return (
     <>
@@ -92,8 +92,8 @@ const GoalsSection: React.FC<GoalsSectionProps> = ({ isLoading }) => {
           GOALS
         </h2>
         <div className="border-l border-gray-500 pl-3 sm:pl-4 md:pl-6">
-          <p className="text-gray-300 text-xs sm:text-sm md:text-base font-light">
-            {displayPrompt}
+          <p className="text-gray-300 text-xs sm:text-sm md:text-base font-light truncate max-w-full">
+            {displayTitle}
           </p>
         </div>
       </div>

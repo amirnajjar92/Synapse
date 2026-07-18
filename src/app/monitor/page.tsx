@@ -163,6 +163,33 @@ function MonitorContent() {
   const [showAIModal, setShowAIModal] = useState(false);
   const [notesInput, setNotesInput] = useState('');
 
+  const [uploadedImage, setUploadedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isDescribing, setIsDescribing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+    });
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadedImage(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const clearUploadedImage = () => {
+    setUploadedImage(null);
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImagePreview(null);
+  };
+
   const [weightsKg, setWeightsKg] = useState<number[]>([]);
   const [activityBarData, setActivityBarData] = useState<number[]>([]);
   const [distanceValuesKm, setDistanceValuesKm] = useState<number[]>([]);
@@ -325,20 +352,78 @@ function MonitorContent() {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   const handleSendToAI = async () => {
-    if (!user?.email || !selectedPlan || !notesInput.trim()) return;
+    if (!user?.email || !selectedPlan || (!notesInput.trim() && !uploadedImage)) return;
     const userMessage = notesInput.trim();
-    setNotesHistory(prev => [...prev, { role: 'user', content: userMessage }]);
+    if (userMessage) {
+      setNotesHistory(prev => [...prev, { role: 'user', content: userMessage }]);
+    }
     setNotesInput('');
     setIsExtracting(true);
     setChatMessages([]);
 
     try {
-      setChatMessages(prev => [...prev, 'Analyzing your activity notes...']);
+      let finalPrompt = userMessage;
+
+      if (uploadedImage) {
+        setIsDescribing(true);
+        setChatMessages(prev => [...prev, 'Reading your watch screen...']);
+
+        const base64 = await fileToBase64(uploadedImage);
+        const describePrompt = 'Extract fitness activity data from this watch screen. Look for distance, time, pace, heart rate, steps, calories, and any other metrics visible. Return the raw numbers.';
+
+        let description = '';
+
+        try {
+          const paidRes = await fetch('https://moole-back.vercel.app/describe-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image_base64: base64, prompt: describePrompt }),
+          });
+          if (paidRes.ok) {
+            const paidData = await paidRes.json();
+            description = paidData.description || '';
+          }
+        } catch (e) {
+          console.warn('Paid describe-image failed, falling back to free', e);
+        }
+
+        if (!description) {
+          try {
+            const freeRes = await fetch('https://moole-back.vercel.app/describe-image-openrouter', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ image_url: base64 }),
+            });
+            if (freeRes.ok) {
+              const freeData = await freeRes.json();
+              description = freeData.description || '';
+            }
+          } catch (e2) {
+            console.error('Free describe-image also failed', e2);
+          }
+        }
+
+        setIsDescribing(false);
+
+        if (description) {
+          setChatMessages(prev => [...prev, `AI read: ${description}`]);
+          finalPrompt = userMessage
+            ? `${userMessage}\n\nWatch screen shows: ${description}`
+            : `Watch screen shows: ${description}`;
+        } else {
+          setChatMessages(prev => [...prev, 'Could not read the image. Proceeding with your notes only.']);
+        }
+      }
+
+      setChatMessages(prev => [...prev, 'Analyzing your activity...']);
 
       const formData = new FormData();
       formData.append('email', user.email);
-      formData.append('prompt', userMessage);
+      formData.append('prompt', finalPrompt);
       formData.append('planId', selectedPlan.id);
+      if (uploadedImage) {
+        formData.append('image', uploadedImage);
+      }
 
       const res = await fetch(
         `/api/users/me/daily-entries/${encodeURIComponent(getTodayStr())}/analyze`,
@@ -348,7 +433,7 @@ function MonitorContent() {
       if (res.ok) {
         const data = await res.json();
         if (data.success) {
-          setChatMessages(prev => [...prev, 'Extracted metrics from your notes']);
+          setChatMessages(prev => [...prev, 'Extracted metrics from your activity']);
           const changes = data.metricChanges || [];
           let responseText = '';
           if (changes.length > 0) {
@@ -359,15 +444,15 @@ function MonitorContent() {
               responseText += msg + '\n';
             });
           } else {
-            setChatMessages(prev => [...prev, 'No metrics found in notes']);
-            responseText = 'No metrics found in your notes.';
+            setChatMessages(prev => [...prev, 'No metrics found']);
+            responseText = 'No metrics found.';
           }
           setChatMessages(prev => [...prev, 'Saved to today\'s entry']);
           setNotesHistory(prev => [...prev, { role: 'assistant', content: responseText || 'Metrics updated successfully.' }]);
           await fetchData();
           setChatMessages(prev => [...prev, 'All done! Metrics updated.']);
         } else {
-          const errorMsg = 'Failed to extract metrics from your notes.';
+          const errorMsg = 'Failed to extract metrics.';
           setChatMessages(prev => [...prev, errorMsg]);
           setNotesHistory(prev => [...prev, { role: 'assistant', content: errorMsg }]);
         }
@@ -383,6 +468,7 @@ function MonitorContent() {
       setNotesHistory(prev => [...prev, { role: 'assistant', content: errorMsg }]);
     } finally {
       setIsExtracting(false);
+      clearUploadedImage();
     }
   };
 
@@ -826,15 +912,55 @@ function MonitorContent() {
                 <h3 className="text-sm font-semibold" style={{ fontFamily: 'var(--font-hanalei-fill)', color: activePalette.text }}>
                   Activity Logger
                 </h3>
+                {isDescribing && (
+                  <span className="text-[10px]" style={{ color: activePalette.textSecondary }}>
+                    Reading watch screen...
+                  </span>
+                )}
               </div>
-              <div className="pb-3">
+              <div className="pb-3 relative">
+                {imagePreview && (
+                  <div className="px-4 pt-2 pb-1">
+                    <div className="relative inline-block rounded-lg overflow-hidden border" style={{ borderColor: activePalette.borderSoft }}>
+                      <img src={imagePreview} alt="Watch screen" className="h-14 w-auto" />
+                      <button
+                        onClick={clearUploadedImage}
+                        className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center text-xs leading-none hover:bg-red-600 transition-colors"
+                        disabled={isExtracting || isDescribing}
+                        aria-label="Remove image"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleFileSelect}
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute bottom-[18px] right-[56px] z-10 w-7 h-7 flex items-center justify-center rounded-lg transition-colors"
+                  style={{ color: activePalette.textMuted }}
+                  disabled={isExtracting || isDescribing}
+                  aria-label="Upload watch screen photo"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                    <circle cx="12" cy="13" r="4" />
+                  </svg>
+                </button>
                 <PromptBoxOpenAI
                   value={notesInput}
                   onChange={setNotesInput}
                   onEnterPressed={handleSendToAI}
                   onClose={() => setShowAIModal(false)}
                   placeholder="Log your activities and I'll extract the metrics..."
-                  isLoading={isExtracting}
+                  isLoading={isExtracting || isDescribing}
                   thinkingMessages={chatMessages}
                   showChat
                   chatHeight={180}
