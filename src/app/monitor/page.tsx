@@ -21,14 +21,19 @@ const Skeleton = ({ className = '' }: { className?: string }) => (
 
 async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 2): Promise<Response> {
   for (let i = 0; i <= maxRetries; i++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
     try {
-      const res = await fetch(url, options);
+      const res = await fetch(url, { ...options, signal: controller.signal });
+      clearTimeout(timeoutId);
       if (res.ok) return res;
       if (i < maxRetries) await new Promise(r => setTimeout(r, 1000 * (i + 1)));
       else return res;
-    } catch {
+    } catch (e) {
+      clearTimeout(timeoutId);
+      console.warn(`fetchWithRetry attempt ${i + 1} failed:`, e);
       if (i < maxRetries) await new Promise(r => setTimeout(r, 1000 * (i + 1)));
-      else throw new Error('Network error after retries');
+      else throw e;
     }
   }
   throw new Error('Network error after retries');
@@ -929,31 +934,46 @@ function MonitorContent() {
                   <h3 className="text-sm font-semibold" style={{ fontFamily: 'var(--font-hanalei-fill)', color: activePalette.text }}>
                     Activity Logger
                   </h3>
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-6 h-6 flex items-center justify-center rounded-lg transition-colors hover:bg-white/10 animate-pulse"
-                    style={{ color: '#ffffff', boxShadow: '0 0 10px rgba(255,255,255,0.6), 0 0 20px rgba(255,255,255,0.2)' }}
-                    disabled={isExtracting || isDescribing}
-                    aria-label="Upload from gallery"
-                  >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                      <circle cx="8.5" cy="8.5" r="1.5" />
-                      <polyline points="21 15 16 10 5 21" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => cameraInputRef.current?.click()}
-                    className="w-6 h-6 flex items-center justify-center rounded-lg transition-colors hover:bg-white/10 animate-pulse"
-                    style={{ color: '#ffffff', boxShadow: '0 0 10px rgba(255,255,255,0.6), 0 0 20px rgba(255,255,255,0.2)' }}
-                    disabled={isExtracting || isDescribing}
-                    aria-label="Take photo with camera"
-                  >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                      <circle cx="12" cy="13" r="4" />
-                    </svg>
-                  </button>
+                  <div className="relative" style={(isExtracting || isDescribing) ? { pointerEvents: 'none', opacity: 0.4 } : undefined}>
+                    <button
+                      className="w-6 h-6 flex items-center justify-center rounded-lg transition-colors animate-pulse pointer-events-none"
+                      style={{ color: '#ffffff', boxShadow: '0 0 10px rgba(255,255,255,0.6), 0 0 20px rgba(255,255,255,0.2)' }}
+                      aria-label="Upload from gallery"
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <polyline points="21 15 16 10 5 21" />
+                      </svg>
+                    </button>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                      accept="image/*"
+                      onChange={handleFileSelect}
+                    />
+                  </div>
+                  <div className="relative" style={(isExtracting || isDescribing) ? { pointerEvents: 'none', opacity: 0.4 } : undefined}>
+                    <button
+                      className="w-6 h-6 flex items-center justify-center rounded-lg transition-colors animate-pulse pointer-events-none"
+                      style={{ color: '#ffffff', boxShadow: '0 0 10px rgba(255,255,255,0.6), 0 0 20px rgba(255,255,255,0.2)' }}
+                      aria-label="Take photo with camera"
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                        <circle cx="12" cy="13" r="4" />
+                      </svg>
+                    </button>
+                    <input
+                      type="file"
+                      ref={cameraInputRef}
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handleFileSelect}
+                    />
+                  </div>
                 </div>
                 {isDescribing && (
                   <span className="text-[10px]" style={{ color: activePalette.textSecondary }}>
@@ -977,21 +997,6 @@ function MonitorContent() {
                     </div>
                   </div>
                 )}
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  className="hidden"
-                  accept="image/*"
-                  onChange={handleFileSelect}
-                />
-                <input
-                  type="file"
-                  ref={cameraInputRef}
-                  className="hidden"
-                  accept="image/*"
-                  capture="environment"
-                  onChange={handleFileSelect}
-                />
                 <PromptBoxOpenAI
                   value={notesInput}
                   onChange={setNotesInput}
