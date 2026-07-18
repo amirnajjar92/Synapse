@@ -15,6 +15,7 @@ interface PromptBoxOpenAIProps {
   showChat?: boolean;
   chatHeight?: number;
   bgColor?: string;
+  imageAttached?: boolean;
 }
 
 const PromptBoxOpenAI: React.FC<PromptBoxOpenAIProps> = ({ 
@@ -30,6 +31,7 @@ const PromptBoxOpenAI: React.FC<PromptBoxOpenAIProps> = ({
   showChat = false,
   chatHeight = 200,
   bgColor = '#1e1e1e',
+  imageAttached = false,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messageContainerRef = useRef<HTMLDivElement>(null);
@@ -192,10 +194,10 @@ const PromptBoxOpenAI: React.FC<PromptBoxOpenAIProps> = ({
             <span className="text-[10px] text-gray-600">Enter to send</span>
             <button
               onClick={onEnterPressed}
-              disabled={!value.trim() || disabled || isLoading}
+              disabled={(!value.trim() && !imageAttached) || disabled || isLoading}
               className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 disabled:opacity-30"
               style={{
-                backgroundColor: value.trim() ? '#ffffff' : 'transparent',
+                backgroundColor: (value.trim() || imageAttached) ? '#ffffff' : 'transparent',
               }}
             >
               <svg 
@@ -203,7 +205,7 @@ const PromptBoxOpenAI: React.FC<PromptBoxOpenAIProps> = ({
                 height="14" 
                 viewBox="0 0 24 24" 
                 fill="none"
-                stroke={value.trim() ? '#000000' : '#6b7280'}
+                stroke={(value.trim() || imageAttached) ? '#000000' : '#6b7280'}
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"

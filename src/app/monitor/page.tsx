@@ -19,6 +19,21 @@ const Skeleton = ({ className = '' }: { className?: string }) => (
   <div className={`animate-pulse bg-gradient-to-r from-gray-800 via-gray-700 to-gray-800 bg-[length:200%_100%] opacity-50 ${className}`} />
 );
 
+async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 2): Promise<Response> {
+  for (let i = 0; i <= maxRetries; i++) {
+    try {
+      const res = await fetch(url, options);
+      if (res.ok) return res;
+      if (i < maxRetries) await new Promise(r => setTimeout(r, 1000 * (i + 1)));
+      else return res;
+    } catch {
+      if (i < maxRetries) await new Promise(r => setTimeout(r, 1000 * (i + 1)));
+      else throw new Error('Network error after retries');
+    }
+  }
+  throw new Error('Network error after retries');
+}
+
 function getPlanDay(startDate: string | null): number {
   if (!startDate) return 0;
   const start = new Date(startDate);
@@ -426,7 +441,7 @@ function MonitorContent() {
         formData.append('image', uploadedImage);
       }
 
-      const res = await fetch(
+      const res = await fetchWithRetry(
         `/api/users/me/daily-entries/${encodeURIComponent(getTodayStr())}/analyze`,
         { method: 'POST', body: formData }
       );
@@ -458,13 +473,13 @@ function MonitorContent() {
           setNotesHistory(prev => [...prev, { role: 'assistant', content: errorMsg }]);
         }
       } else {
-        const errorMsg = 'Network error occurred.';
+        const errorMsg = 'Server error. Retrying failed — please try again.';
         setChatMessages(prev => [...prev, errorMsg]);
         setNotesHistory(prev => [...prev, { role: 'assistant', content: errorMsg }]);
       }
     } catch (e) {
       console.error(e);
-      const errorMsg = 'Network error occurred.';
+      const errorMsg = 'Network error. Retrying failed — check your connection.';
       setChatMessages(prev => [...prev, errorMsg]);
       setNotesHistory(prev => [...prev, { role: 'assistant', content: errorMsg }]);
     } finally {
@@ -910,20 +925,47 @@ function MonitorContent() {
           {showAIModal && (
             <div className="absolute inset-x-3 bottom-3 z-30 overflow-hidden rounded-xl border" style={{ backgroundColor: activePalette.panel, borderColor: activePalette.borderSoft }}>
               <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: activePalette.border }}>
-                <h3 className="text-sm font-semibold" style={{ fontFamily: 'var(--font-hanalei-fill)', color: activePalette.text }}>
-                  Activity Logger
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-semibold" style={{ fontFamily: 'var(--font-hanalei-fill)', color: activePalette.text }}>
+                    Activity Logger
+                  </h3>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-6 h-6 flex items-center justify-center rounded-lg transition-colors hover:bg-white/10"
+                    style={{ color: activePalette.textMuted, filter: 'drop-shadow(0 0 5px rgba(255,255,255,0.4))' }}
+                    disabled={isExtracting || isDescribing}
+                    aria-label="Upload from gallery"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                      <circle cx="8.5" cy="8.5" r="1.5" />
+                      <polyline points="21 15 16 10 5 21" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => cameraInputRef.current?.click()}
+                    className="w-6 h-6 flex items-center justify-center rounded-lg transition-colors hover:bg-white/10"
+                    style={{ color: activePalette.textMuted, filter: 'drop-shadow(0 0 5px rgba(255,255,255,0.4))' }}
+                    disabled={isExtracting || isDescribing}
+                    aria-label="Take photo with camera"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                      <circle cx="12" cy="13" r="4" />
+                    </svg>
+                  </button>
+                </div>
                 {isDescribing && (
                   <span className="text-[10px]" style={{ color: activePalette.textSecondary }}>
                     Reading watch screen...
                   </span>
                 )}
               </div>
-              <div className="pb-3 relative">
+              <div className="pb-3">
                 {imagePreview && (
-                  <div className="px-4 pt-2 pb-1">
-                    <div className="relative inline-block rounded-lg overflow-hidden border" style={{ borderColor: activePalette.borderSoft }}>
-                      <img src={imagePreview} alt="Watch screen" className="h-14 w-auto" />
+                  <div className="px-4 pt-2 pb-1.5">
+                    <div className="relative inline-block rounded-lg overflow-hidden border max-w-full" style={{ borderColor: activePalette.borderSoft }}>
+                      <img src={imagePreview} alt="Watch screen" className="max-h-14 w-auto max-w-full object-contain" />
                       <button
                         onClick={clearUploadedImage}
                         className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center text-xs leading-none hover:bg-red-600 transition-colors"
@@ -950,31 +992,6 @@ function MonitorContent() {
                   capture="environment"
                   onChange={handleFileSelect}
                 />
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="absolute bottom-[18px] right-[80px] z-10 w-7 h-7 flex items-center justify-center rounded-lg transition-colors"
-                  style={{ color: activePalette.textMuted }}
-                  disabled={isExtracting || isDescribing}
-                  aria-label="Upload from gallery"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                    <circle cx="8.5" cy="8.5" r="1.5" />
-                    <polyline points="21 15 16 10 5 21" />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => cameraInputRef.current?.click()}
-                  className="absolute bottom-[18px] right-[56px] z-10 w-7 h-7 flex items-center justify-center rounded-lg transition-colors"
-                  style={{ color: activePalette.textMuted }}
-                  disabled={isExtracting || isDescribing}
-                  aria-label="Take photo with camera"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                    <circle cx="12" cy="13" r="4" />
-                  </svg>
-                </button>
                 <PromptBoxOpenAI
                   value={notesInput}
                   onChange={setNotesInput}
@@ -985,6 +1002,7 @@ function MonitorContent() {
                   thinkingMessages={chatMessages}
                   showChat
                   chatHeight={180}
+                  imageAttached={!!uploadedImage}
                 />
               </div>
             </div>
