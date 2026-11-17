@@ -326,9 +326,14 @@ function MonitorContent() {
           target = sortedMonitorPlans.find(p => p.status === 'IN_PROGRESS') ?? sortedMonitorPlans[0] ?? null;
         }
         setSelectedPlan(target);
+        // No plan to monitor: stop the skeleton and show the empty state instead.
+        if (!target) setIsLoading(false);
+      } else {
+        setIsLoading(false);
       }
     } catch (e) {
       console.error('Error fetching plans:', e);
+      setIsLoading(false);
     }
   }, [user?.email, searchParams]);
 
@@ -471,7 +476,7 @@ function MonitorContent() {
 
           try {
             const t0 = Date.now();
-            const paidRes = await fetch('https://moole-back.vercel.app/describe-image', {
+            const paidRes = await fetch('/api/ai/describe-image', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ image_base64: base64, prompt: describePrompt }),
@@ -631,6 +636,20 @@ function MonitorContent() {
         }}
       >
         <div className="w-full h-full flex flex-col relative">
+          {!isLoading && plans.length === 0 && (
+            <div
+              className="absolute inset-0 z-30 flex flex-col items-center justify-center text-center gap-4 px-6"
+              style={{ backgroundColor: activePalette.frame }}
+            >
+              <p className="text-gray-400 text-xs">No plan to monitor yet</p>
+              <button
+                onClick={() => router.push('/planner')}
+                className="px-4 py-2 rounded-full bg-white text-black text-xs font-medium hover:opacity-90 transition-opacity"
+              >
+                Create Your First Plan
+              </button>
+            </div>
+          )}
           {/* Header Row 1 */}
           <div className="flex w-full h-[6%] relative items-center">
             <div className="absolute top-3 left-3 z-20">

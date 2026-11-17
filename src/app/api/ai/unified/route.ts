@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { complete, hasLLM, SMART_MODEL, type ChatMessage } from '@/lib/ai/llm';
+import { buildUserSnapshot, describePage, pageGuideText } from '@/lib/ai/assistant-context';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Intent Detection Keywords
@@ -200,7 +202,7 @@ export async function POST(request: NextRequest) {
 
       case 'question':
       case 'general':
-        return await handleGeneralQuery(message, intentResult);
+        return await handleGeneralQuery(email, message, intentResult, context);
 
       default:
         return NextResponse.json({
@@ -347,12 +349,25 @@ async function handleAnalysis(
   intentResult: IntentScore,
   context: any
 ) {
+  const answer = await askAssistant(email, message, context, 'analysis');
+  if (answer) {
+    return NextResponse.json({
+      intent: 'analysis',
+      processing: 'Analyzing your data...',
+      response: answer,
+      confidence: intentResult.confidence,
+      navigationLinks: [
+        { text: 'Open Monitor', path: '/monitor' },
+        { text: 'View Progress', path: '/plan-progress-tracker' },
+      ],
+    });
+  }
+
   return NextResponse.json({
     intent: 'analysis',
     processing: 'Analyzing your data...',
-    response: 'Analysis features are being enhanced! \n\nFor now, you can:\n• View your progress on the [Monitor page](/monitor)\n• Check detailed metrics on [Plan Progress Tracker](/plan-progress-tracker)\n• Review your workout history',
+    response: 'I can\'t analyze your data right now. Meanwhile you can:\n• View your progress on the [Monitor page](/monitor)\n• Check detailed metrics on [Plan Progress Tracker](/plan-progress-tracker)',
     confidence: intentResult.confidence,
-    suggestion: 'Visit the Monitor page to see your activity charts and metrics.',
     navigationLinks: [
       { text: 'Open Monitor', path: '/monitor' },
       { text: 'View Progress', path: '/plan-progress-tracker' },
@@ -361,8 +376,10 @@ async function handleAnalysis(
 }
 
 async function handleGeneralQuery(
+  email: string,
   message: string,
-  intentResult: IntentScore
+  intentResult: IntentScore,
+  context: any
 ) {
   // Simple rule-based responses for common questions
   const lowerMessage = message.toLowerCase();
@@ -413,6 +430,15 @@ Try telling me what you want to achieve!`,
     });
   }
 
+  const answer = await askAssistant(email, message, context, 'question');
+  if (answer) {
+    return NextResponse.json({
+      intent: intentResult.intent === 'general' ? 'general' : 'question',
+      response: answer,
+      confidence: intentResult.confidence,
+    });
+  }
+
   return NextResponse.json({
     intent: 'general',
     response: 'I\'m here to help! You can ask me to:\n• [Create a plan](/planner) - "Create a plan to lose 5kg"\n• [Log activity](/monitor) - "Ran 10km today"\n• Answer questions - Ask me anything!\n\nWhat would you like to do?',
@@ -423,4 +449,54 @@ Try telling me what you want to achieve!`,
       { text: 'Monitor', path: '/monitor' },
     ],
   });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LLM answer grounded in the current page and the user's own data
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function askAssistant(
+  email: string,
+  message: string,
+  context: any,
+  mode: 'analysis' | 'question'
+): Promise<string | null> {
+  if (!hasLLM()) return null;
+
+  try {
+    const snapshot = await buildUserSnapshot(email);
+    const system = [
+      'You are the Synapse Fit assistant: a motivating, clear, concise fitness and nutrition coach inside the Synapse app.',
+      `The user is currently on: ${describePage(context?.page)}`,
+      'App pages you can point to with markdown links (only use these paths):',
+      pageGuideText(),
+      '',
+      "The user's own data (read-only):",
+      snapshot,
+      '',
+      mode === 'analysis'
+        ? 'Task: analyze the user\'s progress from the data above. Be specific with numbers and dates you can see; if data is missing, say what to log and where.'
+        : 'Task: answer the user\'s question. Prefer guidance tied to their plans and the page they are on.',
+      'Rules: keep it under 150 words, use short bullet points when helpful, never invent data you were not given, and do not give medical diagnoses (suggest a professional for medical concerns).',
+    ].join('\n');
+
+    const history: ChatMessage[] = Array.isArray(context?.conversationHistory)
+      ? context.conversationHistory
+          .filter((m: any) => (m?.role === 'user' || m?.role === 'assistant') && typeof m?.content === 'string')
+          .slice(-6)
+          .map((m: any) => ({ role: m.role, content: m.content.slice(0, 2000) }))
+      : [];
+
+    // The client already appended the current message to its history; avoid sending it twice.
+    const last = history[history.length - 1];
+    if (last && last.role === 'user' && last.content === message) history.pop();
+
+    return await complete(
+      [{ role: 'system', content: system }, ...history, { role: 'user', content: message }],
+      { model: SMART_MODEL, maxTokens: 700, timeoutMs: 45_000 }
+    );
+  } catch (error) {
+    console.error('Assistant LLM call failed:', error);
+    return null;
+  }
 }

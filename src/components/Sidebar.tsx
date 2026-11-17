@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSidebar } from './SidebarContext';
-import { useSession, signIn } from 'next-auth/react';
+import { useSession, signIn, signOut } from 'next-auth/react';
 import { themes, loadTheme, saveTheme } from '@/lib/theme';
 import NotificationToggle from './NotificationToggle';
 import InvitationBell from './InvitationBell';
@@ -199,7 +199,7 @@ export default function Sidebar() {
     setHasToken(false);
     setUser(null);
     setIsOpen(false);
-    router.push('/');
+    signOut({ callbackUrl: '/' });
   };
 
   if (!mounted) return null;

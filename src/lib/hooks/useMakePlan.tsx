@@ -124,7 +124,7 @@ const useMakePlan = (userPrompt: string, autoRun = false) => {
     tableIndex: number,
     tableTitle: string,
     tablePrompt: string
-  ): Promise<void> => {
+  ): Promise<boolean> => {
     try {
       const useMockData = false; // Set to true for testing without API
 
@@ -138,7 +138,7 @@ const useMakePlan = (userPrompt: string, autoRun = false) => {
           })
         );
         dispatch(setPlanItemLoadingState({ index: tableIndex, isLoading: false }));
-        return;
+        return false;
       }
 
       console.log(`Calling API for ${tableTitle}`);
@@ -169,6 +169,7 @@ const useMakePlan = (userPrompt: string, autoRun = false) => {
       console.log(`Parsed table data for ${tableTitle}:`, parsedTableData);
 
       let finalTableData = TABLE_METADATA[tableIndex].mockTableData;
+      let fromAI = true;
       
       if (parsedTableData && Array.isArray(parsedTableData.tableData)) {
         finalTableData = parsedTableData.tableData;
@@ -181,6 +182,7 @@ const useMakePlan = (userPrompt: string, autoRun = false) => {
           finalTableData = markdownParsed;
         } else {
           console.warn(`Using mock data as fallback for ${tableTitle}`);
+          fromAI = false;
         }
       }
       
@@ -190,6 +192,7 @@ const useMakePlan = (userPrompt: string, autoRun = false) => {
           tableData: finalTableData,
         })
       );
+      return fromAI;
     } catch (err) {
       console.error(`Error generating ${tableTitle}:`, err);
       dispatch(setGenerationError(err instanceof Error ? err.message : 'Unknown error'));
@@ -200,6 +203,7 @@ const useMakePlan = (userPrompt: string, autoRun = false) => {
           tableData: TABLE_METADATA[tableIndex].mockTableData,
         })
       );
+      return false;
     } finally {
       dispatch(setPlanItemLoadingState({ index: tableIndex, isLoading: false }));
     }
@@ -372,6 +376,7 @@ RULES:
     // Sequential chain: Meals → Nutrients → Cardio → Recommended → Challenges → Supplements
     const EXECUTION_ORDER = [0, 2, 1, 3, 4, 5];
     const contextData: { title: string; data: unknown }[] = [];
+    let aiTables = 0;
 
     for (const tableIndex of EXECUTION_ORDER) {
       const metadata = TABLE_METADATA[tableIndex];
@@ -387,7 +392,7 @@ RULES:
 
       logger.log('AI_START', { table: metadata.title, contextCount: contextData.length, promptLength: prompt.length });
 
-      await askAIForTable(tableIndex, metadata.title, prompt);
+      if (await askAIForTable(tableIndex, metadata.title, prompt)) aiTables += 1;
 
       const state = store.getState().plan;
       const tableData = state.planTypes[tableIndex].tableData;
@@ -403,6 +408,13 @@ RULES:
 
     // Mark overall generation as complete
     dispatch(setIsGenerating(false));
+
+    // Don't save (or announce) a sample plan as the user's own when the AI produced nothing.
+    if (aiTables === 0) {
+      logger.log('GENERATE_COMPLETE', { status: 'failed', reason: 'no_tables', totalDuration: logger.getTotalDuration() });
+      setLogAvailable(true);
+      return false;
+    }
 
     // Auto-save the plan!
     const planState = store.getState().plan;
@@ -423,7 +435,8 @@ RULES:
     }
 
     setLogAvailable(true);
-    logger.download();
+    if (process.env.NODE_ENV !== 'production') logger.download();
+    return !!saveResult;
   };
 
   const resetPlan = () => {

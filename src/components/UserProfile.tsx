@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { signOut } from 'next-auth/react';
 
 interface UserData {
   email: string;
@@ -23,7 +24,7 @@ export default function UserProfile() {
   const handleLogout = () => {
     localStorage.removeItem('synapse_token');
     localStorage.removeItem('synapse_user');
-    router.push('/');
+    signOut({ callbackUrl: '/' });
   };
 
   const hasToken = typeof window !== 'undefined' && !!localStorage.getItem('synapse_token');

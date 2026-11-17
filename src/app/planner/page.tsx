@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import PromptBoxOpenAI from '@/components/PromptBoxOpenAI';
 import GoalsSection from '@/components/GoalsSection';
@@ -130,11 +131,16 @@ export default function PlannerPage() {
     dispatch(setEnhancedPromptText(enhanced));
     dispatch(addPromptToHistory(localPromptText));
     // Pass the actual current prompt to generatePlan
-    await generatePlan(localPromptText);
+    const ok = await generatePlan(localPromptText);
     
     // Add plan ready message
     setTimeout(() => {
-      setChatMessages((prev) => [...prev, 'AI: Your plan is ready!']);
+      setChatMessages((prev) => [
+        ...prev,
+        ok
+          ? 'AI: Your plan is ready!'
+          : "AI: Sorry, I couldn't generate your plan right now. Please try again in a moment.",
+      ]);
     }, 1800);
   };
 
@@ -151,91 +157,9 @@ export default function PlannerPage() {
   const handleGoogleSignIn = async () => {
     setIsSigningIn(true);
     try {
-      if (typeof window.google?.accounts?.oauth2 === 'undefined' && typeof window.google?.accounts?.id === 'undefined') {
-        await new Promise<void>((resolve, reject) => {
-          const script = document.createElement("script");
-          script.src = "https://accounts.google.com/gsi/client";
-          script.async = true;
-          script.defer = true;
-          script.onload = () => resolve();
-          script.onerror = () => {
-            console.error("Failed to load Google Identity Services");
-            setIsSigningIn(false);
-            reject();
-          };
-          document.head.appendChild(script);
-        });
-      }
-
-      if (!window.google?.accounts?.oauth2) {
-        console.error("Google OAuth2 not available after script load");
-        setIsSigningIn(false);
-        return;
-      }
-      const client = window.google.accounts.oauth2.initTokenClient({
-        client_id: "763002332533-9fk3gd611c2etmdfdmu3bhlu7u7uosaj.apps.googleusercontent.com",
-        scope: "openid profile email",
-        callback: (response) => {
-          if (response.error) {
-            console.error("Google OAuth error:", response.error);
-            setIsSigningIn(false);
-            return;
-          }
-          if (response.access_token) {
-            handleAccessTokenResponse(response.access_token);
-          } else {
-            console.error("No access token received");
-            setIsSigningIn(false);
-          }
-        },
-      });
-
-      client.requestAccessToken();
+      await signIn('google', { callbackUrl: window.location.href });
     } catch (error) {
       console.error("Google Sign-In error:", error);
-      setIsSigningIn(false);
-    }
-  };
-
-  const handleAccessTokenResponse = async (accessToken: string) => {
-    try {
-      const backendResponse = await fetch(`${SYNAPSE_BACKEND_URL}/api/synapse/auth/google/signin`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ access_token: accessToken }),
-      });
-
-      const data = await backendResponse.json();
-
-      if (backendResponse.ok) {
-        localStorage.setItem("synapse_token", data.token);
-        localStorage.setItem("synapse_user", JSON.stringify({
-          email: data.email,
-          name: data.name,
-          picture: data.picture,
-        }));
-
-        fetch('/api/users/info', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: data.email,
-            name: data.name,
-            picture: data.picture,
-          })
-        }).catch(error => {
-          console.log('Note: Could not sync user to database, but you can still use the app');
-        });
-
-        setIsSignedIn(true);
-      } else {
-        console.error("Backend authentication failed:", data.error);
-        alert("Sign in failed: " + data.error);
-      }
-    } catch (error) {
-      console.error("Error during Google authentication:", error);
-      alert("An error occurred during sign in");
-    } finally {
       setIsSigningIn(false);
     }
   };
@@ -358,7 +282,7 @@ export default function PlannerPage() {
             </div>
           )}
 
-          {logAvailable && (
+          {logAvailable && process.env.NODE_ENV !== 'production' && (
             <div className="absolute bottom-4 right-4 z-20">
               <button
                 onClick={downloadLog}
