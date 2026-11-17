@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { ask, hasLLM } from '@/lib/ai/llm';
 
-// Legacy external backend, kept only as a fallback when OPENROUTER_API_KEY is not configured.
+// Legacy external backend, kept only as a fallback when no AI key is configured.
 const MOOLE_API_URL = 'https://moole-back.vercel.app/ask-moole';
 const OPENROUTER_PROXY_URL = 'https://moole-back.vercel.app/ask-openrouter';
 const TIMEOUT_MS = 15_000;
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
         console.error('Direct LLM call failed, trying legacy backend:', err);
       }
     } else {
-      console.warn('OPENROUTER_API_KEY not set; using legacy moole backend');
+      console.warn('No AI key set (OPENROUTER_API_KEY / OPENAI_API_KEY); using legacy moole backend');
     }
 
     const result = await callLegacyBackend(question);

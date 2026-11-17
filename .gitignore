@@ -50,3 +50,6 @@ public/screeenshots/
 
 # Plan generation logs (auto-generated during testing)
 /logs/
+
+# old Vercel link backup
+.vercel-*

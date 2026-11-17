@@ -1,17 +1,22 @@
 /**
- * Server-side LLM access via OpenRouter (OpenAI-compatible API).
- * Never import this from client components: it reads OPENROUTER_API_KEY.
+ * Server-side LLM access. Uses OpenRouter when OPENROUTER_API_KEY is set,
+ * otherwise OpenAI directly with OPENAI_API_KEY (both speak the same chat API).
+ * Never import this from client components: it reads API keys.
  */
 
-const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const useOpenRouter = !!process.env.OPENROUTER_API_KEY;
+
+const PROVIDER = useOpenRouter
+  ? { url: 'https://openrouter.ai/api/v1/chat/completions', key: process.env.OPENROUTER_API_KEY, fast: 'anthropic/claude-haiku-5.5', smart: 'anthropic/claude-sonnet-5.5' }
+  : { url: 'https://api.openai.com/v1/chat/completions', key: process.env.OPENAI_API_KEY, fast: 'gpt-4.1-mini', smart: 'gpt-4.1' };
 
 /** Fast, cheap model for structured generation (plan tables, titles, prompt enhancing). */
-export const FAST_MODEL = process.env.AI_MODEL_FAST || 'anthropic/claude-haiku-5.5';
+export const FAST_MODEL = process.env.AI_MODEL_FAST || PROVIDER.fast;
 /** Stronger model for the conversational assistant / agent. */
-export const SMART_MODEL = process.env.AI_MODEL_SMART || 'anthropic/claude-sonnet-5.5';
+export const SMART_MODEL = process.env.AI_MODEL_SMART || PROVIDER.smart;
 
 export function hasLLM(): boolean {
-  return !!process.env.OPENROUTER_API_KEY;
+  return !!PROVIDER.key;
 }
 
 export type ChatContent =
@@ -31,14 +36,14 @@ export interface CompleteOptions {
 }
 
 export async function complete(messages: ChatMessage[], opts: CompleteOptions = {}): Promise<string> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) throw new Error('OPENROUTER_API_KEY is not set');
+  const apiKey = PROVIDER.key;
+  if (!apiKey) throw new Error('No AI key set (OPENROUTER_API_KEY or OPENAI_API_KEY)');
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), opts.timeoutMs ?? 60_000);
 
   try {
-    const res = await fetch(OPENROUTER_URL, {
+    const res = await fetch(PROVIDER.url, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -57,13 +62,13 @@ export async function complete(messages: ChatMessage[], opts: CompleteOptions = 
 
     if (!res.ok) {
       const text = await res.text();
-      throw new Error(`OpenRouter ${res.status}: ${text.slice(0, 300)}`);
+      throw new Error(`AI provider ${res.status}: ${text.slice(0, 300)}`);
     }
 
     const data = await res.json();
     const content = data?.choices?.[0]?.message?.content;
     if (typeof content !== 'string' || !content.trim()) {
-      throw new Error('OpenRouter returned an empty answer');
+      throw new Error('AI provider returned an empty answer');
     }
     return content;
   } finally {
