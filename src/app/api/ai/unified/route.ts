@@ -124,6 +124,18 @@ function detectIntent(message: string, context?: { page?: string }): IntentScore
     if (pattern.test(lowerMessage)) planScore += 2;
   });
 
+  // A question without any numbers ("what should I eat after a run?") is never an
+  // activity to log; logging needs actual values (distance, time, weight...).
+  const hasNumber = /\d/.test(lowerMessage);
+  const isQuestion =
+    lowerMessage.trim().endsWith('?') ||
+    /^(what|when|where|why|how|which|who|can|could|should|is|are|do|does|will|would)\b/.test(lowerMessage.trim());
+  if (!hasNumber) activityScore = 0;
+  if (isQuestion && !hasNumber) {
+    questionScore += 2;
+    analysisScore = analysisScore > 0 ? analysisScore + 1 : 0;
+  }
+
   // Determine primary intent
   const scores = [
     { intent: 'plan_creation' as Intent, score: planScore },
@@ -175,6 +187,11 @@ export async function POST(request: NextRequest) {
         { error: 'Email and message are required' },
         { status: 400 }
       );
+    }
+
+    // Help requests always get the help answer, whatever page the user is on.
+    if (/^\s*(help|what can you do\??)\s*[.!?]*\s*$/i.test(message)) {
+      return await handleGeneralQuery(email, message, { intent: 'question', score: 3, confidence: 'high' }, context);
     }
 
     // Detect intent

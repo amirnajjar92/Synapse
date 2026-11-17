@@ -84,7 +84,20 @@ Rules:
     if (res.ok) {
       const data = await res.json();
       try {
-        extractedData = JSON.parse(data.answer);
+        const raw = String(data.answer ?? '')
+          .replace(/^\s*```(?:json)?/i, '')
+          .replace(/```\s*$/, '')
+          .trim();
+        const parsed = JSON.parse(raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1));
+        for (const [type, m] of Object.entries(parsed ?? {})) {
+          const metric = m as { value?: unknown; unit?: unknown };
+          if (typeof metric?.value === 'number' && Number.isFinite(metric.value)) {
+            extractedData[type] = {
+              value: metric.value,
+              unit: typeof metric.unit === 'string' ? metric.unit : undefined,
+            };
+          }
+        }
       } catch (parseError) {
         console.error('Failed to parse AI response:', parseError);
       }
@@ -93,14 +106,7 @@ Rules:
     }
 
     // Avoid overwriting existing metrics with mock data when AI extraction fails
-    if (Object.keys(extractedData).length === 0 && !existingEntry) {
-      extractedData = {
-        weight: { value: 74.8, unit: 'kg' },
-        distance: { value: 6.34, unit: 'km' },
-        pace: { value: 487, unit: 'seconds/km' },
-        totalTime: { value: 3937, unit: 'seconds' },
-      };
-    }
+    // Never invent metrics: if nothing was extracted, only the note is saved.
 
     const mergedNotes = existingEntry?.notes
       ? `${existingEntry.notes}\n${prompt}`.trim()
